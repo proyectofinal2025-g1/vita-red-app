@@ -17,6 +17,3 @@ Proyecto final del bootcamp **Henry**.
 - **Solicitar revisión antes de mergear**
 - **Borrar la rama después del merge**
 
----
-
-Si querés, te lo puedo mejorar con colores, badges, secciones extra (instalación, scripts, arquitectura, etc.). ¿Te gustaría?
