@@ -1,10 +1,20 @@
-# vita-red-app
-Plataforma web para gestión de turnos médicos (proyecto final Henry).
-REGLAS OBLIGATORIAS DEL EQUIPO
-🚫 Prohibido tocar main
-🚫 Prohibido hacer commits en dev
-🚫 Prohibido trabajar sin crear una feature branch
-✔️ Siempre actualizar dev antes de crear tu rama
-✔️ Siempre crear Pull Request
-✔️ Siempre pedir revisión
-✔️ Siempre borrar la rama cuando se mergea
+# VITA RED APP  
+**Plataforma web para gestión de turnos médicos**  
+Proyecto final del bootcamp **Henry**.
+
+---
+
+## 🧭 Reglas de trabajo del equipo
+
+### 🚫 Acciones prohibidas
+- **No tocar la rama `main`**
+- **No hacer commits directamente en `dev`**
+- **No trabajar sin crear una feature branch**
+
+### ✔️ Buenas prácticas obligatorias
+- **Actualizar `dev` antes de crear tu rama**
+- **Crear siempre un Pull Request**
+- **Solicitar revisión antes de mergear**
+- **Borrar la rama después del merge**
+
+---
