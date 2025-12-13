@@ -1,25 +1,51 @@
-import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { User } from './entities/user.entity';
+import { UserRepository } from './user.repository';
+import bcrypt from 'bcrypt'
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly userRepository: UserRepository) { }
+
+  async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
+    const userExist = await this.userRepository.findByEmail(user.email)
+    if (userExist) throw new BadRequestException('The email is already in use.')
+    return await this.userRepository.create(user)
   }
 
-  findAll() {
-    return `This action returns all user`;
+  async findAll() {
+    return await this.userRepository.findAll()
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findById(id: string) {
+    const user = await this.userRepository.findById(id)
+    if (!user) throw new NotFoundException('User not Found')
+    return user;
   }
 
-  update(id: number, updateUserDto: any) {
-    return `This action updates a #${id} user`;
+  async update(id: string, user: Partial<User>) {
+    if (!user || Object.keys(user).length === 0) throw new BadRequestException('You cannot pass an empty object');
+    const userFound = await this.userRepository.findById(id);
+    if (!userFound) throw new NotFoundException('User not found')
+
+    return await this.userRepository.update(id, user)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async disable(id: string) {
+    const user = await this.userRepository.findById(id);
+    if(!user) throw new NotFoundException('User Not found');
+    user.is_active = false;
+    return await this.userRepository.disable(user)
+  }
+
+  async updatePassword(id: string, dto: { currentPassword: string, newPassword: string }) {
+    const user = await this.userRepository.findById(id)
+    if (!user) throw new NotFoundException('User not Found')
+
+    const valid = await bcrypt.compare(dto.currentPassword, user.password)
+    if (!valid) throw new UnauthorizedException('Invalid password')
+
+    user.password = await bcrypt.hash(dto.newPassword, 10)
+    return await this.userRepository.updatePassword(user)
   }
 }
