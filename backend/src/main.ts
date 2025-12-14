@@ -5,15 +5,24 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // 👇 CORS habilitado para el frontend en puerto 3001
+  app.enableCors({
+    origin: 'http://localhost:3001',
+    credentials: true,
+  });
+
   app.useGlobalPipes(new ValidationPipe());
   const swaggerConfig = new DocumentBuilder()
     .setTitle('My API médica')
-    .setDescription('API REST para la gestión de usuarios, roles y funcionalidades del sistema médico. Incluye registro y autenticación con JWT, manejo de pacientes y médicos, administración de turnos, pagos y validación de accesos mediante Guards y decoradores personalizados.')
+    .setDescription(
+      'API REST para la gestión de usuarios, roles y funcionalidades del sistema médico. Incluye registro y autenticación con JWT, manejo de pacientes y médicos, administración de turnos, pagos y validación de accesos mediante Guards y decoradores personalizados.',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api', app, document)
+  SwaggerModule.setup('api', app, document);
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
