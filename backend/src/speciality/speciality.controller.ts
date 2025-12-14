@@ -9,8 +9,10 @@ import { RolesEnum } from '../user/enums/roles.enum';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
-@ApiBearerAuth()
-@ApiTags('Speciality')
+// @ApiBearerAuth()
+@ApiTags('Speciality - Endpoints ')
+  @UseGuards(AuthGuard, RolesGuard)
+
 @Controller('speciality')
 export class SpecialityController {
   constructor(
@@ -26,16 +28,12 @@ export class SpecialityController {
   }
 
   @ApiOkResponse({ type: [SpecialityResponseDto] })
-  @Roles(RolesEnum.SuperAdmin)
-  @UseGuards(AuthGuard, RolesGuard)
   @Get()
   async findAll() {
     return await this.specialityService.findAll();
   }
 
   @ApiOkResponse({ type: SpecialityResponseDto })
-  @Roles(RolesEnum.SuperAdmin)
-  @UseGuards(AuthGuard, RolesGuard)
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe ) id: string) {
     return await this.specialityService.findOne(id);
@@ -44,14 +42,12 @@ export class SpecialityController {
   @ApiOkResponse({ type: SpecialityResponseDto })
   @Patch(':id')
   @Roles(RolesEnum.SuperAdmin)
-  @UseGuards(AuthGuard, RolesGuard)
   async update(@Param('id') id: string, @Body() updateSpecialityDto: UpdateEspecialityDto) {
     return await this.specialityService.update(id,updateSpecialityDto );
   }
 
   @Delete(':id')
   @Roles(RolesEnum.SuperAdmin)
-  @UseGuards(AuthGuard, RolesGuard)
   async remove(@Param('id') id: string) {
     return await this.specialityService.remove(id);
   }
