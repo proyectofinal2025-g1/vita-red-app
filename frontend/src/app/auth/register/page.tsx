@@ -30,6 +30,7 @@ export default function RegisterPage() {
             dni: values.dni,
             email: values.email,
             password: values.password,
+            confirmPassword: values.confirmPassword, // Este valor es redundante (el backend no lo necesita para nada), el DTO del backend lo tiene como campo obligatorio, así se enviará por ahora.
           }),
         });
 
