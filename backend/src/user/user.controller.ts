@@ -4,10 +4,10 @@ import { UserResponse } from './dto/user-response.dto';
 import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
 import { UpdatePasswordDto } from './dto/updatePassword-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from 'src/decorators/role.decorator';
-import { AuthGuard } from 'src/auth/guards/auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { RolesEnum } from './enums/roles.enum';
+import { Roles } from '../decorators/role.decorator';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 
 @ApiBearerAuth()
 @Controller('user')

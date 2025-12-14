@@ -6,6 +6,7 @@ import typeorm from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { config as dotenvConfig } from "dotenv"
 import { JwtModule } from '@nestjs/jwt';
+import { AuthModule } from './auth/auth.module';
 
 dotenvConfig({ path: './.env.development' })
 
@@ -29,7 +30,7 @@ dotenvConfig({ path: './.env.development' })
         }
         return typeormConfig
       }
-    }), UserModule, secretaryModule],
+    }), UserModule, secretaryModule,  AuthModule],
   controllers: [],
   providers: [],
 })
