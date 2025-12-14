@@ -33,7 +33,7 @@ export class UserService {
 
   async disable(id: string) {
     const user = await this.userRepository.findById(id);
-    if(!user) throw new NotFoundException('User Not found');
+    if (!user) throw new NotFoundException('User Not found');
     user.is_active = false;
     return await this.userRepository.disable(user)
   }
@@ -46,6 +46,8 @@ export class UserService {
     if (!valid) throw new UnauthorizedException('Invalid password')
 
     user.password = await bcrypt.hash(dto.newPassword, 10)
-    return await this.userRepository.updatePassword(user)
+    await this.userRepository.updatePassword(user)
+
+    return {message: 'Password successfully updated'}
   }
 }
