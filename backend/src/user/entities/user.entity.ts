@@ -1,6 +1,6 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { RolesEnum } from "../enums/roles.enum";
-import { Secretary } from "src/secretaria/entities/secretary.entity";
+import { Secretary } from "../../secretaria/entities/secretary.entity";
 
 @Entity({ name: 'users' })
 export class User {

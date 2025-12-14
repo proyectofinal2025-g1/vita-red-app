@@ -1,9 +1,8 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEmpty,
   IsNotEmpty,
-  IsOptional,
   IsString,
   IsStrongPassword,
   Length,
@@ -38,11 +37,31 @@ export class CreateUserDto {
   @IsNotEmpty()
   confirmPassword: string;
 
+  @ApiProperty({ 
+    description: 'Nombre del usuario', 
+    example: 'Juan' })
+  @IsString()
+  @IsNotEmpty()
+  first_name: string;
+
+  @ApiProperty({
+    description: 'Apellido del usuario',
+    example: 'Pérez' })
+  @IsString()
+  @IsNotEmpty()
+  last_name: string;
+
+  @ApiProperty({ description: 'DNI del usuario',
+    example: '12345678' })
+  @IsString()
+  @IsNotEmpty()
+  dni: string;
+
+
   @ApiProperty({
     description:
       'Indica si el usuario está activo en la aplicación (no se permite definirlo manualmente)',
-    example: false,
-  })
+    example: false,})
   @IsEmpty()
   is_active: boolean;
 }

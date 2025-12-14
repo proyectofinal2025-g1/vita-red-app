@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Observable } from "rxjs";
-import { RolesEnum } from "src/user/enums/roles.enum";
+import { RolesEnum } from "../../user/enums/roles.enum";
 
 export class RolesGuard implements CanActivate {
     constructor(private readonly reflector: Reflector) { }
