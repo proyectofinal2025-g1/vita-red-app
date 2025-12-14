@@ -27,15 +27,20 @@ export class UserResponse {
   })
   role: RolesEnum;
 
-  @ApiProperty({ example: true })
-  is_active: boolean;
-    constructor(user: User) {
-        this.id = user.id;
-        this.first_name = user.first_name;
-        this.last_name = user.last_name;
-        this.dni = user.dni;
-        this.email = user.email;
-        this.role = user.role;
-        this.is_active = user.is_active;
-    }
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/demo/image/upload/v123456/users/avatars/a3f1c2e4.jpg',
+    description: 'URL pública de la imagen de perfil del usuario',
+    required: false,
+  })
+  profileImageUrl?: string;
+  
+  constructor(user: User) {
+    this.id = user.id;
+    this.first_name = user.first_name;
+    this.last_name = user.last_name;
+    this.dni = user.dni;
+    this.email = user.email;
+    this.role = user.role;
+    this.profileImageUrl = user.profileImageUrl
+  }
 }
