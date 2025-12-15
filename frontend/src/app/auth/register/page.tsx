@@ -37,6 +37,7 @@ export default function RegisterPage() {
         });
 
         const data = await response.json();
+        console.log('Respuesta del backend:', data);
 
         if (!response.ok) {
           const errorMsg = data.message || data.error || 'Error en el registro';
