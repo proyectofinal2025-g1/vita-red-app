@@ -4,6 +4,7 @@ import { UserRepository } from '../user/user.repository';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
+import { RolesEnum } from '../user/enums/roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -46,6 +47,8 @@ export class AuthService {
     if(!passwordMatch){
       throw new UnauthorizedException('Invalid credentials!')
     }
+
+    if(user.is_active === false && user.role !== RolesEnum.SuperAdmin) throw new UnauthorizedException('Invalid credentials!')
 
     const Payload = {
       first_name: user.first_name,

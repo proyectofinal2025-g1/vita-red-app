@@ -5,8 +5,6 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
-  // 👇 CORS habilitado para el frontend en puerto 3001
   app.enableCors({
     origin: 'http://localhost:3001',
     credentials: true,
