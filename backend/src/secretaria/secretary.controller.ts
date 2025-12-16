@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post } from "@nestjs/common";
 import { SecretaryService } from "./secretary.service";
+import { CreateUserDto } from "../user/dto/create-user.dto";
 
 @Controller('secretary')
 export class SecretaryController {
@@ -26,4 +27,8 @@ export class SecretaryController {
         return this.secretaryService.remove(id);
     }
 
+    @Post()
+    async createPatient(@Body()registerDto: CreateUserDto){
+            return await this.secretaryService.createPatient(registerDto)
+    }
 }

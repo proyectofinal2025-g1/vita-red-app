@@ -10,5 +10,15 @@ export class SecretaryRepository {
     private readonly secretaryRepository: Repository<Secretary>,
   ){}
 
+  async findAll(){
+    return this.secretaryRepository.find()
+  }
+
+  async findOne(id: string){
+    return this.secretaryRepository.findOneBy({id})
+  }
   
+  async remove(id: string){
+    return this.secretaryRepository.delete(id)
+  }
 }
