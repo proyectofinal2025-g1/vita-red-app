@@ -1,0 +1,487 @@
+[
+  {
+    "user": {
+      "first_name": "Juan",
+      "last_name": "Perez",
+      "dni": "40100001",
+      "email": "juan.perez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-1001" },
+    "speciality": "cardiologia"
+  },
+  {
+    "user": {
+      "first_name": "Maria",
+      "last_name": "Lopez",
+      "dni": "40100002",
+      "email": "maria.lopez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-1002" },
+    "speciality": "cardiologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Carlos",
+      "last_name": "Gomez",
+      "dni": "40100003",
+      "email": "carlos.gomez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-2001" },
+    "speciality": "psiquiatria"
+  },
+  {
+    "user": {
+      "first_name": "Laura",
+      "last_name": "Mendez",
+      "dni": "40100004",
+      "email": "laura.mendez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-2002" },
+    "speciality": "psiquiatria"
+  },
+
+  {
+    "user": {
+      "first_name": "Ana",
+      "last_name": "Rios",
+      "dni": "40100005",
+      "email": "ana.rios@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-3001" },
+    "speciality": "psicologia"
+  },
+  {
+    "user": {
+      "first_name": "Diego",
+      "last_name": "Castro",
+      "dni": "40100006",
+      "email": "diego.castro@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-3002" },
+    "speciality": "psicologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Roberto",
+      "last_name": "Suarez",
+      "dni": "40100007",
+      "email": "roberto.suarez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-4001" },
+    "speciality": "clinica medica"
+  },
+  {
+    "user": {
+      "first_name": "Patricia",
+      "last_name": "Vega",
+      "dni": "40100008",
+      "email": "patricia.vega@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-4002" },
+    "speciality": "clinica medica"
+  },
+
+  {
+    "user": {
+      "first_name": "Sofia",
+      "last_name": "Martinez",
+      "dni": "40100009",
+      "email": "sofia.martinez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-5001" },
+    "speciality": "pediatria"
+  },
+  {
+    "user": {
+      "first_name": "Lucas",
+      "last_name": "Benitez",
+      "dni": "40100010",
+      "email": "lucas.benitez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-5002" },
+    "speciality": "pediatria"
+  },
+
+  {
+    "user": {
+      "first_name": "Hernan",
+      "last_name": "Silva",
+      "dni": "40100011",
+      "email": "hernan.silva@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-6001" },
+    "speciality": "oftalmologia"
+  },
+  {
+    "user": {
+      "first_name": "Cecilia",
+      "last_name": "Farias",
+      "dni": "40100012",
+      "email": "cecilia.farias@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-6002" },
+    "speciality": "oftalmologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Martin",
+      "last_name": "Acosta",
+      "dni": "40100013",
+      "email": "martin.acosta@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-7001" },
+    "speciality": "nutricion"
+  },
+  {
+    "user": {
+      "first_name": "Luciana",
+      "last_name": "Morales",
+      "dni": "40100014",
+      "email": "luciana.morales@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-7002" },
+    "speciality": "nutricion"
+  },
+
+  {
+    "user": {
+      "first_name": "Fernando",
+      "last_name": "Navarro",
+      "dni": "40100015",
+      "email": "fernando.navarro@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-8001" },
+    "speciality": "urologia"
+  },
+  {
+    "user": {
+      "first_name": "German",
+      "last_name": "Paz",
+      "dni": "40100016",
+      "email": "german.paz@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-8002" },
+    "speciality": "urologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Rocio",
+      "last_name": "Alvarez",
+      "dni": "40100017",
+      "email": "rocio.alvarez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-9001" },
+    "speciality": "nefrologia"
+  },
+  {
+    "user": {
+      "first_name": "Marcos",
+      "last_name": "Luna",
+      "dni": "40100018",
+      "email": "marcos.luna@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-9002" },
+    "speciality": "nefrologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Valeria",
+      "last_name": "Sosa",
+      "dni": "40100019",
+      "email": "valeria.sosa@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-10001" },
+    "speciality": "endocrinologia"
+  },
+  {
+    "user": {
+      "first_name": "Pablo",
+      "last_name": "Ibarra",
+      "dni": "40100020",
+      "email": "pablo.ibarra@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-10002" },
+    "speciality": "endocrinologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Esteban",
+      "last_name": "Ramos",
+      "dni": "40100021",
+      "email": "esteban.ramos@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-11001" },
+    "speciality": "traumatologia"
+  },
+  {
+    "user": {
+      "first_name": "Natalia",
+      "last_name": "Peralta",
+      "dni": "40100022",
+      "email": "natalia.peralta@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-11002" },
+    "speciality": "traumatologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Agustin",
+      "last_name": "Moreno",
+      "dni": "40100023",
+      "email": "agustin.moreno@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-12001" },
+    "speciality": "kinesiologia"
+  },
+  {
+    "user": {
+      "first_name": "Camila",
+      "last_name": "Rey",
+      "dni": "40100024",
+      "email": "camila.rey@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-12002" },
+    "speciality": "kinesiologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Jorge",
+      "last_name": "Salas",
+      "dni": "40100025",
+      "email": "jorge.salas@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-13001" },
+    "speciality": "odontologia"
+  },
+  {
+    "user": {
+      "first_name": "Florencia",
+      "last_name": "Diaz",
+      "dni": "40100026",
+      "email": "florencia.diaz@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-13002" },
+    "speciality": "odontologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Ricardo",
+      "last_name": "Cano",
+      "dni": "40100027",
+      "email": "ricardo.cano@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-14001" },
+    "speciality": "otorrinolaringologia"
+  },
+  {
+    "user": {
+      "first_name": "Daniela",
+      "last_name": "Quiroga",
+      "dni": "40100028",
+      "email": "daniela.quiroga@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-14002" },
+    "speciality": "otorrinolaringologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Guillermo",
+      "last_name": "Vidal",
+      "dni": "40100029",
+      "email": "guillermo.vidal@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-15001" },
+    "speciality": "reumatologia"
+  },
+  {
+    "user": {
+      "first_name": "Paula",
+      "last_name": "Herrera",
+      "dni": "40100030",
+      "email": "paula.herrera@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-15002" },
+    "speciality": "reumatologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Alberto",
+      "last_name": "Nuñez",
+      "dni": "40100031",
+      "email": "alberto.nunez@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-16001" },
+    "speciality": "diagnostico por imagenes"
+  },
+  {
+    "user": {
+      "first_name": "Silvia",
+      "last_name": "Campos",
+      "dni": "40100032",
+      "email": "silvia.campos@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-16002" },
+    "speciality": "diagnostico por imagenes"
+  },
+
+  {
+    "user": {
+      "first_name": "Julian",
+      "last_name": "Ortega",
+      "dni": "40100033",
+      "email": "julian.ortega@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-17001" },
+    "speciality": "ginecologia"
+  },
+  {
+    "user": {
+      "first_name": "Veronica",
+      "last_name": "Arias",
+      "dni": "40100034",
+      "email": "veronica.arias@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-17002" },
+    "speciality": "ginecologia"
+  },
+
+  {
+    "user": {
+      "first_name": "Oscar",
+      "last_name": "Bravo",
+      "dni": "40100035",
+      "email": "oscar.bravo@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-18001" },
+    "speciality": "gastroenterologia"
+  },
+  {
+    "user": {
+      "first_name": "Romina",
+      "last_name": "Molina",
+      "dni": "40100036",
+      "email": "romina.molina@medicos.com",
+      "password": "Password123!",
+      "role": "medico",
+      "isActive": true
+    },
+    "doctor": { "licence_number": "MP-18002" },
+    "speciality": "gastroenterologia"
+  }
+]
