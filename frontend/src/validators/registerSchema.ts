@@ -22,10 +22,22 @@ export const registerFormInitialValues: RegisterFormValuesType = {
 
 export const registerformValidatorSchema = Yup.object({
   first_name: Yup.string()
-    .min(2, 'El primer nombre debe tener al menos 2 caracteres')
+    .min(2, 'El nombre debe tener al menos 2 caracteres')
+    .max(20, 'El nombre no puede tener más de 20 caracteres')
+    .matches(
+      /^[a-zA-Z\s]+$/,
+      'El nombre solo puede contener letras (sin sacentos ni tildes) y espacios'
+    )
+    .trim() // Elimina espacios al inicio y al final
     .required('El primer nombre es obligatorio'),
   last_name: Yup.string()
     .min(2, 'El apellido debe tener al menos 2 caracteres')
+    .max(20, 'El apellido no puede tener más de 20 caracteres')
+    .matches(
+      /^[a-zA-Z\s]+$/,
+      'El apellido solo puede contener letras (sin sacentos ni tildes) y espacios'
+    )
+    .trim() // Elimina espacios al inicio y al final
     .required('El apellido es obligatorio'),
   dni: Yup.string()
     .matches(/^\d+$/, 'El DNI solo debe contener números')
@@ -39,7 +51,7 @@ export const registerformValidatorSchema = Yup.object({
     .min(8, 'La contraseña debe tener al menos 8 caracteres') // Ajustado a lo que usa el backend
     .matches(/[A-Z]/, 'Debe contener al menos una mayúscula')
     .matches(/\d/, 'Debe contener al menos un número')
-    .matches(/[@$!%*?&#]/, 'Debe contener al menos un carácter especial')
+    .matches(/[@$!%*?&#_+-]/, 'Debe contener al menos un carácter especial')
     .required('La contraseña es obligatoria'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), undefined], 'Las contraseñas deben coincidir')
