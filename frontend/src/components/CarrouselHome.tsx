@@ -29,7 +29,7 @@ export default function CarrouselHome() {
   }, []);
 
   return (
-    <section className="relative w-screen h-[50vh] overflow-hidden">
+    <section className="relative w-full h-[50vh] overflow-hidden">
       <div
         className="flex h-full transition-transform duration-1000 ease-in-out"
         style={{
@@ -37,7 +37,7 @@ export default function CarrouselHome() {
         }}
       >
         {images.map((src, index) => (
-          <div key={index} className="relative w-[50vw] h-full shrink-0">
+          <div key={index} className="relative w-1/2 h-full shrink-0">
             <Image
               src={src}
               alt="Hero image"
