@@ -35,7 +35,7 @@ dotenvConfig({ path: './.env.development' })
         }
         return typeormConfig
       }
-    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule],
+    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule, SpecialityModule, DoctorModule, SeedModule],
   controllers: [],
   providers: [],
 }) 
