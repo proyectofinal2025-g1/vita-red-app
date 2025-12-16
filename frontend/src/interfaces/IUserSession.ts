@@ -1,12 +1,12 @@
 export interface IUserSession {
     login: boolean;
     token: string;
-    user: {
+    user?: {
         id: number;
-        name: string;
+        first_name: string;
+        last_name: string;
+        dni: number;
         email: string;
-        address: string;
-        phone: string;
         appointments: [];
         role: string;
     };
