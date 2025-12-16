@@ -8,6 +8,12 @@ export class User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
+    @Column({nullable: true, type: 'varchar'})
+    profileImageUrl?: string;
+
+    @Column({nullable: true, type: 'varchar'})
+    profileImagePublicId?: string;
+
     @Column({type: 'varchar', nullable: false, length: 30})
     first_name: string;
 

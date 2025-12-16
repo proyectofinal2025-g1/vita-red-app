@@ -1,13 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, HttpCode, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, HttpCode, UseGuards, Request, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserResponse } from './dto/user-response.dto';
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOkResponse, ApiParam } from '@nestjs/swagger';
 import { UpdatePasswordDto } from './dto/updatePassword-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RolesEnum } from './enums/roles.enum';
 import { Roles } from '../decorators/role.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiBearerAuth()
 @Controller('user')
@@ -23,7 +24,7 @@ export class UserController {
     return userArray.map(user => new UserResponse(user))
   }
 
-  @ApiOkResponse({ description: 'Perfil del usuario autenticado', type: UserResponse})
+  @ApiOkResponse({ description: 'Perfil del usuario autenticado', type: UserResponse })
   @Get('me')
   @UseGuards(AuthGuard)
   async getMe(@Request() req: any) {
@@ -61,6 +62,39 @@ export class UserController {
     @Body() dto: UpdatePasswordDto,
   ) {
     return this.userService.updatePassword(id, dto);
+  }
+
+  @Patch('me/avatar')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadAvatar(@Request() req: any,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 2000000,
+            message: 'Superas el peso maximo de 2MB',
+          }),
+          new FileTypeValidator({ fileType: /(.jpg|.png|.svg|.webp|.jpeg)/ })
+        ],
+      }),
+    )
+    file: Express.Multer.File,) {
+    const userId = req.user.sub
+    const user = await this.userService.updateAvatar(userId, file)
+    return new UserResponse(user)
   }
 
 }

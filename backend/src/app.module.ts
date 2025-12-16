@@ -11,6 +11,7 @@ import { DoctorModule } from './doctor/doctor.module';
 import { SpecialityModule } from './speciality/speciality.module';
 import { SeederService } from './seed/seed.service';
 import { SeedModule } from './seed/seed.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 dotenvConfig({ path: './.env.development' })
 
@@ -34,7 +35,7 @@ dotenvConfig({ path: './.env.development' })
         }
         return typeormConfig
       }
-    }), UserModule, secretaryModule,  AuthModule, DoctorModule, SpecialityModule, SeedModule],
+    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule],
   controllers: [],
   providers: [],
 }) 

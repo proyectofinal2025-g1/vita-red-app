@@ -1,11 +1,15 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { UserRepository } from './user.repository';
 import bcrypt from 'bcrypt'
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly userRepository: UserRepository) { }
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly cloudinaryService: CloudinaryService
+  ) { }
 
   async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
     const userExist = await this.userRepository.findByEmail(user.email)
@@ -33,7 +37,7 @@ export class UserService {
 
   async disable(id: string) {
     const user = await this.userRepository.findById(id);
-    if(!user) throw new NotFoundException('User Not found');
+    if (!user) throw new NotFoundException('User Not found');
     user.is_active = false;
     return await this.userRepository.disable(user)
   }
@@ -46,6 +50,28 @@ export class UserService {
     if (!valid) throw new UnauthorizedException('Invalid password')
 
     user.password = await bcrypt.hash(dto.newPassword, 10)
-    return await this.userRepository.updatePassword(user)
+    await this.userRepository.updatePassword(user)
+
+    return { message: 'Password successfully updated' }
+  }
+
+  async updateAvatar(userId: string, file: Express.Multer.File) {
+    const userFound = await this.userRepository.findById(userId)
+    if (!userFound) throw new NotFoundException('User not found')
+    try {
+      if (userFound.profileImagePublicId) {
+        await this.cloudinaryService.deleteImage(userFound.profileImagePublicId)
+      }
+      const image = await this.cloudinaryService.uploadImage(file)
+      userFound.profileImageUrl = image.secure_url;
+      userFound.profileImagePublicId = image.public_id;
+      await this.userRepository.update(userId, userFound)
+      return userFound;
+
+    } catch (error) {
+      console.log(error.message);
+      throw new InternalServerErrorException('Error updating avatar')
+      
+    }
   }
 }
