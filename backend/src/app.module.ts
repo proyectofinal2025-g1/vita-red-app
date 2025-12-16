@@ -12,6 +12,7 @@ import { SpecialityModule } from './speciality/speciality.module';
 import { SeederService } from './seed/seed.service';
 import { SeedModule } from './seed/seed.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { SuperAdminModule } from './super-admin/super-admin.module';
 
 dotenvConfig({ path: './.env.development' })
 
@@ -35,18 +36,19 @@ dotenvConfig({ path: './.env.development' })
         }
         return typeormConfig
       }
-    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule, SpecialityModule, DoctorModule, SeedModule],
+    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule, SpecialityModule, DoctorModule, SeedModule, SuperAdminModule],
   controllers: [],
   providers: [],
 }) 
 export class AppModule implements OnModuleInit {
   constructor(
-    private readonly doctorsSeeder: SeederService,
+    private readonly seederService: SeederService,
   ) {}
 
   async onModuleInit() {
     if (process.env.NODE_ENV !== 'production') {
-      await this.doctorsSeeder.run();
+      await this.seederService.seedSuperAdmin();
+      await this.seederService.run();
     }
   }
 }
