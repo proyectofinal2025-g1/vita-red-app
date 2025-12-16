@@ -46,12 +46,24 @@ export const registerformValidatorSchema = Yup.object({
     .required('El DNI es obligatorio'),
   email: Yup.string()
     .email('El correo electrónico no es válido')
+    .max(50, 'El correo electrónico no puede tener más de 50 caracteres')
     .required('El correo es obligatorio'),
   password: Yup.string()
-    .min(8, 'La contraseña debe tener al menos 8 caracteres') // Ajustado a lo que usa el backend
-    .matches(/[A-Z]/, 'Debe contener al menos una mayúscula')
-    .matches(/\d/, 'Debe contener al menos un número')
-    .matches(/[@$!%*?&#_+-]/, 'Debe contener al menos un carácter especial')
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .matches(
+      /[a-z]/,
+      'La contraseña debe contener al menos una letra minúscula (A-Z)'
+    )
+    .matches(
+      /[A-Z]/,
+      'La contraseña debe contener al menos una letra mayúscula (A-Z)'
+    )
+    .matches(/\d/, 'La contraseña debe contener al menos un número (0-9)')
+    .matches(
+      /[@$!%*?&#_+-]/,
+      'La contraseña debe contener al menos un carácter especial (@, $, !, %, *, ?, &, #, _, +, -)'
+    )
+    .max(20, 'La contraseña no puede tener más de 20 caracteres')
     .required('La contraseña es obligatoria'),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), undefined], 'Las contraseñas deben coincidir')
