@@ -18,7 +18,7 @@ export class Speciality {
 
   @ApiProperty()
   @OneToMany(()=> Doctor, (doctor) => doctor.speciality, {nullable: true})
-  doctor: Doctor
+  doctor: Doctor[]
   
   @ApiProperty()
   @Column({type:'boolean', default: true})

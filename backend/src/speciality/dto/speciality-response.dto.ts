@@ -1,4 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { DoctorSimpleDto } from '../../doctor/dto/doctor-simple.dto';
+import { DoctorForSpecialityDto } from '../../doctor/dto/doctor-speciality.dto';
 
 export class SpecialityResponseDto {
   @ApiProperty({
@@ -16,4 +18,10 @@ export class SpecialityResponseDto {
   @ApiProperty({ example: true })
   isActive: boolean;
   
+   @ApiProperty({
+    type: () => DoctorForSpecialityDto,
+    isArray: true,
+    description: 'Doctores asociados a esta especialidad',
+  })
+   doctors: DoctorForSpecialityDto[]
 }

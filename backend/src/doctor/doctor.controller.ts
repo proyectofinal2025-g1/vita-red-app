@@ -1,67 +1,99 @@
-import {Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards, Req,} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseUUIDPipe,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
+
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags,} from '@nestjs/swagger';
 import { DoctorResponseDto } from './dto/doctor-response.dto';
+
 import { Roles } from '../decorators/role.decorator';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
-@ApiBearerAuth()
-@ApiTags('Doctor - Endpoints')
-@UseGuards(AuthGuard, RolesGuard)
+@ApiTags('Doctors')
 @Controller('doctor')
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
 
-  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Crear un perfil de médico' })
   @ApiCreatedResponse({ type: DoctorResponseDto })
+  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @UseGuards(AuthGuard, RolesGuard)
   @Post()
-  async create(@Body() createDoctorDto: CreateDoctorDto) {
+  async create(@Body() dto: CreateDoctorDto) {
     return this.doctorService.create({
-      licence_number: createDoctorDto.licence_number,
-      user_id: createDoctorDto.user_id,
-      speciality_id: createDoctorDto.speciality_id,
+      licence_number: dto.licence_number,
+      user_id: dto.user_id,
+      speciality_id: dto.speciality_id,
     });
   }
 
-  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @ApiOperation({ summary: 'Obtener todos los médicos' })
   @ApiOkResponse({ type: [DoctorResponseDto] })
   @Get()
   async findAll() {
     return this.doctorService.findAll();
   }
 
-  @Roles(RolesEnum.Medic)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener el perfil del médico logueado' })
   @ApiOkResponse({ type: DoctorResponseDto })
+  @Roles(RolesEnum.Medic)
+  @UseGuards(AuthGuard, RolesGuard)
   @Get('me')
   async meDoctor(@Req() req: any) {
     return this.doctorService.findMeDoctor(req.user);
   }
 
-  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener un médico por ID' })
   @ApiOkResponse({ type: DoctorResponseDto })
+  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @UseGuards(AuthGuard, RolesGuard)
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.doctorService.findOne(id);
   }
 
-  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Actualizar un médico' })
   @ApiOkResponse({ type: DoctorResponseDto })
+  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @UseGuards(AuthGuard, RolesGuard)
   @Patch(':id')
   async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateDoctorDto: UpdateDoctorDto,
+    @Body() dto: UpdateDoctorDto,
   ) {
     return this.doctorService.update(id, {
-      licence_number: updateDoctorDto.licence_number,
-      speciality_id: updateDoctorDto.speciality_id,
+      licence_number: dto.licence_number,
+      speciality_id: dto.speciality_id,
     });
   }
 
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Eliminar un médico' })
   @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @UseGuards(AuthGuard, RolesGuard)
   @Delete(':id')
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.doctorService.remove(id);

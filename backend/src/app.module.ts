@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { secretaryModule } from './secretaria/secretary.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -8,7 +8,9 @@ import { config as dotenvConfig } from "dotenv"
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { DoctorModule } from './doctor/doctor.module';
-import { EspecialityModule } from './speciality/speciality.module';
+import { SpecialityModule } from './speciality/speciality.module';
+import { SeederService } from './seed/seed.service';
+import { SeedModule } from './seed/seed.module';
 
 dotenvConfig({ path: './.env.development' })
 
@@ -32,8 +34,18 @@ dotenvConfig({ path: './.env.development' })
         }
         return typeormConfig
       }
-    }), UserModule, secretaryModule,  AuthModule, DoctorModule, EspecialityModule],
+    }), UserModule, secretaryModule,  AuthModule, DoctorModule, SpecialityModule, SeedModule],
   controllers: [],
   providers: [],
-})
-export class AppModule { }
+}) 
+export class AppModule implements OnModuleInit {
+  constructor(
+    private readonly doctorsSeeder: SeederService,
+  ) {}
+
+  async onModuleInit() {
+    if (process.env.NODE_ENV !== 'production') {
+      await this.doctorsSeeder.run();
+    }
+  }
+}
