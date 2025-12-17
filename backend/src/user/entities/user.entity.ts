@@ -1,6 +1,6 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { RolesEnum } from "../enums/roles.enum";
-import { Secretary } from "../../secretaria/entities/secretary.entity";
+import { Doctor } from "../../doctor/entities/doctor.entity";
 
 @Entity({ name: 'users' })
 export class User {
@@ -34,15 +34,6 @@ export class User {
     @Column({type:'boolean', default: true})
     is_active: boolean;
 
-    /*@OneToOne(() => Doctor, (doctor) => doctor.user, { nullable: true })
-    doctor?: Doctor; */
-
-    /*@OneToOne(() => Patient, (patient) => patient.user, { nullable: true })
-    patient?: Patient;*/
-
-    @OneToOne(() => Secretary, (secretary) => secretary.user, { nullable: true })
-    secretary?: Secretary;
-
-    /*@OneToOne(() => Admin, (admin) => admin.user, { nullable: true })
-    admin?: Admin;*/
+    @OneToOne(() => Doctor, (doctor) => doctor.user, { nullable: true })
+    doctor?: Doctor;
 }
