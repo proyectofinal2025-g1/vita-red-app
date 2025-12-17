@@ -12,6 +12,11 @@ export class UserRepository {
         return userFound
     }
 
+    async findByDni(dni: string) {
+        const userFound = await this.userRepository.findOneBy({ dni })
+        return userFound
+    }
+
     async create(createUser: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
         const userCreate = await this.userRepository.create(createUser)
         const userSave = await this.userRepository.save(userCreate)
@@ -32,7 +37,7 @@ export class UserRepository {
     }
 
     async disable(user: User) {
-     await this.userRepository.save(user);
+        await this.userRepository.save(user);
     }
 
     async updatePassword(user: any) {

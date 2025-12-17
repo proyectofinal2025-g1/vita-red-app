@@ -13,7 +13,12 @@ export class UserService {
 
   async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
     const userExist = await this.userRepository.findByEmail(user.email)
-    if (userExist) throw new BadRequestException('The email is already in use.')
+    const userExistByDni = await this.userRepository.findByDni(user.dni)
+    if (userExist) {
+      throw new BadRequestException('The email is already in use.')
+    }else if(userExistByDni) {
+      throw new BadRequestException('The dni is already in use.')
+    }
     return await this.userRepository.create(user)
   }
 
