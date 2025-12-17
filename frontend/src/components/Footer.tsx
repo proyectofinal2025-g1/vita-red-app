@@ -35,7 +35,7 @@ export const Footer = () => {
 
         <div className="text-center">
           <span className="text-sm block">
-            © 2025 <a className="hover:underline">VITA RED™</a>. Todos los derechos reservados.
+            © 2025 <a>VITA RED™</a>. Todos los derechos reservados.
           </span>
         </div>
       </div>

@@ -9,6 +9,9 @@ import { DoctorService } from '../doctor/doctor.service';
 import { SpecialityService } from '../speciality/speciality.service';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { Doctor } from '../doctor/entities/doctor.entity';
+import { User } from '../user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
 
 interface Seeder {
   user: {
@@ -36,7 +39,30 @@ export class SeederService {
     private readonly userRepository: UserRepository,
     private readonly doctorService: DoctorService,
     private readonly specialityService: SpecialityService,
-  ) {}
+    @InjectRepository(User) private readonly userDb: Repository<User>
+  ) { }
+
+  async seedSuperAdmin() {
+    const SuperAdmin: Partial<User> = {
+      first_name: process.env.FIRST_NAME_SUPERADMIN,
+      last_name: process.env.LAST_NAME_SUPERADMIN,
+      dni: process.env.DNI_SUPERADMIN,
+      email: process.env.EMAIL_SUPERADMIN,
+      password: process.env.PASSWORD_SUPERADMIN
+    };
+
+    const userFound = await this.userRepository.findByEmail(SuperAdmin.email!)
+    if (userFound) {
+      this.logger.warn('Ya existe un superAdmin')
+    } else {
+      if (!process.env.PASSWORD_SUPERADMIN) throw new Error('No existe la password') 
+      const passwordHash = await bcrypt.hashSync(process.env.PASSWORD_SUPERADMIN, 10)
+      SuperAdmin.role = RolesEnum.SuperAdmin;
+      SuperAdmin.password = passwordHash
+      await this.userDb.save(SuperAdmin)
+      this.logger.log('SuperAdmin creado correctamente')
+    }
+  }
 
   async run(): Promise<void> {
     this.logger.log('Iniciando seed de doctores...');
