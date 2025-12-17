@@ -36,10 +36,4 @@ export class User {
 
     @OneToOne(() => Doctor, (doctor) => doctor.user, { nullable: true })
     doctor?: Doctor;
-
-    /*@OneToOne(() => Patient, (patient) => patient.user, { nullable: true })
-    patient?: Patient;*/
-
-    /*@OneToOne(() => Admin, (admin) => admin.user, { nullable: true })
-    admin?: Admin;*/
 }
