@@ -1,32 +1,62 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseBoolPipe, ParseEnumPipe, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { SuperAdminService } from './super-admin.service';
+import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { RolesEnum } from '../user/enums/roles.enum';
+import { Roles } from '../decorators/role.decorator';
+import { AuthGuard } from '../auth/guards/auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { SuperAdminResponse } from './dto/super-admin.response.dto';
 
-@Controller('super-admin')
+@ApiBearerAuth()
+@Controller('superadmin')
 export class SuperAdminController {
-  constructor(private readonly superAdminService: SuperAdminService) {}
+  constructor(private readonly superAdminService: SuperAdminService) { }
 
-  @Post()
-  create(@Body() createSuperAdminDto) {
-    return this.superAdminService.create(createSuperAdminDto);
+  @ApiQuery({
+    name: 'role',
+    enum: RolesEnum,
+    required: false,
+    description: 'Filtrar usuarios por rol'
+  })
+  @ApiQuery({
+    name: 'is_active',
+    required: false,
+    type: Boolean,
+    description: 'Filtrar usuarios por estado de actividad'
+  })
+  @Get('users')
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  async findAll(@Query('role', new ParseEnumPipe(RolesEnum)) role?: RolesEnum, @Query('is_active', ParseBoolPipe) is_active?: boolean) {
+    const users = await this.superAdminService.findAll(role, is_active);
+    return users.map(user => new SuperAdminResponse(user));
   }
 
-  @Get()
-  findAll() {
-    return this.superAdminService.findAll();
+  @ApiQuery({ 
+    name: 'id', 
+    type: 'string', 
+    format: 'uuid' ,
+    required: true,
+    description: 'UUID del usuario para actualizar el estado'
+  })
+  @Patch('users/:id/status')
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  async updateActive(@Param('id', ParseUUIDPipe) id: string) {
+    return await this.superAdminService.updateActive(id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.superAdminService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSuperAdminDto) {
-    return this.superAdminService.update(+id, updateSuperAdminDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.superAdminService.remove(+id);
+  @ApiQuery({
+    name: 'id',
+    type: 'string',
+    format: 'uuid',
+    required: true,
+    description: 'UUID del usuario para actualizar el rol'
+  })
+  @Patch('users/:id/role')
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  async updateRole(@Param('id', ParseUUIDPipe) id: string, @Body() role: RolesEnum) {
+    return await this.superAdminService.updateRole(id, role);
   }
 }

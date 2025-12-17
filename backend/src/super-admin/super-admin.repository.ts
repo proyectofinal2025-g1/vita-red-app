@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from '../user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { RolesEnum } from '../user/enums/roles.enum';
 
 
 @Injectable()
 export class SuperAdminRepository {
-  create(createSuperAdminDto) {
-    return 'This action adds a new superAdmin';
+  constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
+
+  async findAll(role?: RolesEnum, isActive?: boolean) {
+    const usersFound = await this.userRepository.find({ where: { role, is_active: isActive } })
+    return usersFound;
   }
 
-  findAll() {
-    return `This action returns all superAdmin`;
+  async update(user: User) {
+    return await this.userRepository.save(user)
   }
-
-  findOne(id: number) {
-    return `This action returns a #${id} superAdmin`;
-  }
-
-  update(id: number, updateSuperAdminDto) {
-    return `This action updates a #${id} superAdmin`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} superAdmin`;
+  
+  async findOne(id: string) {
+    const user = await this.userRepository.findOneBy({ id })
+    return user;
   }
 }
