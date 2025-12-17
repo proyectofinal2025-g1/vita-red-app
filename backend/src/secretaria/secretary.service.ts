@@ -1,38 +1,59 @@
-import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { UserService } from "../user/user.service";
 import * as bcrypt from 'bcrypt';
 import { User } from "../user/entities/user.entity";
 import { SecretaryRepository } from "./secretary.repository";
 import { UpdateUserDto } from "../user/dto/update-user.dto";
-import { NotFoundError } from "rxjs";
+import { InjectRepository } from "@nestjs/typeorm";
+import { FindOptionsWhere, Repository } from "typeorm";
+import { RolesEnum } from "../user/enums/roles.enum";
+import { UserResponse } from "../user/dto/user-response.dto";
 
 
 @Injectable()
 export class SecretaryService {
   constructor(
     private readonly secretaryRepository: SecretaryRepository,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) { }
 
-  async findAll() {
-    return await this.secretaryRepository.findAll();
+  async findAll(filters: {
+    role?: RolesEnum;
+    is_active?: boolean;
+  }) {
+    const where: FindOptionsWhere<User> = {};
+
+    if (filters.role) {
+      where.role = filters.role;
+    }
+
+    if (filters.is_active !== undefined) {
+      where.is_active = filters.is_active;
+    }
+
+    return this.userRepository.find({ where });
   }
 
-  async findOne(id: string) {
-    const secretaryFound = await this.secretaryRepository.findOne(id);
-    if(!secretaryFound){throw new NotFoundException('ID inexisting')}
-    return secretaryFound
+
+  async findOne(id: string): Promise<UserResponse> {
+    const userFound = await this.userRepository.findOneBy({ id })
+    if (!userFound) {
+      throw new NotFoundException('ID not found')
+    }
+    return userFound
   }
+
 
   async update(id: string, updateUserDto: any) {
     return await this.userService.update(id, updateUserDto);
   }
 
-  async remove(id: string) {
-    const secretaryFound = await this.secretaryRepository.remove(id);
-    if(!secretaryFound){throw new NotFoundException('ID inexisting')}
-    return secretaryFound
+  async disable(id: string) {
+    return await this.userService.disable(id)
   }
+
 
   async createPatient({ confirmPassword, password, ...user }: { confirmPassword: string, password: string } & Pick<User, 'email' | 'first_name' | 'last_name' | 'dni'>) {
 
