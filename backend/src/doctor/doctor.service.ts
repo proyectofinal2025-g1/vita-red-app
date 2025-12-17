@@ -10,6 +10,7 @@ import { Doctor } from './entities/doctor.entity';
 import { DoctorResponseDto } from './dto/doctor-response.dto';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { Speciality } from '../speciality/entities/speciality.entity';
+import { DoctorFindResponseDto } from './dto/doctor-find-response.dto';
 
 @Injectable()
 export class DoctorService {
@@ -86,6 +87,17 @@ export class DoctorService {
 
     return this.toResponseDto(doctor);
   }
+
+  async findByDoctorName(name: string): Promise<DoctorFindResponseDto[]> {
+  const doctors = await this.doctorRepository.findByDoctorName(name);
+
+  return doctors.map((doctor) => ({
+    id: doctor.id,
+    fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
+    speciality: doctor.speciality.name,
+    licence_number: doctor.licence_number,
+  }));
+}
 
   async update(
     id: string,

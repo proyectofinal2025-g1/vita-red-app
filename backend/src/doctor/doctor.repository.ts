@@ -57,6 +57,21 @@ export class DoctorRepository {
     });    
   }
 
+  async findByDoctorName(name: string): Promise<Doctor[]> {
+  return this.doctorRepository
+    .createQueryBuilder('doctor')
+    .leftJoinAndSelect('doctor.user', 'user')
+    .leftJoinAndSelect('doctor.speciality', 'speciality')
+    .where('LOWER(user.first_name) LIKE LOWER(:name)', {
+      name: `%${name}%`,
+    })
+    .orWhere('LOWER(user.last_name) LIKE LOWER(:name)', {
+      name: `%${name}%`,
+    })
+    .getMany();
+}
+
+
   async update(id:string, data: Partial<Pick<Doctor, 'licence_number'| 'speciality'>>){
     await this.doctorRepository.update(id, data);
     return this.findOne(id)

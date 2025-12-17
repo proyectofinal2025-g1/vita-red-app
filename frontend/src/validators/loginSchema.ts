@@ -1,20 +1,16 @@
 import * as Yup from 'yup';
+import { ILoginFormValues } from '../interfaces/ILoginFormValues';
 
-export interface LoginFormValuesType {
-  email: string;
-  password: string;
-}
-
-export const loginFormInitialValues: LoginFormValuesType = {
+export const initialValuesLogin: ILoginFormValues = {
   email: '',
   password: '',
 };
 
-export const loginformValidatorSchema = Yup.object({
+export const loginValidationSchema = Yup.object({
   email: Yup.string()
     .email('El correo electrónico no es válido')
     .required('El correo es obligatorio'),
-  password: Yup.string()
+    password: Yup.string()
     .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .required('La contraseña es obligatoria'),
 });

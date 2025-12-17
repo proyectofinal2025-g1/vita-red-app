@@ -7,12 +7,30 @@ import {
 } from '@/validators/registerSchema';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  getPasswordStrength,
+  getPasswordStrengthLabel,
+} from '@/utils/passwordStrength';
 
 export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+
+  // Dentro de RegisterPage()
+  const getPasswordColor = (strength: string) => {
+    switch (strength) {
+      case 'weak':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'strong':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-300';
+    }
+  };
 
   const formik = useFormik({
     initialValues: registerFormInitialValues,
@@ -74,7 +92,7 @@ export default function RegisterPage() {
   });
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4'>
+    <div className='min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-blue-100 p-4'>
       <div className='w-full max-w-md'>
         <div className='bg-white rounded-2xl shadow-xl p-8 border border-blue-200'>
           <div className='text-center mb-8'>
@@ -132,7 +150,7 @@ export default function RegisterPage() {
                 id='last_name'
                 name='last_name'
                 type='text'
-                placeholder='Pérez'
+                placeholder='Perez'
                 className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
                   formik.touched.last_name && formik.errors.last_name
                     ? 'border-red-500 focus:ring-red-500'
@@ -281,6 +299,34 @@ export default function RegisterPage() {
               )}
             </div>
 
+            {/* Fortaleza de la contraseña */}
+            {formik.values.password &&
+              (() => {
+                const strength = getPasswordStrength(formik.values.password);
+                const color = getPasswordColor(strength);
+                const label = getPasswordStrengthLabel(strength);
+                const width =
+                  strength === 'weak'
+                    ? '33%'
+                    : strength === 'medium'
+                    ? '66%'
+                    : '100%';
+
+                return (
+                  <div className='mt-2'>
+                    <div className='w-full h-2 bg-gray-200 rounded-full overflow-hidden'>
+                      <div
+                        className={`h-full ${color} transition-all duration-300`}
+                        style={{ width }}
+                      />
+                    </div>
+                    <p className='text-sm mt-1 text-gray-600'>
+                      Fortaleza: <span className='font-medium'>{label}</span>
+                    </p>
+                  </div>
+                );
+              })()}
+
             {/* Confirm Password */}
             <div className='relative'>
               <label
@@ -365,7 +411,7 @@ export default function RegisterPage() {
             <button
               type='submit'
               disabled={formik.isSubmitting}
-              className='w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed'
+              className='w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed'
             >
               {formik.isSubmitting ? 'Registrando...' : 'Registrar'}
             </button>

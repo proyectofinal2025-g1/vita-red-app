@@ -1,17 +1,14 @@
-// src/components/Navbar.tsx (o donde tengas este componente)
-
 'use client';
 
 import { navItems } from '@/utils/navItems';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext'; // Asegúrate que esta ruta sea correcta
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
 
-  // Asegúrate que useAuth devuelva la estructura correcta de dataUser
   const { dataUser, logout } = useAuth();
 
   const [isVisible, setIsVisible] = useState(true);
@@ -66,16 +63,16 @@ export const Navbar = () => {
             })}
 
             <div>
-              {!dataUser?.token ? (
+              {!dataUser ? (
                 <div className='hidden md:flex items-center gap-10'>
-                  {/* Cambiado a /auth/login */}
+
                   <Link
                     href='/auth/login'
                     className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Iniciar sesión
                   </Link>
-                  {/* Cambiado a /auth/register */}
+
                   <Link
                     href='/auth/register'
                     className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
@@ -86,14 +83,12 @@ export const Navbar = () => {
               ) : (
                 <div>
                   <Link href='/profile' className='text-bone font-bold'>
-                    {dataUser.user.name}
+                    {dataUser.user?.first_name} {dataUser.user?.last_name}
                   </Link>
-                  <Link href='/'>
-                    {' '}
-                    {/* O a donde quieras redirigir después de logout */}
+                  <Link href='/auth/login'>
                     <button
                       onClick={logout}
-                      className='text-white hover:bg-cyan-800 px-3 py-1 rounded-3xl ml-15 transition cursor-pointer'
+                      className='text-white font-bold hover:bg-cyan-800 px-3 py-1 rounded-3xl transition cursor-pointer'
                     >
                       Cerrar sesión
                     </button>
@@ -118,19 +113,19 @@ export const Navbar = () => {
             </Link>
           ))}
 
-          {!dataUser?.token ? (
+          {!dataUser ? (
             <div className='flex flex-col items-center gap-2'>
-              {/* Cambiado a /auth/login */}
+
               <Link
                 href='/auth/login'
-                className='text-white px-3 py-2 rounded-3xl hover:text-white mb-2'
+                className='text-white font-bold px-3 py-2 rounded-3xl hover:text-white mb-2'
               >
                 Iniciar sesión
               </Link>
-              {/* Cambiado a /auth/register */}
+
               <Link
                 href='/auth/register'
-                className='text-white px-3 py-2 rounded-3xl hover:text-white mb-2'
+                className='text-white font-bold px-3 py-2 rounded-3xl hover:text-white mb-2'
               >
                 Registrarse
               </Link>
@@ -142,11 +137,11 @@ export const Navbar = () => {
                 onClick={() => setOpenMenu(false)}
                 className=' text-white font-bold hover:text-cyan-800'
               >
-                {dataUser.user.name}
+                {dataUser.user?.first_name} {dataUser.user?.last_name}
               </Link>
               <button
                 onClick={logout}
-                className='text-white px-3 py-1 rounded-3xl mb-3 hover:bg-cyan-800 transition cursor-pointer'
+                className='text-white font-bold px-3 py-1 rounded-3xl mb-3 hover:bg-cyan-800 transition cursor-pointer'
               >
                 Cerrar sesión
               </button>
