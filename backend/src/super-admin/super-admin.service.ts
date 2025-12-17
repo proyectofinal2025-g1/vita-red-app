@@ -1,24 +1,39 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { SuperAdminRepository } from './super-admin.repository';
+import { RolesEnum } from '../user/enums/roles.enum';
 
 @Injectable()
 export class SuperAdminService {
-  create(createSuperAdminDto) {
-    return 'This action adds a new superAdmin';
+  constructor(private readonly super_adminRepository: SuperAdminRepository) { }
+
+  async findAll(role?: RolesEnum, isActive?: boolean) {
+    return await this.super_adminRepository.findAll(role, isActive)
   }
 
-  findAll() {
-    return `This action returns all superAdmin`;
+  async updateActive(id: string) {
+    const userFound = await this.super_adminRepository.findOne(id)
+    if (!userFound) {
+      throw new NotFoundException(`User with id: ${id} not found.`)
+    } else if (userFound.role === RolesEnum.SuperAdmin) {
+      throw new ForbiddenException('You cannot disable a super admin')
+    }
+    userFound.is_active = !userFound.is_active
+    await this.super_adminRepository.update(userFound)
+    return !userFound.is_active ? 'User successfully deactivated' : 'User successfully activated'
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} superAdmin`;
+  async updateRole(id: string, role: RolesEnum) {
+    const userFound = await this.super_adminRepository.findOne(id)
+    if (!userFound) {
+      throw new NotFoundException(`User with id: ${id} not found.`)
+    } else if (userFound.role === RolesEnum.SuperAdmin) {
+      throw new ForbiddenException('You cannot change the role of a super admin')
+    }else if(role === RolesEnum.SuperAdmin){
+      throw new ForbiddenException('You cannot assign this role')
+    }
+    userFound.role = role;
+    await this.super_adminRepository.update(userFound)
+    return `The user: ${userFound.email} now has the role of: ${userFound.role}`
   }
 
-  update(id: number, updateSuperAdminDto) {
-    return `This action updates a #${id} superAdmin`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} superAdmin`;
-  }
 }

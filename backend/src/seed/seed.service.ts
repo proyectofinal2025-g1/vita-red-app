@@ -1,4 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
 
 import seedData from './data/seeder.json';
 import { UserService } from '../user/user.service';
@@ -6,7 +8,7 @@ import { UserRepository } from '../user/user.repository';
 import { DoctorService } from '../doctor/doctor.service';
 import { SpecialityService } from '../speciality/speciality.service';
 import { RolesEnum } from '../user/enums/roles.enum';
-import * as bcrypt from 'bcrypt';
+import { Doctor } from '../doctor/entities/doctor.entity';
 import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -32,6 +34,7 @@ export class SeederService {
   private readonly logger = new Logger(SeederService.name);
 
   constructor(
+    private readonly dataSource: DataSource,
     private readonly userService: UserService,
     private readonly userRepository: UserRepository,
     private readonly doctorService: DoctorService,
@@ -62,7 +65,7 @@ export class SeederService {
   }
 
   async run(): Promise<void> {
-    this.logger.log(' Iniciando seed de doctores...');
+    this.logger.log('Iniciando seed de doctores...');
 
     for (const seed of seedData as Seeder[]) {
       try {
@@ -72,8 +75,9 @@ export class SeederService {
 
         let user = await this.userRepository.findByEmail(seed.user.email);
 
-        const hashedPassword = await bcrypt.hash(seed.user.password, 10);
         if (!user) {
+          const hashedPassword = await bcrypt.hash(seed.user.password, 10);
+
           const userId = await this.userService.create({
             email: seed.user.email,
             password: hashedPassword,
@@ -100,24 +104,33 @@ export class SeederService {
           user = await this.userRepository.findById(user.id);
         }
 
-        if (!user) {
-          throw new Error(
-            `User not found or not created for email: ${seed.user.email}`,
+        const validUser = user;
+
+        const doctorExists = await this.dataSource
+          .getRepository(Doctor)
+          .findOne({
+            where: { licence_number: seed.doctor.licence_number },
+          });
+
+        if (doctorExists) {
+          this.logger.log(
+            `Doctor ya existente (seed skip): ${seed.user.first_name} ${seed.user.last_name} | ${seed.speciality} | ${seed.doctor.licence_number}`,
           );
+          continue;
         }
 
         await this.doctorService.create({
           licence_number: seed.doctor.licence_number,
-          user_id: user.id,
+          user_id: user!.id,
           speciality_id: speciality.id,
         });
 
         this.logger.log(
-          ` Doctor ${seed.doctor.licence_number} cargado correctamente`,
+          `Doctor ${seed.doctor.licence_number} cargado correctamente`,
         );
       } catch (error) {
-        this.logger.warn(
-          ` No se pudo cargar el doctor ${seed.doctor.licence_number}: ${error.message}`,
+        this.logger.error(
+          `Error al procesar doctor ${seed.doctor.licence_number}: ${error.message}`,
         );
       }
     }

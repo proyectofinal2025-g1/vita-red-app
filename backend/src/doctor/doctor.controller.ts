@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   UseGuards,
   Req,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -40,7 +41,7 @@ export class DoctorController {
   @UseGuards(AuthGuard, RolesGuard)
   @Post()
   async create(@Body() dto: CreateDoctorDto) {
-    return this.doctorService.create({
+    return await this.doctorService.create({
       licence_number: dto.licence_number,
       user_id: dto.user_id,
       speciality_id: dto.speciality_id,
@@ -51,9 +52,15 @@ export class DoctorController {
   @ApiOkResponse({ type: [DoctorResponseDto] })
   @Get()
   async findAll() {
-    return this.doctorService.findAll();
+    return await this.doctorService.findAll();
   }
-
+  
+  @Get('search')
+  @ApiOkResponse({ type: DoctorResponseDto })
+  async findByDoctorName(@Query('name') name: string ){
+    return await this.doctorService.findByDoctorName(name)
+  }
+  
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Obtener el perfil del médico logueado' })
   @ApiOkResponse({ type: DoctorResponseDto })
@@ -61,7 +68,7 @@ export class DoctorController {
   @UseGuards(AuthGuard, RolesGuard)
   @Get('me')
   async meDoctor(@Req() req: any) {
-    return this.doctorService.findMeDoctor(req.user);
+    return await this.doctorService.findMeDoctor(req.user);
   }
 
   @ApiBearerAuth()
@@ -71,8 +78,12 @@ export class DoctorController {
   @UseGuards(AuthGuard, RolesGuard)
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.doctorService.findOne(id);
+    return await this.doctorService.findOne(id);
   }
+  
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: 'Buscar un médico' })
+  // @UseGuards(AuthGuard, RolesGuard)
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar un médico' })
