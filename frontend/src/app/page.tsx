@@ -1,3 +1,5 @@
+import CarrouselHome from "@/components/CarrouselHome";
+import SectionOneTwoHome from "@/components/SectionOneTwoHome";
 import Image from "next/image";
 
 export default function Home() {
@@ -22,114 +24,18 @@ export default function Home() {
             prioridad.
           </p>
 
-          <button className="text-2xl cursor-pointer rounded-xl bg-blue-500 px-6 py-3 hover:bg-blue-600 transition">
+          <button className="text-2xl cursor-pointer rounded-xl bg-blue-400 px-6 py-3 hover:bg-blue-600 transition">
             Sacar turno
           </button>
         </div>
       </section>
+      <SectionOneTwoHome />
 
       <section className="mt-20 px-6">
         <h2 className="text-center text-3xl font-semibold mb-10">
           Nuestras especialidades
         </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 place-items-center">
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/Cardiologia.jpg"
-              width={250}
-              height={260}
-              alt="Cardiologia"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Cardiología</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/cirugia-general.webp"
-              width={250}
-              height={260}
-              alt="Cirugia General"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Cirugía General</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/diagnostico_por_imagenes.jpg"
-              width={250}
-              height={260}
-              alt="Diagnostico por Imagenes"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Diagnóstico por Imágenes</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/medico-bebe.jpg"
-              width={250}
-              height={260}
-              alt="Pediatria"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Pediatría</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/medico-clinico.jpg"
-              width={250}
-              height={260}
-              alt="Medico Clinico"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Médico Clínico</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/nutricion.jpg"
-              width={250}
-              height={260}
-              alt="Nutricion"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Nutrición</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/oftalmología.jpg"
-              width={250}
-              height={260}
-              alt="Oftalmologia"
-              className="rounded-xl shadow-md"
-            />
-            <p className="mt-2 font-medium">Oftalmología</p>
-          </div>
-
-          <div className="text-center hover:scale-110 transition duration-400">
-            <Image
-              src="/rehabilitacion.jpg"
-              width={250}
-              height={260}
-              alt="Rehabilitacion"
-              className="rounded-xl shadow-md"
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/8 px-5 transition-colors hover:border-transparent hover:bg-black/4 dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+        <CarrouselHome />
       </section>
     </>
   );
