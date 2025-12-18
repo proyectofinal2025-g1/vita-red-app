@@ -58,7 +58,7 @@ export default function CarrouselHome() {
 
     <Link
       href="/especialidades"
-      className="pointer-events-auto text-2xl cursor-pointer rounded-xl bg-blue-500 px-6 py-3 hover:bg-blue-600 transition"
+      className="pointer-events-auto text-2xl cursor-pointer rounded-xl bg-blue-400 px-6 py-3 hover:bg-blue-600 transition"
     >
       Conocé más
     </Link>
