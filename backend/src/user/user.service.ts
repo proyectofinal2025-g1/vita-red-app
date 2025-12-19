@@ -14,16 +14,21 @@ export class UserService {
   ) { }
 
   async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
-    const userExist = await this.userRepository.findByEmail(user.email)
-    const userExistByDni = await this.userRepository.findByDni(user.dni)
-    if (userExist) {
-      throw new BadRequestException('The email is already in use.')
-    }else if(userExistByDni) {
-      throw new BadRequestException('The dni is already in use.')
+    try {
+      const userExist = await this.userRepository.findByEmail(user.email)
+      const userExistByDni = await this.userRepository.findByDni(user.dni)
+      if (userExist) {
+        throw new BadRequestException('The email is already in use.')
+      }else if(userExistByDni) {
+        throw new BadRequestException('The dni is already in use.')
+      }
+      const userCreate = await this.userRepository.create(user)
+      await this.notificationService.sendWelcomeNotification(user.email, user.first_name)
+      await new Promise(resolve => setTimeout(resolve, 500))
+      return userCreate
+    } catch (error) {
+      throw new InternalServerErrorException('Error creating user: ' + error.message)
     }
-    const userCreate = await this.userRepository.create(user)
-    await this.notificationService.sendWelcomeNotification(user.email, user.first_name)
-    return userCreate
   }
 
   async findAll() {
