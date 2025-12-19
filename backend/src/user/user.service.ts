@@ -3,12 +3,14 @@ import { User } from './entities/user.entity';
 import { UserRepository } from './user.repository';
 import bcrypt from 'bcrypt'
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly cloudinaryService: CloudinaryService
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly notificationService: NotificationService
   ) { }
 
   async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
@@ -19,7 +21,9 @@ export class UserService {
     }else if(userExistByDni) {
       throw new BadRequestException('The dni is already in use.')
     }
-    return await this.userRepository.create(user)
+    const userCreate = await this.userRepository.create(user)
+    await this.notificationService.sendWelcomeNotification(user.email, user.first_name)
+    return userCreate
   }
 
   async findAll() {

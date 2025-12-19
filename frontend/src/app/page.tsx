@@ -1,4 +1,5 @@
 import CarrouselHome from "@/components/CarrouselHome";
+import SectionOneTwoHome from "@/components/SectionOneTwoHome";
 import Image from "next/image";
 
 export default function Home() {
@@ -23,11 +24,12 @@ export default function Home() {
             prioridad.
           </p>
 
-          <button className="text-2xl cursor-pointer rounded-xl bg-blue-500 px-6 py-3 hover:bg-blue-600 transition">
+          <button className="text-2xl cursor-pointer rounded-xl bg-blue-400 px-6 py-3 hover:bg-blue-600 transition">
             Sacar turno
           </button>
         </div>
       </section>
+      <SectionOneTwoHome />
 
       <section className="mt-20 px-6">
         <h2 className="text-center text-3xl font-semibold mb-10">

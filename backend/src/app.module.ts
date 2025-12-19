@@ -13,6 +13,7 @@ import { SeederService } from './seed/seed.service';
 import { SeedModule } from './seed/seed.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
+import { NotificationModule } from './notification/notification.module';
 
 dotenvConfig({ path: './.env.development' })
 
@@ -36,7 +37,7 @@ dotenvConfig({ path: './.env.development' })
         }
         return typeormConfig
       }
-    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule, SpecialityModule, DoctorModule, SeedModule, SuperAdminModule],
+    }), UserModule, secretaryModule,  AuthModule, CloudinaryModule, SpecialityModule, DoctorModule, SeedModule, SuperAdminModule, NotificationModule],
   controllers: [],
   providers: [],
 }) 
