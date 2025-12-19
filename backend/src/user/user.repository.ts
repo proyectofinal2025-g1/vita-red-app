@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class UserRepository {
@@ -29,6 +29,10 @@ export class UserRepository {
 
     async findById(id: string) {
         return await this.userRepository.findOneBy({ id })
+    }
+
+    async findByName(name: string){
+        return await this.userRepository.find({where: {first_name:  ILike(`%${name}%`)}})
     }
 
     async update(id: string, updateUser: Partial<User>) {
