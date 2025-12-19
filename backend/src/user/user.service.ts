@@ -4,6 +4,8 @@ import { UserRepository } from './user.repository';
 import bcrypt from 'bcrypt'
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { NotificationService } from '../notification/notification.service';
+import { RolesEnum } from './enums/roles.enum';
+import { UserResponse } from './dto/user-response.dto';
 
 @Injectable()
 export class UserService {
@@ -34,6 +36,13 @@ export class UserService {
     const user = await this.userRepository.findById(id)
     if (!user) throw new NotFoundException('User not Found')
     return user;
+  }
+
+  async findByName(name: string) :Promise<UserResponse[]>{
+    const listUsersName = await this.userRepository.findByName(name)
+    if (listUsersName.length === 0) throw new NotFoundException('User not Found')
+    
+      return listUsersName.map(({password, ...users})=>users)
   }
 
   async update(id: string, user: Partial<User>) {

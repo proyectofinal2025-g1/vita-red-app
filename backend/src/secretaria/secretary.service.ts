@@ -22,7 +22,7 @@ export class SecretaryService {
   async findAll(filters: {
     role?: RolesEnum;
     is_active?: boolean;
-  }) {
+  }) :Promise<UserResponse[]> {
     const where: FindOptionsWhere<User> = {};
 
     if (filters.role) {
@@ -33,7 +33,8 @@ export class SecretaryService {
       where.is_active = filters.is_active;
     }
 
-    return this.userRepository.find({ where });
+    const listUser = await this.userRepository.find({ where });
+    return listUser.map(({password, ...user})=> user)
   }
 
 
@@ -42,16 +43,13 @@ export class SecretaryService {
     if (!userFound) {
       throw new NotFoundException('ID not found')
     }
-    return userFound
+    const {password, ...userWithoutPassword} = userFound
+    return userWithoutPassword
   }
 
-
-  async update(id: string, updateUserDto: any) {
-    return await this.userService.update(id, updateUserDto);
-  }
-
-  async disable(id: string) {
-    return await this.userService.disable(id)
+  async getPatientByName(name: string){
+    const listUser = await this.userService.findByName(name)
+    return listUser.filter(user => user.role === RolesEnum.User)
   }
 
 
@@ -76,11 +74,14 @@ export class SecretaryService {
     };
   }
 
-  async updatePatient(id: string, updateUserDto: UpdateUserDto) {
-    return await this.userService.update(id, updateUserDto)
+
+  async update(id: string, updateUserDto: Partial<User>) {
+    return await this.userService.update(id, updateUserDto);
   }
 
-  async deletePatient(id: string) {
+  async disable(id: string) {
     return await this.userService.disable(id)
   }
+
+
 }
