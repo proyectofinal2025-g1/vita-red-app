@@ -3,6 +3,9 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
+    "assets": [
+      "src/notification/mail/templates/**/*"
+    ],
     "deleteOutDir": true,
     "plugins": [
       {
