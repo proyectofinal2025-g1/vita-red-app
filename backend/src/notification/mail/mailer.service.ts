@@ -32,7 +32,7 @@ export class MailerService {
                 subject,
                 html
             })
-
+            console.log("Correo enviado");
         } catch (error) {
             throw new Error(`Error sending email: ${error.message}`)
         }

@@ -9,5 +9,6 @@ import { MailerService } from './mail/mailer.service';
   imports: [TypeOrmModule.forFeature([Notification])],
   controllers: [],
   providers: [NotificationService, NotificationRepository, MailerService],
+  exports: [NotificationService]
 })
 export class NotificationModule {}
