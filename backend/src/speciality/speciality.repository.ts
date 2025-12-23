@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Speciality } from './entities/speciality.entity';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class SpecialityRepository {
@@ -49,7 +49,7 @@ export class SpecialityRepository {
 
   async findByNameWithDoctors(name: string) {
     return await this.specialityRepository.findOne({
-      where: { name, isActive: true },
+      where: { name: ILike(`%${name}%`), isActive: true },
       relations: ['doctor', 'doctor.user'],
     });
   }

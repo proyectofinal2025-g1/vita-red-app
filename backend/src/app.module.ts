@@ -1,6 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { UserModule } from './user/user.module';
-import { secretaryModule } from './secretaria/secretary.module';
+import { secretaryModule } from './secretary/secretary.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import typeorm from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
