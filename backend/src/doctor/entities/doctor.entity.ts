@@ -1,7 +1,8 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { User } from "../../user/entities/user.entity";
 import { ApiProperty } from "@nestjs/swagger";
 import { Speciality } from "../../speciality/entities/speciality.entity";
+import { MedicalRecord } from "../../medical-record/entities/medical-record.entity";
 
 @Entity({ name: 'doctor'})
 export class Doctor {
@@ -27,4 +28,8 @@ export class Doctor {
   @ApiProperty()
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  @ApiProperty()
+  @OneToMany(()=> MedicalRecord, (medical_record)=> medical_record.doctor)
+  medical_records: MedicalRecord[]
 }

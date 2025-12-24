@@ -1,17 +1,20 @@
-import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseEnumPipe, ParseUUIDPipe, Patch, Post, Query } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseEnumPipe, ParseUUIDPipe, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiQuery } from "@nestjs/swagger";
 import { RolesEnum } from "../user/enums/roles.enum";
 import { SecretaryService } from "./secretary.service";
 import { User } from "../user/entities/user.entity";
 import { CreateUserDto } from "../user/dto/create-user.dto";
 import { CreateDoctorDto } from "../doctor/dto/create-doctor.dto";
+import { Roles } from "../decorators/role.decorator";
+import { AuthGuard } from "../auth/guards/auth.guard";
+import { RolesGuard } from "../auth/guards/roles.guard";
 
 @Controller('secretary')
 export class SecretaryController {
     constructor(private readonly secretaryService: SecretaryService) { }
 
-
-      /* TODOS LOS USUARIOS */
+/* PROBANDOO */
+    
     @ApiOperation({
         summary: 'Obtener todos los usuarios',
         description:
@@ -27,6 +30,8 @@ export class SecretaryController {
         required: false,
         type: Boolean,
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary, RolesEnum.Medic)
+    @UseGuards(AuthGuard, RolesGuard)
     @Get()
     async findAll(
         @Query('role', new ParseEnumPipe(RolesEnum, { optional: true })) role?: RolesEnum,
@@ -40,6 +45,8 @@ export class SecretaryController {
         description:
             'Devuelve el usuario buscado por su ID'
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary, RolesEnum.Medic)
+    @UseGuards(AuthGuard, RolesGuard)
     @Get(':id/')
     async findOne(@Param('id', ParseUUIDPipe) id: string) {
         return await this.secretaryService.findOne(id);
@@ -63,6 +70,8 @@ export class SecretaryController {
         type: 'string',
         required: false,
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary, RolesEnum.Medic)
+    @UseGuards(AuthGuard, RolesGuard)
     @Get('patient/name/')
     async getPatientByName(
         @Query('first_name') first_name?: string,
@@ -77,6 +86,8 @@ export class SecretaryController {
         description:
             'Filtrar la búsqueda de pacientes por dni'
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary, RolesEnum.Medic)
+    @UseGuards(AuthGuard, RolesGuard)
     @Get('patient/dni/:dni')
     async getPatientByDni(@Param('dni') dni: string) {
         return await this.secretaryService.getPatientByDni(dni)
@@ -88,6 +99,8 @@ export class SecretaryController {
         description:
             'Crea y guarda en la base de datos un usuario nuevo'
     })
+   // @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+   // @UseGuards(AuthGuard, RolesGuard)
     @Post('patient')
     async createPatient(@Body() registerDto: CreateUserDto) {
         return await this.secretaryService.createPatient(registerDto)
@@ -99,6 +112,8 @@ export class SecretaryController {
         description:
             'Actualiza el perfil de un usuario por su ID'
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
     @Patch('patient/:id')
     async updatePatient(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserDto: User) {
         return await this.secretaryService.updatePatient(id, updateUserDto);
@@ -110,6 +125,8 @@ export class SecretaryController {
         description:
             'Cambia el estado de un usuario(solamente paciente) a "inactivo"'
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
     @Delete('patient/:id')
     async disablePatient(@Param('id', ParseUUIDPipe) id: string) {
         return await this.secretaryService.disablePatient(id);
@@ -124,6 +141,8 @@ export class SecretaryController {
         description:
             'Crea y guarda en la base de datos un doctor nuevo'
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
     @Post('Doctor')
     async createDoctor(@Body() createDoctor: CreateDoctorDto) {
         return await this.secretaryService.createDoctor(createDoctor)
@@ -138,6 +157,8 @@ export class SecretaryController {
         type: 'string',
         required: false,
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
     @Get('Doctor/:name')
     async getDoctors(
         @Query('doctorName') name?: string
@@ -160,6 +181,8 @@ export class SecretaryController {
         description:
             'Cambia el estado de un médico a "inactivo"'
     })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
     @Delete('Doctor')
     async disableDoctor(id: string) {
         return await this.secretaryService.disableDoctor(id)

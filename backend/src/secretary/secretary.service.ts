@@ -3,22 +3,21 @@ import { UserService } from "../user/user.service";
 import { DoctorService } from '../doctor/doctor.service';
 import * as bcrypt from 'bcrypt';
 import { User } from "../user/entities/user.entity";
-import { SecretaryRepository } from "./secretary.repository";
 import { InjectRepository } from "@nestjs/typeorm";
 import { FindOptionsWhere, ILike, Repository } from "typeorm";
 import { RolesEnum } from "../user/enums/roles.enum";
 import { UserResponse } from "../user/dto/user-response.dto";
 import { CreateDoctorDto } from "../doctor/dto/create-doctor.dto";
-import { Speciality } from "../speciality/entities/speciality.entity";
 import { Doctor } from "../doctor/entities/doctor.entity";
 import { DoctorFindResponseDto } from "../doctor/dto/doctor-find-response.dto";
 import { SpecialityService } from "../speciality/speciality.service";
+import { DoctorResponseDto } from "../doctor/dto/doctor-response.dto";
+import { Speciality } from "../speciality/entities/speciality.entity";
 
 
 @Injectable()
 export class SecretaryService {
   constructor(
-    private readonly secretaryRepository: SecretaryRepository,
     private readonly userService: UserService,
     private readonly doctorService: DoctorService,
     private readonly specialityService: SpecialityService,
@@ -60,7 +59,7 @@ export class SecretaryService {
 
         /* PATIENTS  */
 
-  async getPatientByName(first_name?: string, last_name?: string){
+  async getPatientByName(first_name?: string, last_name?: string):Promise<UserResponse[]>{
     const listUser = await this.userService.findByName(first_name, last_name)
     return listUser.filter(user => user.role === RolesEnum.User)
   }
@@ -104,11 +103,11 @@ export class SecretaryService {
 
           /*  DOCTOR   */
 
-  async createDoctor(createDoctor: CreateDoctorDto){
+  async createDoctor(createDoctor: CreateDoctorDto) :Promise<DoctorResponseDto>{
     return await this.doctorService.create(createDoctor)
   }
 
-async getDoctors(name?: string) {
+async getDoctors(name?: string) :Promise<DoctorFindResponseDto[]>{
   if(name){
     const foundDoctor = await this.doctorService.findByDoctorName(name)
     if(!foundDoctor) throw new NotFoundException('Not found doctor')
@@ -142,7 +141,7 @@ async disableDoctor(id: string){
 
 
     /* SPECIALITYS  */
-async getSpecialitys (nameSpeciality?: string){
+async getSpecialitys (nameSpeciality?: string) {
   if (nameSpeciality){ return await this.specialityService.findByNameWithDoctors(nameSpeciality)}
   return await this.specialityService.findAll()
 }

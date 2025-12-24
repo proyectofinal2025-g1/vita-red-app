@@ -50,7 +50,6 @@ export class UserService {
   }
 
     async findByDni(dni: string) :Promise<UserResponse>{
-          console.log('DNI recibido:', `[${dni}]`);
     const userFound = await this.userRepository.findByDni(dni)
     if (!userFound) throw new NotFoundException('User not Found')
     
