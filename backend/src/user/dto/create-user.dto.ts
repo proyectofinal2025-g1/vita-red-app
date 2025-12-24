@@ -58,10 +58,4 @@ export class CreateUserDto {
   dni: string;
 
 
-  @ApiProperty({
-    description:
-      'Indica si el usuario está activo en la aplicación (no se permite definirlo manualmente)',
-    example: false,})
-  @IsEmpty()
-  is_active: boolean;
 }
