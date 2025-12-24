@@ -1,6 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { UserModule } from './user/user.module';
-import { secretaryModule } from './secretaria/secretary.module';
+import { secretaryModule } from './secretary/secretary.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import typeorm from './config/typeorm';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -16,6 +16,8 @@ import { SuperAdminModule } from './super-admin/super-admin.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PaymentsModule } from './payments/payments.module';
+import { NotificationModule } from './notification/notification.module';
+import { MedicalRecordModule } from './medical-record/medical-record.module';
 
 dotenvConfig({ path: './.env.development' });
 
@@ -49,6 +51,8 @@ dotenvConfig({ path: './.env.development' });
     DoctorModule,
     SeedModule,
     SuperAdminModule,
+    NotificationModule,
+    MedicalRecordModule,
     AppointmentsModule,
     PaymentsModule,
   ],

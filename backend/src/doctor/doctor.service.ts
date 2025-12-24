@@ -74,9 +74,15 @@ export class DoctorService {
     return this.toResponseDto(created);
   }
 
-  async findAll() {
-    const list = await this.doctorRepository.findAll();
-    return list.map((doctor) => this.toResponseDto(doctor));
+  async findAll():Promise<DoctorFindResponseDto[]> {
+    const listDoctors = await this.doctorRepository.findAll();
+    
+    return listDoctors.map((doctor) => ({
+    id: doctor.id,
+    fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
+    speciality: doctor.speciality.name,
+    licence_number: doctor.licence_number,
+  }));
   }
 
   async findOne(id: string) {
@@ -87,6 +93,16 @@ export class DoctorService {
 
     return this.toResponseDto(doctor);
   }
+
+  /* necesito q devuelva la entidad para la relaciones en medical-records*/
+  async findyById(id: string): Promise<Doctor> {
+  const doctor = await this.doctorRepository.findOne(id);
+  if (!doctor) {
+    throw new NotFoundException(`Doctor with id ${id} not found`);
+  }
+  return doctor;
+}
+
 
   async findByDoctorName(name: string): Promise<DoctorFindResponseDto[]> {
   const doctors = await this.doctorRepository.findByDoctorName(name);

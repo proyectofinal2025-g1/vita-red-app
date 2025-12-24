@@ -1,7 +1,7 @@
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { RolesEnum } from "../enums/roles.enum";
-import { Secretary } from "../../secretaria/entities/secretary.entity";
 import { Doctor } from "../../doctor/entities/doctor.entity";
+import { MedicalRecord } from "../../medical-record/entities/medical-record.entity";
 
 @Entity({ name: 'users' })
 export class User {
@@ -32,18 +32,12 @@ export class User {
     @Column({ type: 'enum', enum: RolesEnum, default: RolesEnum.User })
     role: RolesEnum
 
+    @OneToMany(()=> MedicalRecord, (medical_record) => medical_record.patient)
+    medical_records: MedicalRecord[]
+
     @Column({type:'boolean', default: true})
     is_active: boolean;
 
     @OneToOne(() => Doctor, (doctor) => doctor.user, { nullable: true })
     doctor?: Doctor;
-
-    /*@OneToOne(() => Patient, (patient) => patient.user, { nullable: true })
-    patient?: Patient;*/
-
-    @OneToOne(() => Secretary, (secretary) => secretary.user, { nullable: true })
-    secretary?: Secretary;
-
-    /*@OneToOne(() => Admin, (admin) => admin.user, { nullable: true })
-    admin?: Admin;*/
 }
