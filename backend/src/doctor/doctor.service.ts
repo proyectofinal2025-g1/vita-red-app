@@ -94,6 +94,16 @@ export class DoctorService {
     return this.toResponseDto(doctor);
   }
 
+  /* necesito q devuelva la entidad para la relaciones en medical-records*/
+  async findyById(id: string): Promise<Doctor> {
+  const doctor = await this.doctorRepository.findOne(id);
+  if (!doctor) {
+    throw new NotFoundException(`Doctor with id ${id} not found`);
+  }
+  return doctor;
+}
+
+
   async findByDoctorName(name: string): Promise<DoctorFindResponseDto[]> {
   const doctors = await this.doctorRepository.findByDoctorName(name);
 
