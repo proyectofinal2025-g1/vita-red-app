@@ -13,7 +13,7 @@ export class UserRepository {
     }
 
 
-    async create(createUser: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
+    async create(createUser: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni' | 'profileImageUrl'>) {
         const userCreate = await this.userRepository.create(createUser)
         const userSave = await this.userRepository.save(userCreate)
         return userSave.id

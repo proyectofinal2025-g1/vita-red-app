@@ -15,6 +15,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 interface Seeder {
   user: {
+    profileImageUrl: string;
     first_name: string;
     last_name: string;
     dni: string;
@@ -79,6 +80,7 @@ export class SeederService {
           const hashedPassword = await bcrypt.hash(seed.user.password, 10);
 
           const userId = await this.userService.create({
+            profileImageUrl:seed.user.profileImageUrl,
             email: seed.user.email,
             password: hashedPassword,
             first_name: seed.user.first_name,
@@ -125,9 +127,9 @@ export class SeederService {
           speciality_id: speciality.id,
         });
 
-        this.logger.log(
-          `Doctor ${seed.doctor.licence_number} cargado correctamente`,
-        );
+        // this.logger.log(
+        //   `Doctor ${seed.doctor.licence_number} cargado correctamente`,
+        // );
       } catch (error) {
         this.logger.error(
           `Error al procesar doctor ${seed.doctor.licence_number}: ${error.message}`,
