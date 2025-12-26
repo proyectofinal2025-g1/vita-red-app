@@ -11,40 +11,28 @@ export const AuthContext = createContext<IAuthContextProps>({
   logout: () => {},
 });
 
-// Función auxiliar para leer desde localStorage de forma segura
-const getUserFromLocalStorage = (): IUserSession | null => {
-  if (typeof window === 'undefined') return null;
-  const userInfo = localStorage.getItem('userSession');
-  if (!userInfo) return null;
-  try {
-    return JSON.parse(userInfo);
-  } catch {
-    console.warn('Error parsing userSession from localStorage');
-    return null;
-  }
-};
-
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
-  // Inicializa el estado directamente desde localStorage
-  const [dataUser, setDataUser] = useState<IUserSession | null>(
-    getUserFromLocalStorage
-  );
+  const [dataUser, setDataUser] = useState<IUserSession | null>(null);
 
-  // useEffect solo para guardar (no para leer)
   useEffect(() => {
     if (dataUser) {
       localStorage.setItem('userSession', JSON.stringify(dataUser));
-    } else {
-      localStorage.removeItem('userSession');
     }
   }, [dataUser]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const userInfo = localStorage.getItem('userSession');
+      if (userInfo) {
+        setDataUser(JSON.parse(userInfo));
+      }
+    }
+  }, []);
+
   const logout = () => {
     setDataUser(null);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && window.localStorage) {
       localStorage.removeItem('userSession');
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userEmail');
     }
   };
 
