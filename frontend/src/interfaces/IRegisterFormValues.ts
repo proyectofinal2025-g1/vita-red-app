@@ -1,8 +1,9 @@
-export interface IRegisterFormValues{
-    first_name: string;
-    last_name: string;
-    dni: number;
-    email: string;
-    password: string;
-    confirmPassword: string;
+export interface IRegisterFormValues {
+  first_name: string;
+  last_name: string;
+  dni: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 }
+ 

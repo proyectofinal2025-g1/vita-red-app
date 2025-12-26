@@ -5,7 +5,7 @@ import LoginForm from "@/components/UI/LoginView"
 const LoginPage = () => {
     return (
         <div>
-            <LoginForm />
+            <LoginForm /> 
         </div>
     )
 };

@@ -18,7 +18,7 @@ export default function SpecialityList({ specialitys }: Props) {
   }, [search, specialitys]);
 
   return (
-    <>
+    <> 
       <div className="mb-10">
         <input
           type="text"

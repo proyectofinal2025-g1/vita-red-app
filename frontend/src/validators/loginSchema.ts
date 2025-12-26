@@ -7,7 +7,7 @@ export const initialValuesLogin: ILoginFormValues = {
 };
 
 export const loginValidationSchema = Yup.object({
-  email: Yup.string()
+  email: Yup.string() 
     .email('El correo electrónico no es válido')
     .required('El correo es obligatorio'),
     password: Yup.string()

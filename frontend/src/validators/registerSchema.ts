@@ -12,7 +12,7 @@ export interface RegisterFormValuesType {
 }
 
 export const registerFormInitialValues: RegisterFormValuesType = {
-  first_name: '',
+  first_name: '', 
   last_name: '',
   dni: '',
   email: '',

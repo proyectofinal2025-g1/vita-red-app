@@ -4,3 +4,4 @@ export interface IDoctor {
   speciality: string;
   licence_number: string;
 }
+ 

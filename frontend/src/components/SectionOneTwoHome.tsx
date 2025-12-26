@@ -17,7 +17,7 @@ const SectionOneTwoHome = () => {
             <h2 className="mb-6 text-3xl font-bold text-gray-800 flex justify-center">
               Quiénes somos
             </h2>
-
+ 
             <p className="mb-4 text-lg text-gray-600">
               En <span className="font-semibold text-gray-800">Vita Red</span>{" "}
               somos una clínica con más de{" "}

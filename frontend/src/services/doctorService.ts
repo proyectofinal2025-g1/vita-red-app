@@ -1,8 +1,9 @@
 import { IDoctor } from "@/interfaces/IDoctor";
+const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getAllDoctorsService = async (): Promise<IDoctor[]> => {
   try {
-    const res = await fetch("http://localhost:3000/doctor", {
+    const res = await fetch(`${apiURL}/doctor`, {
       cache: "no-store",
       method: "GET"
     });
