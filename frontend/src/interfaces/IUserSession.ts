@@ -1,13 +1,13 @@
 export interface IUserSession {
-  login: boolean;
-  token: string;
-  user: {
-    id: string; // era number antes de la actualización //
-    first_name: string; //
-    last_name: string; //
-    email: string; //
-    role: string; //
-    dni?: string; // era number antes de la actualización
-    appointments: []; //
-  };
+    login: boolean;
+    token: string;
+    user?: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        dni: number;
+        email: string;
+        appointments: [];
+        role: string;
+    };
 }
