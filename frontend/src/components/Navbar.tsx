@@ -2,14 +2,20 @@
 
 import { navItems } from '@/utils/navItems';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
-
   const { dataUser, logout } = useAuth();
+
+  // ✅ Manejo seguro de hidratación
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -27,6 +33,41 @@ export const Navbar = () => {
     window.addEventListener('scroll', controlNavbar);
     return () => window.removeEventListener('scroll', controlNavbar);
   }, [lastScrollY]);
+
+  // 👇 Skeleton durante SSR (evita mismatch)
+  if (!isClient) {
+    return (
+      <nav className='bg-blue-300 w-full z-20 top-0 start-0 border-b border-default'>
+        <div className='max-w-7xl flex items-center justify-between mx-auto p-4'>
+          <div className='flex items-center space-x-3'>
+            <Link href='/' className='flex items-center gap-2'>
+              <img src='/logo2.png' alt='Logo clinica' className='h-15 w-35' />
+            </Link>
+          </div>
+          <div className='hidden md:flex items-center gap-10 text-white'>
+            {navItems.map((item) => (
+              <span key={item.id} className='px-3 py-2 opacity-0'>
+                {item.name}
+              </span>
+            ))}
+            <span className='px-3 py-2 opacity-0'>Auth</span>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
+  // ✅ Funciones seguras para mostrar datos
+  const getDisplayName = () => {
+    if (dataUser?.user?.first_name && dataUser.user.last_name) {
+      return `${dataUser.user.first_name} ${dataUser.user.last_name}`;
+    }
+    return dataUser?.user?.email || 'Usuario';
+  };
+
+  const getRole = () => {
+    return dataUser?.user?.role || 'usuario';
+  };
 
   return (
     <nav
@@ -48,51 +89,52 @@ export const Navbar = () => {
           ☰
         </button>
 
+        {/* 👇 MENU DE ESCRITORIO */}
         <div className='hidden w-full md:block md:w-auto' id='navbar-default'>
           <div className='hidden md:flex items-center gap-10 ml-10 text-white'>
-            {navItems.map((navigationItem) => {
-              return (
-                <Link
-                  key={navigationItem.id}
-                  href={navigationItem.route}
-                  className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
-                >
-                  {navigationItem.name}
-                </Link>
-              );
-            })}
+            {navItems.map((navigationItem) => (
+              <Link
+                key={navigationItem.id}
+                href={navigationItem.route}
+                className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+              >
+                {navigationItem.name}
+              </Link>
+            ))}
 
             <div>
               {!dataUser ? (
                 <div className='hidden md:flex items-center gap-10'>
-
                   <Link
                     href='/auth/login'
-                    className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+                    className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Iniciar sesión
                   </Link>
-
                   <Link
                     href='/auth/register'
-                    className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+                    className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Registrarse
                   </Link>
                 </div>
               ) : (
-                <div>
-                  <Link href='/profile' className='text-bone font-bold'>
-                    {dataUser.user?.first_name} {dataUser.user?.last_name}
-                  </Link>
-                  <Link href='/auth/login'>
-                    <button
-                      onClick={logout}
-                      className='text-white font-bold hover:bg-cyan-800 px-3 py-1 rounded-3xl transition cursor-pointer'
-                    >
-                      Cerrar sesión
-                    </button>
-                  </Link>
+                <div className='flex flex-col md:flex-row md:items-center gap-1'>
+                  <div className='text-xs text-blue-900 font-bold space-y-0.1'>
+                    <div>Hola, bienvenid@</div>
+                    <div className='text-base text-blue-900'>
+                      {getDisplayName()}
+                    </div>
+                    <div className='text-xs text-blue-900 capitalize'>
+                      {getRole()}
+                    </div>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className='text-sm ml-2 bg-blue-600 hover:bg-red-700 text-white font-bold px-4 py-1 rounded-3xl transition cursor-pointer'
+                  >
+                    Cerrar sesión
+                  </button>
                 </div>
               )}
             </div>
@@ -100,8 +142,9 @@ export const Navbar = () => {
         </div>
       </div>
 
+      {/* 👇 MENU MÓVIL (solo visible en pantallas pequeñas) */}
       {openMenu && (
-        <div className='md:hidden bg-chocolate border-t border-default w-full flex flex-col items-center gap-4'>
+        <div className='md:hidden bg-chocolate border-t border-default w-full flex flex-col items-center gap-4 py-4'>
           {navItems.map((navigationItem) => (
             <Link
               key={navigationItem.id}
@@ -114,34 +157,39 @@ export const Navbar = () => {
           ))}
 
           {!dataUser ? (
-            <div className='flex flex-col items-center gap-2'>
-
+            <div className='flex flex-col items-center gap-2 mt-4'>
               <Link
                 href='/auth/login'
                 className='text-white font-bold px-3 py-2 rounded-3xl hover:text-white mb-2'
+                onClick={() => setOpenMenu(false)}
               >
                 Iniciar sesión
               </Link>
-
               <Link
                 href='/auth/register'
                 className='text-white font-bold px-3 py-2 rounded-3xl hover:text-white mb-2'
+                onClick={() => setOpenMenu(false)}
               >
                 Registrarse
               </Link>
             </div>
           ) : (
-            <div className='flex flex-col items-center gap-2'>
-              <Link
-                href='/profile'
-                onClick={() => setOpenMenu(false)}
-                className=' text-white font-bold hover:text-cyan-800'
-              >
-                {dataUser.user?.first_name} {dataUser.user?.last_name}
-              </Link>
+            <div className='flex flex-col items-center gap-2 mt-4'>
+              <div className='text-center text-white font-bold text-lg'>
+                Hola, bienvenid@
+                <br />
+                {getDisplayName()}
+                <br />
+                <span className='text-xs text-gray-300 capitalize'>
+                  ({getRole()})
+                </span>
+              </div>
               <button
-                onClick={logout}
-                className='text-white font-bold px-3 py-1 rounded-3xl mb-3 hover:bg-cyan-800 transition cursor-pointer'
+                onClick={() => {
+                  logout();
+                  setOpenMenu(false);
+                }}
+                className='text-white font-bold px-4 py-2 rounded-3xl mb-3 bg-red-600 hover:bg-red-700 transition cursor-pointer'
               >
                 Cerrar sesión
               </button>
