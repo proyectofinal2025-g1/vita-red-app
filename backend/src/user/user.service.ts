@@ -14,7 +14,7 @@ export class UserService {
     private readonly notificationService: NotificationService
   ) { }
 
-  async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
+  async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni' | 'profileImageUrl'>) {
     try {
       const userExist = await this.userRepository.findByEmail(user.email)
       const userExistByDni = await this.userRepository.findByDni(user.dni)
