@@ -9,5 +9,5 @@ export interface IUserSession {
     role: string; //
     dni?: string; // era number antes de la actualización
     appointments: []; //
-  };
+  }; 
 }

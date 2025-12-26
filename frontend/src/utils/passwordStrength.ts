@@ -14,7 +14,7 @@ export const getPasswordStrength = (password: string) => {
 
   // 4. Al menos un carácter especial (¡mismo conjunto que en Yup!)
   if (/[@$!%*?&#_+-]/.test(password)) strength += 1;
-
+ 
   // Evaluación
   if (strength <= 1) return 'weak'; // Rojo (solo cumple 0 o 1 regla)
   if (strength <= 2) return 'medium'; // Amarillo (cumple 2 reglas)

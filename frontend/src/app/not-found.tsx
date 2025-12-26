@@ -11,7 +11,7 @@ export default function NotFound() {
       <h1 className="text-6xl font-extrabold mb-2">404</h1>
       <h2 className="text-2xl font-semibold mb-4">
         Ups… esta página no pasó por admisión
-      </h2>
+      </h2> 
 
       <p className="max-w-md text-blue-800 mb-8">
         Revisamos la historia clínica, buscamos en todos los consultorios… pero

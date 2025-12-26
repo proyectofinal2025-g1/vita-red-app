@@ -18,7 +18,7 @@ export const decodeJWT = (token: string): JWTPayload | null => {
         .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
-    return JSON.parse(jsonPayload);
+    return JSON.parse(jsonPayload); 
   } catch (error) {
     console.error('Error al decodificar el token JWT:', error);
     return null;

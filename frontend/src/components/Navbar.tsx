@@ -121,12 +121,12 @@ export const Navbar = () => {
               ) : (
                 <div className='flex flex-col md:flex-row md:items-center gap-1'>
                   <div className='text-xs text-blue-900 font-bold space-y-0.1'>
-                    <div>Hola, bienvenid@</div>
+                    <div>Bienvenid@</div>
                     <div className='text-base text-blue-900'>
-                      {getDisplayName()}
+                      {getDisplayName() }
                     </div>
-                    <div className='text-xs text-blue-900 capitalize'>
-                      {getRole()}
+                    <div className='text-xs text-blue-900 capitalize' >
+                      {getRole() }
                     </div>
                   </div>
                   <button

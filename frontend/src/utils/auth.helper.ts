@@ -17,7 +17,7 @@ export const registerUserService = async (userData: IRegisterFormValues) => {
       password: userData.password,
       confirmPassword: userData.confirmPassword,
     }),
-  });
+  }); 
 
   const data = await response.json();
   console.log('Respuesta del backend:', data);

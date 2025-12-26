@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { SpecialityRepository } from './speciality.repository';
 import { Speciality } from './entities/speciality.entity';
-import { SpecialityResponseDto } from './dto/speciality-response.dto';
 
 @Injectable()
 export class SpecialityService {

@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     <AuthContext.Provider value={{ dataUser, setDataUser, logout }}>
       {children}
     </AuthContext.Provider>
-  );
+  ); 
 };
 
 export const useAuth = () => useContext(AuthContext);

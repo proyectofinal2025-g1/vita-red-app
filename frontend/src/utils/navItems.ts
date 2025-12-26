@@ -15,7 +15,7 @@ export const navItems = [
         id: 3,
         name: "Especialidades",
         route: PATHROUTES.SPECIALTIES,
-    },
+    }, 
     {
         id: 4,
         name: "Contacto",

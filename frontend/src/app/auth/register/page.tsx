@@ -3,7 +3,7 @@
 import RegisterForm from '@/components/UI/RegisterView';
 
 const RegisterPage = () => {
-  return (
+  return ( 
     <div>
       <RegisterForm />
     </div>

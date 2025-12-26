@@ -39,7 +39,7 @@ const LoginForm = () => {
 
         // userSession con los datos reales del token
         const userSession: IUserSession = {
-          login: true,
+          login: true, 
           token,
           user: {
             id: payload.sub, // UUID del usuario

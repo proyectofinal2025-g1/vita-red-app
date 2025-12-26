@@ -6,3 +6,4 @@ export interface IRegisterFormValues {
   password: string;
   confirmPassword: string;
 }
+ 

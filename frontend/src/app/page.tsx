@@ -11,7 +11,7 @@ export default function Home() {
           alt="imagenFondo"
           fill
           className="object-cover"
-          priority
+          priority 
         />
 
         <div className="absolute inset-0 bg-black/50"></div>

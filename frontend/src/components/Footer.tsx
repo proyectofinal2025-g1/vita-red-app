@@ -16,7 +16,7 @@ export const Footer = () => {
 
           <ul className="flex flex-wrap justify-center sm:justify-end items-center gap-4 md:gap-10 text-sm font-medium mb-2 sm:mb-0">
             <li>
-              <Link href="/" className="text-white hover:underline">Inicio</Link>
+              <Link href="/" className="text-white hover:underline">Inicio</Link> 
             </li>
             <li>
               <Link href="#" className="text-white hover:underline">Nuestra clínica</Link>
