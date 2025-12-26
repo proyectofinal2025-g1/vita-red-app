@@ -1,8 +1,7 @@
-import { ILoginFormValues } from '../interfaces/ILoginFormValues';
-import { IRegisterFormValues } from '../interfaces/IRegisterFormValues';
+import { ILoginFormValues } from "../interfaces/ILoginFormValues";
+import { IRegisterFormValues } from "../interfaces/IRegisterFormValues";
 
-const apiURL = process.env.NEXT_PUBLIC_API_URL;
-
+const apiURL = process.env.NEXT_PUBLIC_API_URL; 
 export const registerUserService = async (userData: IRegisterFormValues) => {
   const response = await fetch(`${apiURL}/auth/register`, {
     method: 'POST',
@@ -31,20 +30,22 @@ export const registerUserService = async (userData: IRegisterFormValues) => {
 };
 
 export const loginUserService = async (userData: ILoginFormValues) => {
-  const response = await fetch(`${apiURL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
-  const data = await response.json();
-  console.log('Respuesta del backend (Login):', data);
-
-  if (!response.ok) {
-    const errorMsg = data.message || data.error || 'Credenciales incorrectas';
-    throw new Error(errorMsg);
-  }
-
-  return data; // Devuelve la respuesta del backend (token + user si la hubiera)
+    try {
+        const response = await fetch (`http://localhost:3000/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(userData),
+        });
+        if (response.ok) {
+            alert("¡Inicio de sesión exitoso!")
+            return response.json();
+        } else {
+            alert("Ups no pudimos loguearte")
+            throw new Error("Logueo fallido");
+        }
+    } catch (error: any) {
+        throw new Error(error);
+}
 };
