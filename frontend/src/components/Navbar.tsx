@@ -9,7 +9,6 @@ export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const { dataUser, logout } = useAuth();
 
-  // ✅ Manejo seguro de hidratación
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -34,7 +33,6 @@ export const Navbar = () => {
     return () => window.removeEventListener('scroll', controlNavbar);
   }, [lastScrollY]);
 
-  // 👇 Skeleton durante SSR (evita mismatch)
   if (!isClient) {
     return (
       <nav className='bg-blue-300 w-full z-20 top-0 start-0 border-b border-default'>
@@ -57,7 +55,6 @@ export const Navbar = () => {
     );
   }
 
-  // ✅ Funciones seguras para mostrar datos
   const getDisplayName = () => {
     if (dataUser?.user?.first_name && dataUser.user.last_name) {
       return `${dataUser.user.first_name} ${dataUser.user.last_name}`;
@@ -89,7 +86,7 @@ export const Navbar = () => {
           ☰
         </button>
 
-        {/* 👇 MENU DE ESCRITORIO */}
+        {/* MENU DE ESCRITORIO */}
         <div className='hidden w-full md:block md:w-auto' id='navbar-default'>
           <div className='hidden md:flex items-center gap-10 ml-10 text-white'>
             {navItems.map((navigationItem) => (
@@ -121,7 +118,7 @@ export const Navbar = () => {
               ) : (
                 <div className='flex flex-col md:flex-row md:items-center gap-1'>
                   <div className='text-xs text-blue-900 font-bold space-y-0.1'>
-                    <div>Hola, bienvenid@</div>
+                    <div>Bienvenid@</div>
                     <div className='text-base text-blue-900'>
                       {getDisplayName()}
                     </div>
@@ -142,7 +139,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* 👇 MENU MÓVIL (solo visible en pantallas pequeñas) */}
+      {/* MENU MÓVIL (solo visible en pantallas pequeñas) */}
       {openMenu && (
         <div className='md:hidden bg-chocolate border-t border-default w-full flex flex-col items-center gap-4 py-4'>
           {navItems.map((navigationItem) => (

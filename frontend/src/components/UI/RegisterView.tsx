@@ -14,8 +14,6 @@ import {
 import { registerUserService } from '@/utils/auth.helper';
 import Swal from 'sweetalert2';
 
-// import { loginUserService } from '@/utils/auth.helper';
-
 export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,11 +27,9 @@ export default function RegisterPage() {
       setError('');
       setSubmitting(true);
 
-      // const response = await registerUserService(values);
       try {
         await registerUserService(values);
 
-        // ✅ ÉXITO: SweetAlert
         Swal.fire({
           title: '¡Registro exitoso!',
           text: 'Tu cuenta ha sido creada correctamente.',

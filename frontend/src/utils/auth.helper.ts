@@ -1,7 +1,7 @@
 import { ILoginFormValues } from '../interfaces/ILoginFormValues';
 import { IRegisterFormValues } from '../interfaces/IRegisterFormValues';
 
-const apiURL = process.env.NEXT_PUBLIC_API_URL; 
+const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
 export const registerUserService = async (userData: IRegisterFormValues) => {
   const response = await fetch(`${apiURL}/auth/register`, {
@@ -23,11 +23,10 @@ export const registerUserService = async (userData: IRegisterFormValues) => {
   console.log('Respuesta del backend:', data);
 
   if (!response.ok) {
-    // Lanza un error con el mensaje del backend
     const errorMsg = data.message || data.error || 'Error en el registro';
     throw new Error(errorMsg);
   }
-  return data; // Éxito: devuelve los datos del usuario o lo que el backend envíe
+  return data;
 };
 
 export const loginUserService = async (userData: ILoginFormValues) => {
@@ -46,5 +45,5 @@ export const loginUserService = async (userData: ILoginFormValues) => {
     throw new Error(errorMsg);
   }
 
-  return data; // Devuelve la respuesta del backend (token + user si la hubiera)
+  return data;
 };

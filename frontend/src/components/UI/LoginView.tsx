@@ -47,7 +47,7 @@ const LoginForm = () => {
             last_name: payload.last_name,
             email: payload.email,
             role: payload.role,
-            appointments: [], //  no viene en el token
+            appointments: [],
           },
         };
 

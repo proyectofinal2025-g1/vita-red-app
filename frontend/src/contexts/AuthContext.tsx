@@ -11,7 +11,6 @@ export const AuthContext = createContext<IAuthContextProps>({
   logout: () => {},
 });
 
-// Función auxiliar para leer desde localStorage de forma segura
 const getUserFromLocalStorage = (): IUserSession | null => {
   if (typeof window === 'undefined') return null;
   const userInfo = localStorage.getItem('userSession');
@@ -52,7 +51,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     <AuthContext.Provider value={{ dataUser, setDataUser, logout }}>
       {children}
     </AuthContext.Provider>
-  ); 
+  );
 };
 
 export const useAuth = () => useContext(AuthContext);
