@@ -24,10 +24,12 @@ const getUserFromLocalStorage = (): IUserSession | null => {
 };
 
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
+  // Inicializa el estado directamente desde localStorage
   const [dataUser, setDataUser] = useState<IUserSession | null>(
     getUserFromLocalStorage
   );
 
+  // useEffect solo para guardar (no para leer)
   useEffect(() => {
     if (dataUser) {
       localStorage.setItem('userSession', JSON.stringify(dataUser));
