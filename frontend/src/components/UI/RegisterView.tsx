@@ -14,8 +14,6 @@ import {
 import { registerUserService } from '@/utils/auth.helper';
 import Swal from 'sweetalert2';
 
-// import { loginUserService } from '@/utils/auth.helper';
-
 export default function RegisterPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,11 +27,9 @@ export default function RegisterPage() {
       setError('');
       setSubmitting(true);
 
-      // const response = await registerUserService(values);
       try {
         await registerUserService(values);
 
-        // ✅ ÉXITO: SweetAlert
         Swal.fire({
           title: '¡Registro exitoso!',
           text: 'Tu cuenta ha sido creada correctamente.',
@@ -382,7 +378,7 @@ export default function RegisterPage() {
                         strokeLinejoin='round'
                         d='M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z'
                       />
-                      <path 
+                      <path
                         strokeLinecap='round'
                         strokeLinejoin='round'
                         d='M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
