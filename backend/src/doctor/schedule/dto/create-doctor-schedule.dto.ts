@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsUUID, Min, Max, Matches } from 'class-validator';
+import { IsInt, IsUUID, Min, Max, Matches, IsEnum } from 'class-validator';
+import { DayOfWeekEnum } from '../enum/enumDays';
 
 export class CreateDoctorScheduleDto {
   @ApiProperty({ description: 'ID del médico' })
@@ -7,13 +8,11 @@ export class CreateDoctorScheduleDto {
   doctorId: string;
 
   @ApiProperty({
-    description: 'Día de la semana (0=Domingo, 6=Sábado)',
-    example: 1,
+    enum: DayOfWeekEnum,
+    example: 'Lunes',
   })
-  @IsInt()
-  @Min(0)
-  @Max(6)
-  dayOfWeek: number;
+  @IsEnum(DayOfWeekEnum)
+  dayOfWeek: DayOfWeekEnum;
 
   @ApiProperty({ example: '08:00' })
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/)

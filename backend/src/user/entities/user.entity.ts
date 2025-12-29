@@ -41,3 +41,7 @@ export class User {
     @OneToOne(() => Doctor, (doctor) => doctor.user, { nullable: true })
     doctor?: Doctor;
 }
+
+
+// admin@vitared.test
+// SuperAdmin123!

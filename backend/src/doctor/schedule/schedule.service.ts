@@ -8,6 +8,11 @@ import { Repository } from 'typeorm';
 
 import { DoctorSchedule } from './entities/schedule.entity';
 import { Doctor } from '../entities/doctor.entity';
+import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
+import { DoctorService } from '../doctor.service';
+import { mapDayToNumber } from './helper/mapDayOfWeek.helper';
+import { DoctorScheduleResponseDto } from './dto/doctor-schedule-response.dto';
+import { mapNumberToDay } from './helper/mapDaysOfWeekNumToString.helper';
 
 @Injectable()
 export class DoctorScheduleService {
@@ -17,6 +22,8 @@ export class DoctorScheduleService {
 
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
+
+    private readonly doctorService: DoctorService
   ) {}
 
   async create(
@@ -25,7 +32,7 @@ export class DoctorScheduleService {
       'dayOfWeek' | 'startTime' | 'endTime' | 'slotDuration'
     >,
     doctorId: string,
-  ): Promise<DoctorSchedule> {
+  ): Promise<DoctorScheduleResponseDto> {
     const doctor = await this.doctorRepo.findOne({
       where: { id: doctorId, isActive: true },
     });
@@ -40,12 +47,18 @@ export class DoctorScheduleService {
       );
     }
 
-    const schedule = this.scheduleRepo.create({
+    const newSchedule = await this.scheduleRepo.create({
       ...data,
       doctor,
     });
 
-    return this.scheduleRepo.save(schedule);
+    return {
+    id: newSchedule.id,
+    dayOfWeek: mapNumberToDay(newSchedule.dayOfWeek),
+    startTime: newSchedule.startTime,
+    endTime: newSchedule.endTime,
+    slotDuration: newSchedule.slotDuration,
+  };;
   }
 
   async findByDoctor(doctorId: string): Promise<DoctorSchedule[]> {
@@ -92,4 +105,49 @@ export class DoctorScheduleService {
     const [hours, minutes] = time.split(':').map(Number);
     return hours * 60 + minutes;
   }
+
+async updateScheduleDoctor(
+  doctorId: string,
+  dto: UpdateDoctorScheduleDto,
+): Promise<DoctorScheduleResponseDto> {
+
+  if (!dto || Object.keys(dto).length === 0) {
+    throw new BadRequestException('You cannot pass an empty object');
+  }
+
+  const doctor = await this.doctorService.findyById(doctorId);
+
+  const updateDto: Partial<DoctorSchedule> = {
+    ...dto,
+    dayOfWeek: dto.dayOfWeek
+      ? mapDayToNumber(dto.dayOfWeek)
+      : undefined,
+  };
+
+  await this.scheduleRepo.update(
+    { doctor: { id: doctor.id }, dayOfWeek: updateDto.dayOfWeek },
+    updateDto,
+  );
+
+  const updatedSchedule = await this.scheduleRepo.findOne({
+    where: {
+      doctor: { id: doctor.id },
+      dayOfWeek: updateDto.dayOfWeek,
+    },
+    relations: { doctor: true },
+  });
+
+  if (!updatedSchedule) {
+    throw new NotFoundException('Schedule not found');
+  }
+
+  return {
+    id: updatedSchedule.id,
+    dayOfWeek: mapNumberToDay(updatedSchedule.dayOfWeek),
+    startTime: updatedSchedule.startTime,
+    endTime: updatedSchedule.endTime,
+    slotDuration: updatedSchedule.slotDuration,
+  };
+}
+
 }

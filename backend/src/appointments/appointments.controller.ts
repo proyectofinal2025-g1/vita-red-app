@@ -22,8 +22,8 @@ import { AppointmentResponseDto } from './dto/appointment-response.dto';
 import { AuthGuard } from '../auth/guards/auth.guard';
 
 @ApiTags('Appointments')
-@ApiBearerAuth()
-@UseGuards(AuthGuard)
+//@ApiBearerAuth()
+//@UseGuards(AuthGuard)
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}

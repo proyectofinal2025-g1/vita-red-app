@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Between, ILike, Raw, Repository } from 'typeorm';
 
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
@@ -46,7 +46,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) {}
+  ) { }
 
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
@@ -167,9 +167,9 @@ export class AppointmentsService {
 
       speciality: appointment.speciality
         ? {
-            id: appointment.speciality.id,
-            name: appointment.speciality.name,
-          }
+          id: appointment.speciality.id,
+          name: appointment.speciality.name,
+        }
         : undefined,
     };
   }
@@ -284,4 +284,83 @@ export class AppointmentsService {
       where: { id },
     });
   }
+
+  async findByFiltersPatient(filters: {
+    patientId: string;
+    date?: string;
+    speciality?: string;
+  }) {
+    const { patientId, date, speciality } = filters;
+
+    const where: any = {
+      patient: { id: patientId },
+    };
+
+    if (date) {
+      where.date = Raw(
+        (alias) => `DATE(${alias}) = :date`,
+        { date },
+      );
+    }
+    console.log('appoint', date)
+
+    if (speciality) {
+      where.speciality = { name: ILike(`%${speciality}%`) };
+    }
+
+    const appointments = await this.appointmentRepository.find({
+      where,
+      relations: {
+        doctor: { user: true },
+        speciality: true,
+        patient: true,
+      },
+      order: {
+        date: 'ASC',
+      },
+    });
+
+
+    return appointments;
+  }
+
+  
+    async findByFiltersDoctor(filters: {
+    doctorId: string;
+    date?: string;
+    patientId?: string;
+  }) {
+    const { doctorId, date, patientId } = filters;
+
+    const where: any = {
+      doctor: { id: doctorId },
+    };
+
+    if (date) {
+      where.date = Raw(
+        (alias) => `DATE(${alias}) = :date`,
+        { date },
+      );
+    }
+
+    if (patientId) {
+      where.patientId = { id: {patientId} };
+    }
+
+    const appointments = await this.appointmentRepository.find({
+      where,
+      relations: {
+        doctor: { user: true },
+        speciality: true,
+        patient: true,
+      },
+      order: {
+        date: 'ASC',
+      },
+    });
+
+
+    return appointments;
+  }
+
 }
