@@ -82,7 +82,7 @@ export const Navbar = () => {
                 </div>
               ) : (
                 <div>
-                  <Link href='/profile' className='text-bone font-bold'>
+                  <Link href='/dashboard/patient' className='text-bone font-bold'>
                     {dataUser.user?.first_name} {dataUser.user?.last_name}
                   </Link>
                   <Link href='/auth/login'>
@@ -133,7 +133,7 @@ export const Navbar = () => {
           ) : (
             <div className='flex flex-col items-center gap-2'>
               <Link
-                href='/profile'
+                href='/dashboard/patient'
                 onClick={() => setOpenMenu(false)}
                 className=' text-white font-bold hover:text-cyan-800'
               >

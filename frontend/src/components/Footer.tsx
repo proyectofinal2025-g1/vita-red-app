@@ -19,13 +19,10 @@ export const Footer = () => {
               <Link href="/" className="text-white hover:underline">Inicio</Link>
             </li>
             <li>
-              <Link href="#" className="text-white hover:underline">Nuestra clínica</Link>
+              <Link href="/especialidades" className="text-white hover:underline">Especialidades</Link>
             </li>
             <li>
-              <Link href="#" className="text-white hover:underline">Especialidades</Link>
-            </li>
-            <li>
-              <Link href="#" className="text-white hover:underline">Contacto</Link>
+              <Link href="/contacto" className="text-white hover:underline">Contacto</Link>
             </li>
           </ul>
 
