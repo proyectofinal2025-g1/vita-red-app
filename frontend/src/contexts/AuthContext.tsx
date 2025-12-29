@@ -8,7 +8,7 @@ import { IUserSession } from '@/interfaces/IUserSession';
 export const AuthContext = createContext<IAuthContextProps>({
   dataUser: null,
   setDataUser: () => {},
-  logout: () => {},
+  logout: () => {}
 });
 
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {

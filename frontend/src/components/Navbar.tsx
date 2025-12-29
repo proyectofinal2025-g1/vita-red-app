@@ -68,14 +68,14 @@ export const Navbar = () => {
 
                   <Link
                     href='/auth/login'
-                    className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+                    className=' text-white font-bold hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Iniciar sesión
                   </Link>
 
                   <Link
                     href='/auth/register'
-                    className=' text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+                    className=' text-white font-bold hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Registrarse
                   </Link>
