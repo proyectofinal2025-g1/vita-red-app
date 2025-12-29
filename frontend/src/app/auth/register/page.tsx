@@ -18,7 +18,6 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
-  // Dentro de RegisterPage()
   const getPasswordColor = (strength: string) => {
     switch (strength) {
       case 'weak':
@@ -50,7 +49,7 @@ export default function RegisterPage() {
             dni: values.dni,
             email: values.email,
             password: values.password,
-            confirmPassword: values.confirmPassword, // Este valor es redundante (el backend no lo necesita para nada), el DTO del backend lo tiene como campo obligatorio, así se enviará por ahora.
+            confirmPassword: values.confirmPassword,
           }),
         });
 
@@ -109,7 +108,6 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* Primer nombre */}
             <div>
               <label
                 htmlFor='first_name'
@@ -138,7 +136,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Apellido */}
             <div>
               <label
                 htmlFor='last_name'
@@ -167,7 +164,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* DNI */}
             <div>
               <label
                 htmlFor='dni'
@@ -194,7 +190,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Email */}
             <div>
               <label
                 htmlFor='email'
@@ -223,7 +218,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Password */}
             <div className='relative'>
               <label
                 htmlFor='password'
@@ -299,7 +293,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Fortaleza de la contraseña */}
             {formik.values.password &&
               (() => {
                 const strength = getPasswordStrength(formik.values.password);
@@ -327,7 +320,6 @@ export default function RegisterPage() {
                 );
               })()}
 
-            {/* Confirm Password */}
             <div className='relative'>
               <label
                 htmlFor='confirmPassword'
@@ -407,7 +399,6 @@ export default function RegisterPage() {
                 )}
             </div>
 
-            {/* Botón de Registro */}
             <button
               type='submit'
               disabled={formik.isSubmitting}
@@ -416,7 +407,6 @@ export default function RegisterPage() {
               {formik.isSubmitting ? 'Registrando...' : 'Registrar'}
             </button>
 
-            {/* Enlace a Login */}
             <div className='text-center mt-6'>
               <p className='text-gray-600 text-sm'>
                 ¿Ya tienes cuenta?{' '}
