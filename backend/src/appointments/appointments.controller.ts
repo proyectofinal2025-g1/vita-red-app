@@ -20,6 +20,7 @@ import { CreateAppointmentPreReserveDto } from './dto/create-appointment-pre-res
 import { AppointmentResponseDto } from './dto/appointment-response.dto';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
 
 @ApiTags('Appointments')
 @ApiBearerAuth()
@@ -30,11 +31,11 @@ export class AppointmentsController {
 
   @Post('pre-reserve')
   @ApiOperation({ summary: 'Pre-reservar un turno (requiere pago)' })
-  @ApiCreatedResponse({ type: AppointmentResponseDto })
+  @ApiCreatedResponse({ type: PreReserveAppointmentResponseDto })
   async preReserve(
     @Req() req,
     @Body() dto: CreateAppointmentPreReserveDto,
-  ): Promise<AppointmentResponseDto> {
+  ): Promise<PreReserveAppointmentResponseDto> {
     return this.appointmentsService.preReserveAppointment(dto, req.user.sub);
   }
 

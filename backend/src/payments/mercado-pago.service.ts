@@ -9,7 +9,7 @@ export class MercadoPagoService {
     description: string;
     payerEmail: string;
     expiresAt: Date;
-  }): Promise<string> {
+  }): Promise<{ initPoint: string; preferenceId: string }> {
     const response = await axios.post(
       'https://api.mercadopago.com/checkout/preferences',
       {
@@ -39,12 +39,29 @@ export class MercadoPagoService {
       },
     );
 
-    return response.data.init_point;
+    return {
+      initPoint: response.data.init_point,
+      preferenceId: response.data.id,
+    };
   }
 
   async getPayment(paymentId: string) {
     const response = await axios.get(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        },
+      },
+    );
+
+    return response.data;
+  }
+
+  // ✅ ESTE ES EL MÉTODO QUE FALTABA
+  async getMerchantOrder(merchantOrderId: string) {
+    const response = await axios.get(
+      `https://api.mercadopago.com/merchant_orders/${merchantOrderId}`,
       {
         headers: {
           Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
