@@ -4,3 +4,4 @@ export interface ISpeciality {
   description: string;
   isActive: boolean;
 }
+ 

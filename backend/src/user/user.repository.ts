@@ -12,12 +12,8 @@ export class UserRepository {
         return userFound
     }
 
-    async findByDni(dni: string) {
-        const userFound = await this.userRepository.findOneBy({ dni })
-        return userFound
-    }
 
-    async create(createUser: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
+    async create(createUser: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni' | 'profileImageUrl'>) {
         const userCreate = await this.userRepository.create(createUser)
         const userSave = await this.userRepository.save(userCreate)
         return userSave.id
@@ -31,9 +27,24 @@ export class UserRepository {
         return await this.userRepository.findOneBy({ id })
     }
 
-    async findByName(name: string){
-        return await this.userRepository.find({where: {first_name:  ILike(`%${name}%`)}})
+    async findByName(first_name?: string, last_name?: string) {
+        const where: any = {};
+
+        if (first_name) {
+            where.first_name = ILike(`%${first_name}%`);
+        }
+
+        if (last_name) {
+            where.last_name = ILike(`%${last_name}%`);
+        }
+
+        return this.userRepository.find({ where });
     }
+
+    async findByDni(dni: string) {
+        return await this.userRepository.findOneBy({ dni })
+    }
+
 
     async update(id: string, updateUser: Partial<User>) {
         await this.userRepository.update(id, updateUser)

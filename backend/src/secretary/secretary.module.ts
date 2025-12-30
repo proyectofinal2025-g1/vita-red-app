@@ -4,15 +4,20 @@ import { SecretaryService } from "./secretary.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { CloudinaryModule } from "../cloudinary/cloudinary.module";
 import { UserModule } from "../user/user.module";
-import { SecretaryRepository } from "./secretary.repository";
 import { User } from "../user/entities/user.entity";
+import { DoctorModule } from "../doctor/doctor.module";
+import { Doctor } from "../doctor/entities/doctor.entity";
+import { Speciality } from "../speciality/entities/speciality.entity";
+import { SpecialityModule } from "../speciality/speciality.module";
 
 @Module({
-    imports: [ TypeOrmModule.forFeature([User]),
+    imports: [ TypeOrmModule.forFeature([User, Doctor, Speciality]),
         UserModule, 
+        DoctorModule,
+        SpecialityModule,
         CloudinaryModule
     ],
     controllers: [SecretaryController],
-    providers: [SecretaryService, SecretaryRepository]
+    providers: [SecretaryService]
 })
 export class secretaryModule {}

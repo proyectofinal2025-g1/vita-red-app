@@ -4,7 +4,6 @@ import { UserRepository } from './user.repository';
 import bcrypt from 'bcrypt'
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { NotificationService } from '../notification/notification.service';
-import { RolesEnum } from './enums/roles.enum';
 import { UserResponse } from './dto/user-response.dto';
 
 @Injectable()
@@ -15,7 +14,7 @@ export class UserService {
     private readonly notificationService: NotificationService
   ) { }
 
-  async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni'>) {
+  async create(user: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni' | 'profileImageUrl'>) {
     try {
       const userExist = await this.userRepository.findByEmail(user.email)
       const userExistByDni = await this.userRepository.findByDni(user.dni)
@@ -43,11 +42,19 @@ export class UserService {
     return user;
   }
 
-  async findByName(name: string) :Promise<UserResponse[]>{
-    const listUsersName = await this.userRepository.findByName(name)
+  async findByName(first_name?: string, last_name?: string) :Promise<UserResponse[]>{
+    const listUsersName = await this.userRepository.findByName(first_name, last_name)
     if (listUsersName.length === 0) throw new NotFoundException('User not Found')
     
       return listUsersName.map(({password, ...users})=>users)
+  }
+
+    async findByDni(dni: string) :Promise<UserResponse>{
+    const userFound = await this.userRepository.findByDni(dni)
+    if (!userFound) throw new NotFoundException('User not Found')
+    
+    const {password, ...userWithoutPassword} = userFound
+    return userWithoutPassword
   }
 
   async update(id: string, user: Partial<User>) {
@@ -55,14 +62,16 @@ export class UserService {
     const userFound = await this.userRepository.findById(id);
     if (!userFound) throw new NotFoundException('User not found')
 
-    return await this.userRepository.update(id, user)
+    const userUpdate = await this.userRepository.update(id, user)
+    return `User ${userFound.first_name} ${userFound.last_name} modified correctly`
   }
 
   async disable(id: string) {
     const user = await this.userRepository.findById(id);
     if (!user) throw new NotFoundException('User Not found');
+    if(user.is_active === false) throw new BadRequestException('the user had already been deleted')
     user.is_active = false;
-    return await this.userRepository.disable(user)
+    return `$User {user.first_name} ${user.last_name} eliminated correctly`
   }
 
   async updatePassword(id: string, dto: { currentPassword: string, newPassword: string }) {

@@ -1,8 +1,10 @@
 import { ISpeciality } from "@/interfaces/ISpeciality";
+const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getAllSpecialityService = async () => {
-  try {
-    const res = await fetch("http://localhost:3000/speciality", {
+  try {    console.log("API URL:", apiURL);
+
+    const res = await fetch(`${apiURL}/speciality`, {
       method: "GET",
       cache: "no-store",
     });
