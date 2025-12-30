@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { AppointmentStatus } from '../enums/appointment-status.enum';
 
-export class AppointmentListResponseDto {
+export class DoctorAppointmentListResponseDto {
   @ApiProperty({ example: 'uuid' })
   id: string;
 
@@ -18,15 +18,9 @@ export class AppointmentListResponseDto {
   status: AppointmentStatus;
 
   @ApiProperty({
-    description: 'Nombre del médico',
-    example: 'Dra. María Gómez',
+    description: 'Nombre del paciente',
+    example: 'María Paz',
   })
-  doctorName: string;
+  patientName: string;
 
-  @ApiProperty({
-    description: 'Especialidad',
-    example: 'Cardiología',
-    required: false,
-  })
-  specialty?: string;
 }

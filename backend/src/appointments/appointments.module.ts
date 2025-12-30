@@ -9,7 +9,7 @@ import { User } from '../user/entities/user.entity';
 import { Speciality } from '../speciality/entities/speciality.entity';
 import { Doctor } from '../doctor/entities/doctor.entity';
 import { DoctorModule } from '../doctor/doctor.module';
-import { SheduleModule } from '../doctor/schedule/schedule.module';
+import { ScheduleModule } from '../doctor/schedule/schedule.module';
 import { AppointmentsExpirationService } from './appointments-expiration.service';
 import { AppointmentsRepository } from './appointments.repository';
 
@@ -17,7 +17,7 @@ import { AppointmentsRepository } from './appointments.repository';
   imports: [
     TypeOrmModule.forFeature([Appointment, User, Speciality, Doctor]),
     DoctorModule,
-    SheduleModule,
+    ScheduleModule,
   ],
   controllers: [AppointmentsController],
   providers: [
@@ -25,6 +25,6 @@ import { AppointmentsRepository } from './appointments.repository';
     AppointmentsExpirationService,
     AppointmentsRepository,
   ],
-  exports: [AppointmentsService, AppointmentsRepository],
+  exports: [AppointmentsService, AppointmentsRepository, AppointmentsExpirationService],
 })
 export class AppointmentsModule {}

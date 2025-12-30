@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, ParseBoolPipe, ParseEnumPipe, ParseUUIDPipe, Patch, Post, Query, UseGuards } from "@nestjs/common";
-import { ApiOperation, ApiQuery } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from "@nestjs/swagger";
 import { RolesEnum } from "../user/enums/roles.enum";
 import { SecretaryService } from "./secretary.service";
 import { User } from "../user/entities/user.entity";
@@ -8,13 +8,16 @@ import { CreateDoctorDto } from "../doctor/dto/create-doctor.dto";
 import { Roles } from "../decorators/role.decorator";
 import { AuthGuard } from "../auth/guards/auth.guard";
 import { RolesGuard } from "../auth/guards/roles.guard";
+import { CreateAppointmentPreReserveDto } from "../appointments/dto/create-appointment-pre-reserve.dto";
+import { UpdateDoctorScheduleDto } from "../doctor/schedule/dto/update-doctor-schedule.dto";
+import { UpdateDoctorScheduleDtoBySecretary } from "./dto/scheduleDoctor.dto";
 
 @Controller('secretary')
 export class SecretaryController {
     constructor(private readonly secretaryService: SecretaryService) { }
 
-/* PROBANDOO */
-    
+
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Obtener todos los usuarios',
         description:
@@ -40,6 +43,7 @@ export class SecretaryController {
         return this.secretaryService.findAll({ role, is_active });
     }
 
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Obtener usuario por ID',
         description:
@@ -55,6 +59,7 @@ export class SecretaryController {
 
     /* PATIENT */
 
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Buscar un paciente por nombre',
         description:
@@ -80,7 +85,7 @@ export class SecretaryController {
         return await this.secretaryService.getPatientByName(first_name, last_name)
     }
 
-
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Buscar un paciente por DNI',
         description:
@@ -93,20 +98,21 @@ export class SecretaryController {
         return await this.secretaryService.getPatientByDni(dni)
     }
 
-
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Crea un usuario nuevo',
         description:
             'Crea y guarda en la base de datos un usuario nuevo'
     })
-   // @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
-   // @UseGuards(AuthGuard, RolesGuard)
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
     @Post('patient')
     async createPatient(@Body() registerDto: CreateUserDto) {
         return await this.secretaryService.createPatient(registerDto)
     }
 
 
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Actualiza un usuario',
         description:
@@ -120,6 +126,7 @@ export class SecretaryController {
     }
 
 
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Elimina un usuario',
         description:
@@ -136,6 +143,7 @@ export class SecretaryController {
 
     /*   DOCTOR    */
 
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Crea un perfil médico nuevo',
         description:
@@ -147,6 +155,8 @@ export class SecretaryController {
     async createDoctor(@Body() createDoctor: CreateDoctorDto) {
         return await this.secretaryService.createDoctor(createDoctor)
     }
+    
+
     @ApiOperation({
         summary: 'Obtener todos los médicos',
         description:
@@ -157,8 +167,6 @@ export class SecretaryController {
         type: 'string',
         required: false,
     })
-    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
-    @UseGuards(AuthGuard, RolesGuard)
     @Get('Doctor/:name')
     async getDoctors(
         @Query('doctorName') name?: string
@@ -166,6 +174,20 @@ export class SecretaryController {
         return await this.secretaryService.getDoctors(name)
     }
 
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Modifica schedule de un médico/a.',
+    })
+    @Roles(RolesEnum.Secretary, RolesEnum.SuperAdmin)
+    @UseGuards(AuthGuard, RolesGuard)
+    @Patch('doctor/update/:doctorId')
+    updateDoctorSchedule(
+        @Param('doctorId', ParseUUIDPipe) doctorId: string,
+        @Body() dto: UpdateDoctorScheduleDtoBySecretary) {
+      return this.secretaryService.updateScheduleDoctor(doctorId, dto)
+    }
+
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Obtener médicos pos su especialidad',
         description:
@@ -176,6 +198,7 @@ export class SecretaryController {
         return await this.secretaryService.getBySpeciality(specialityName)
     }
 
+    @ApiBearerAuth()
     @ApiOperation({
         summary: 'Elimina un médico',
         description:
@@ -184,9 +207,12 @@ export class SecretaryController {
     @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
     @UseGuards(AuthGuard, RolesGuard)
     @Delete('Doctor')
-    async disableDoctor(id: string) {
+    async disableDoctor(@Param('id', ParseUUIDPipe) id: string) {
         return await this.secretaryService.disableDoctor(id)
     }
+
+
+    /*   SPECIALITY   */
 
    @ApiOperation({
         summary: 'Obtener todas las especialidades',
@@ -203,6 +229,100 @@ export class SecretaryController {
         return await this.secretaryService.getSpecialitys(nameSpeciality)
     }
 
+
+    /*     APPOINTMENTS    */  
+    @ApiBearerAuth()
+    @Roles(RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
+    @ApiOperation({
+        summary: 'Pre-reservar un turno para los pacientes'
+    })
+    @Post('appointments/pre-reserve')
+    async preReserveAppointment(
+            @Body() dto: CreateAppointmentPreReserveDto,
+                    userId: string
+    ){
+        return await this.secretaryService.preReserveAppointment(dto, userId)
+    }
+
+
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Ver el historial de los turno del paciente.'
+    })
+    @ApiParam({
+        name: 'patientId',
+        type: 'string',
+        required: true,
+    })
+    @ApiQuery({
+        name: 'date',
+        type: 'string',
+        required: false,
+    })
+    @ApiQuery({
+        name: 'speciality',
+        type: 'string',
+        required: false,
+    })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
+    @Get('appointments/patient/list')
+    async findAppointmentsByPatientId(
+        @Param('patientId', ParseUUIDPipe) patientId: string,
+        @Query('date') date?: string,
+        @Query('speciality') speciality?: string
+    ){
+        return await this.secretaryService.findAppointmentsByPatientId(patientId, date, speciality)
+    }
+
+
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Ver agenda del médico/a.'
+    })
+    @ApiParam({
+        name: 'doctorId',
+        type: 'string',
+        required: true,
+    })
+    @ApiQuery({
+        name: 'date',
+        type: 'string',
+        required: false,
+    })
+    @ApiQuery({
+        name: 'patientId',
+        type: 'string',
+        required: false,
+    })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
+    @Get('appointments/doctor/list')
+    async findAgendByDoctor(
+        @Param('doctorId', ParseUUIDPipe) doctorId: string,
+        @Query('date') date?: string,
+        @Query('patientId', ParseUUIDPipe) patientId?: string
+    ){
+        return await this.secretaryService.findAgendByDoctor(doctorId, date, patientId)
+    }
+
+
+    @ApiBearerAuth()
+    @ApiOperation({
+        summary: 'Ver un turno por ID.'
+    })
+    @ApiParam({
+        name: 'id',
+        type: 'string',
+        required: true
+    })
+    @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+    @UseGuards(AuthGuard, RolesGuard)
+    @Get('appointment/:id')
+    async getAppointmentById(@Param('id', ParseUUIDPipe) id: string){
+        return this.secretaryService.getAppointmentById(id)
+    }
 }
 
 

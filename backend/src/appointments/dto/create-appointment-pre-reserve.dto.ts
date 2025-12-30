@@ -16,7 +16,7 @@ export class CreateAppointmentPreReserveDto {
   })
   @IsOptional()
   @IsUUID()
-  specialtyId?: string;
+  specialtyId: string;
 
   @ApiProperty({
     description: 'Fecha del turno (YYYY-MM-DD)',
