@@ -8,7 +8,7 @@ import { IUserSession } from '@/interfaces/IUserSession';
 export const AuthContext = createContext<IAuthContextProps>({
   dataUser: null,
   setDataUser: () => {},
-  logout: () => {},
+  logout: () => {}
 });
 
 const getUserFromLocalStorage = (): IUserSession | null => {

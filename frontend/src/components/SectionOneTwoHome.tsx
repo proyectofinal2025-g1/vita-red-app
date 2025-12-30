@@ -22,7 +22,7 @@ const SectionOneTwoHome = () => {
               En <span className="font-semibold text-gray-800">Vita Red</span>{" "}
               somos una clínica con más de{" "}
               <span className="font-semibold">20 años de trayectoria</span>,
-              dedicada a brindar atención médica integral, y de calidad. A lo
+              dedicada a brindar atención médica integral y de calidad. A lo
               largo de los años hemos acompañado a miles de pacientes,
               construyendo una relación basada en la confianza, el compromiso y
               el respeto por cada persona.
@@ -70,12 +70,12 @@ const SectionOneTwoHome = () => {
               </h3>
 
               <ul className="space-y-3 text-lg">
-                <li>• Derivación de alta complejidad a nivel regional</li>
+                <li>• Derivación de alta complejidad a nivel regional.</li>
                 <li>
                   • Atención oncológica, siendo el centro de mayor envergadura
-                  nacional
+                  nacional.
                 </li>
-                <li>• Trasplante de médula ósea en el país</li>
+                <li>• Trasplante de médula ósea en el país.</li>
               </ul>
             </div>
 
@@ -100,9 +100,9 @@ const SectionOneTwoHome = () => {
               <h3 className="mb-4 text-2xl font-semibold">Pioneros en:</h3>
 
               <ul className="space-y-3 text-lg">
-                <li>• Trasplante de órganos</li>
-                <li>• Cirugía e intervencionismo cardíaco</li>
-                <li>• Banco de huesos y tejidos del interior del país</li>
+                <li>• Trasplante de órganos.</li>
+                <li>• Cirugía e intervencionismo cardíaco.</li>
+                <li>• Banco de huesos y tejidos del interior del país.</li>
               </ul>
             </div>
           </div>
