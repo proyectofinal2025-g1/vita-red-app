@@ -1,7 +1,4 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-
 import { AppointmentsService } from '../appointments/appointments.service';
 import { AppointmentsRepository } from '../appointments/appointments.repository';
 import { MercadoPagoService } from './mercado-pago.service';
@@ -12,6 +9,8 @@ import { ResponsePaymentDto } from './dto/response-payment.dto';
 import { Payment } from './entities/payment.entity';
 import { PaymentStatus } from './enums/payment-status.enum';
 import { AppointmentStatus } from '../appointments/enums/appointment-status.enum';
+import { PaymentsRepository } from './payments.repository';
+import { Appointment } from '../appointments/entities/appointment.entity';
 
 @Injectable()
 export class PaymentsService {
@@ -19,8 +18,7 @@ export class PaymentsService {
     private readonly appointmentsService: AppointmentsService,
     private readonly appointmentsRepository: AppointmentsRepository,
     private readonly mercadoPagoService: MercadoPagoService,
-    @InjectRepository(Payment)
-    private readonly paymentsRepository: Repository<Payment>,
+    private readonly paymentsRepository: PaymentsRepository,
   ) {}
 
   async createPreference(dto: CreatePaymentDto): Promise<ResponsePaymentDto> {
@@ -42,11 +40,19 @@ export class PaymentsService {
       );
     }
 
+    // IDMPOTENCIA
+    const existingPayment =
+      await this.paymentsRepository.findPendingByAppointmentId(appointment.id);
+
+    if (existingPayment?.initPoint) {
+      return { initPoint: existingPayment.initPoint };
+    }
+
     const description = appointment.speciality
       ? `Consulta médica - ${appointment.speciality.name}`
       : 'Consulta médica';
 
-    const initPoint = await this.mercadoPagoService.createPreference({
+    const mpPreference = await this.mercadoPagoService.createPreference({
       appointmentId: appointment.id,
       price: appointment.priceAtBooking,
       description,
@@ -54,7 +60,18 @@ export class PaymentsService {
       expiresAt: appointment.expiresAt,
     });
 
-    return { initPoint };
+    const payment = this.paymentsRepository.create({
+      appointment: { id: appointment.id } as Appointment,
+      provider: 'MERCADO_PAGO',
+      status: PaymentStatus.PENDING,
+      amount: appointment.priceAtBooking,
+      preferenceId: mpPreference.preferenceId,
+      initPoint: mpPreference.initPoint,
+    });
+
+    await this.paymentsRepository.save(payment);
+
+    return { initPoint: mpPreference.initPoint };
   }
 
   async processApprovedPayment(data: {
@@ -63,43 +80,20 @@ export class PaymentsService {
     amount: number;
     paidAt: Date;
   }): Promise<void> {
-    const appointment = await this.appointmentsRepository.findOne({
-      where: { id: data.appointmentId },
-    });
+    console.log('🔥 processApprovedPayment CALLED', data);
 
-    if (!appointment) {
+    // 🔑 Idempotencia fuerte
+    const existingPayment =
+      await this.paymentsRepository.findByExternalPaymentId(
+        data.externalPaymentId,
+      );
+
+    if (existingPayment?.status === PaymentStatus.APPROVED) {
+      console.log('⚠️ Pago ya aprobado, no se reprocesa');
       return;
     }
 
-    // Si ya está confirmado, no tocamos el turno
-    if (appointment.status === AppointmentStatus.PENDING) {
-      appointment.status = AppointmentStatus.CONFIRMED;
-      await this.appointmentsRepository.save(appointment);
-    }
-
-    // Buscar pago existente
-    let payment = await this.paymentsRepository.findOne({
-      where: { externalPaymentId: data.externalPaymentId },
-    });
-
-    if (!payment) {
-      // Crear pago
-      payment = this.paymentsRepository.create({
-        appointment,
-        provider: 'MERCADO_PAGO',
-        externalPaymentId: data.externalPaymentId,
-        amount: data.amount,
-        status: PaymentStatus.APPROVED,
-        paidAt: data.paidAt,
-      });
-    } else {
-      // Actualizar pago existente
-      payment.status = PaymentStatus.APPROVED;
-      payment.amount = data.amount;
-      payment.paidAt = data.paidAt;
-    }
-
-    await this.paymentsRepository.save(payment);
+    await this.createApproved(data);
   }
 
   private async createApproved(data: {
@@ -112,16 +106,22 @@ export class PaymentsService {
       id: data.appointmentId,
     });
 
-    return this.paymentsRepository.save(
-      this.paymentsRepository.create({
-        appointment,
-        provider: 'MERCADO_PAGO',
-        externalPaymentId: data.externalPaymentId,
-        amount: data.amount,
-        status: PaymentStatus.APPROVED,
-        paidAt: data.paidAt,
-      }),
-    );
+    // CONFIRMAMOS EL TURNO ACÁ (SIEMPRE)
+    if (appointment.status !== AppointmentStatus.CONFIRMED) {
+      appointment.status = AppointmentStatus.CONFIRMED;
+      await this.appointmentsRepository.save(appointment);
+    }
+
+    const payment = this.paymentsRepository.create({
+      appointment,
+      provider: 'MERCADO_PAGO',
+      externalPaymentId: data.externalPaymentId,
+      amount: data.amount,
+      status: PaymentStatus.APPROVED,
+      paidAt: data.paidAt,
+    });
+
+    return this.paymentsRepository.save(payment);
   }
 
   private async createRejected(data: {

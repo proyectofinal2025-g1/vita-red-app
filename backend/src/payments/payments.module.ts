@@ -12,6 +12,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   imports: [TypeOrmModule.forFeature([Payment]), AppointmentsModule],
   controllers: [PaymentsController, MercadoPagoWebhookController],
-  providers: [PaymentsService, MercadoPagoService, MercadoPagoWebhookService],
+  providers: [
+    PaymentsService,
+    MercadoPagoService,
+    PaymentsRepository,
+    MercadoPagoWebhookService,
+  ],
 })
 export class PaymentsModule {}

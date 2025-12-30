@@ -19,6 +19,7 @@ import { DoctorScheduleService } from '../doctor/schedule/schedule.service';
 import { AppointmentRules } from './rules/appointment.rules';
 import { AppointmentTimeHelper } from './utils/appointment-time.helper';
 import { AppointmentsRepository } from './appointments.repository';
+import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
 
 type PreReservedAppointmentForPayment = {
   id: string;
@@ -51,7 +52,7 @@ export class AppointmentsService {
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
     patientId: string,
-  ): Promise<AppointmentResponseDto> {
+  ): Promise<PreReserveAppointmentResponseDto> {
     const patient = await this.userRepository.findOne({
       where: { id: patientId },
     });
@@ -140,7 +141,11 @@ export class AppointmentsService {
 
     const saved = await this.appointmentRepository.save(appointment);
 
-    return this.toResponseDto(saved);
+    return {
+      appointmentId:saved.id,
+      expiresAt:saved.expiresAt!,
+      price:saved.priceAtBooking
+    }
   }
 
   private toResponseDto(appointment: Appointment): AppointmentResponseDto {
