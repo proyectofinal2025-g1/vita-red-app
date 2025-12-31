@@ -52,13 +52,14 @@ export class DoctorScheduleService {
       doctor,
     });
 
+    await this.scheduleRepo.save(newSchedule)
     return {
     id: newSchedule.id,
     dayOfWeek: mapNumberToDay(newSchedule.dayOfWeek),
     startTime: newSchedule.startTime,
     endTime: newSchedule.endTime,
     slotDuration: newSchedule.slotDuration,
-  };;
+  };
   }
 
   async findByDoctor(doctorId: string): Promise<DoctorSchedule[]> {

@@ -19,6 +19,8 @@ import { DoctorAppointmentListResponseDto } from "../appointments/dto/doctor-app
 import { UpdateDoctorScheduleDto } from "../doctor/schedule/dto/update-doctor-schedule.dto";
 import { DoctorScheduleService } from "../doctor/schedule/schedule.service";
 import { UpdateDoctorScheduleDtoBySecretary } from "./dto/scheduleDoctor.dto";
+import { CreateDoctorScheduleDto } from "../doctor/schedule/dto/create-doctor-schedule.dto";
+import { mapDayToNumber } from "../doctor/schedule/helper/mapDayOfWeek.helper";
 
 
 @Injectable()
@@ -125,6 +127,18 @@ export class SecretaryService {
   }
 
 
+  async getDoctorById(doctorId: string){
+    return await this.doctorService.findyById(doctorId)
+  }
+
+
+  async createScheduleDoctor(dto: CreateDoctorScheduleDto, doctorId: string){
+    return await this.doctorScheduleService.create({...dto, dayOfWeek: mapDayToNumber(dto.dayOfWeek),},
+    doctorId,
+    );
+  }
+
+
   async updateScheduleDoctor(doctorId: string, dto: UpdateDoctorScheduleDtoBySecretary){
     return await this.doctorScheduleService.updateScheduleDoctor(doctorId, dto)
   }
@@ -179,7 +193,7 @@ async findAppointmentsByPatientId(
     speciality,
   });
 
-  console.log('secretary', date)
+
    if (!appointments.length) {
     if (date && speciality) {
       throw new NotFoundException(
