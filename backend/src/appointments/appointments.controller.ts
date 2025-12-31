@@ -23,8 +23,8 @@ import { AuthGuard } from '../auth/guards/auth.guard';
 import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
 
 @ApiTags('Appointments')
-//@ApiBearerAuth()
-//@UseGuards(AuthGuard)
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
