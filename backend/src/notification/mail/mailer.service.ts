@@ -49,18 +49,4 @@ export class MailerService {
         const subject = 'Bienvenido a VitaRed';
         await this.sendEmail(email, subject, html)
     }
-
-    async sendAppointmentCreatedEmail(email: string, first_name: string ): Promise<void> {
-        let html = this.loadTemplate('appointment-created.html')
-        html = html.replace('{{name}}', first_name)
-        const subject = 'Turno creado';
-        await this.sendEmail(email, subject, html)
-    }
-
-    async sendAppointmentCancelledEmail(email: string, first_name: string ): Promise<void> {
-        let html = this.loadTemplate('appointment-cancelled.html')
-        html = html.replace('{{name}}', first_name)
-        const subject = 'Turno cancelado';
-        await this.sendEmail(email, subject, html)
-    }
 }

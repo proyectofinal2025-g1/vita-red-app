@@ -20,6 +20,7 @@ import { AppointmentRules } from './rules/appointment.rules';
 import { AppointmentTimeHelper } from './utils/appointment-time.helper';
 import { AppointmentsRepository } from './appointments.repository';
 import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
+import { NotificationService } from '../notification/notification.service';
 
 type PreReservedAppointmentForPayment = {
   id: string;
@@ -38,6 +39,7 @@ export class AppointmentsService {
   constructor(
     private readonly doctorScheduleService: DoctorScheduleService,
     private readonly appointmentRepository: AppointmentsRepository,
+    private readonly notificationService: NotificationService,
 
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -142,9 +144,9 @@ export class AppointmentsService {
     const saved = await this.appointmentRepository.save(appointment);
 
     return {
-      appointmentId:saved.id,
-      expiresAt:saved.expiresAt!,
-      price:saved.priceAtBooking
+      appointmentId: saved.id,
+      expiresAt: saved.expiresAt!,
+      price: saved.priceAtBooking
     }
   }
 
@@ -207,7 +209,8 @@ export class AppointmentsService {
     appointment.cancelledBy = { id: cancelledByUserId } as any;
 
     await this.appointmentRepository.save(appointment);
-
+    const notification = { email: appointment.patient.email, first_name: appointment.patient.first_name, date: appointment.date }
+    await this.notificationService.sendAppointmentCancelledNotification(notification)
     return this.toResponseDto(appointment);
   }
 
@@ -253,7 +256,8 @@ export class AppointmentsService {
     appointment.paymentReference = paymentReference;
 
     await this.appointmentRepository.save(appointment);
-
+    const notification = { email: appointment.patient.email, first_name: appointment.patient.first_name, date: appointment.date, doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}` }
+    await this.notificationService.sendAppointmentCreatedNotification(notification)
     return this.toResponseDto(appointment);
   }
 
@@ -329,8 +333,8 @@ export class AppointmentsService {
     return appointments;
   }
 
-  
-    async findByFiltersDoctor(filters: {
+
+  async findByFiltersDoctor(filters: {
     doctorId: string;
     date?: string;
     patientId?: string;
@@ -349,7 +353,7 @@ export class AppointmentsService {
     }
 
     if (patientId) {
-      where.patientId = { id: {patientId} };
+      where.patientId = { id: { patientId } };
     }
 
     const appointments = await this.appointmentRepository.find({
