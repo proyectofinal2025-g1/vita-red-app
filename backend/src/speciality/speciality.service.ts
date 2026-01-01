@@ -35,21 +35,27 @@ export class SpecialityService {
   }
 
   async findById(id: string) {
-    const speciality = await this.specialityRepository.findById(id);
-    if (!speciality) {
-      throw new NotFoundException(`Speciality with id ${id} not found`);
-    }
-    return {
-      id: speciality.id,
-      name: speciality.name,
-      description: speciality.description,
-      isActive: speciality.isActive,
-      doctors: speciality.doctor.map((doctor) => ({
-        id: doctor.id,
-        licence_number: doctor.licence_number,
-      })),
-    };
+  const speciality = await this.specialityRepository.findByIdWithDoctors(id);
+
+  if (!speciality) {
+    throw new NotFoundException(`Speciality with id ${id} not found`);
   }
+
+  return {
+    id: speciality.id,
+    name: speciality.name,
+    description: speciality.description,
+    isActive: speciality.isActive,
+    doctors: speciality.doctor.map((doctor) => ({
+      id: doctor.id,
+      first_name: doctor.user.first_name,
+      last_name: doctor.user.last_name,
+      licence_number: doctor.licence_number,
+      profileImageUrl: doctor.user.profileImageUrl,
+    })),
+  };
+}
+
 
   async findByNameWithDoctors(name: string) {
     const speciality =
@@ -69,6 +75,7 @@ export class SpecialityService {
         first_name: doctor.user.first_name,
         last_name: doctor.user.last_name,
         licence_number: doctor.licence_number,
+        profileImageUrl: doctor.user.profileImageUrl
       })),
     };
   }

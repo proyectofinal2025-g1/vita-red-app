@@ -3,5 +3,6 @@ export interface IDoctor {
   fullName: string;
   speciality: string;
   licence_number: string;
+  profileImageUrl?: string;
 }
  

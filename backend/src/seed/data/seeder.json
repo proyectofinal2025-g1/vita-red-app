@@ -11,7 +11,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-1001" },
-    "speciality": "cardiologia"
+    "speciality": "Cardiología"
   },
   {
     "user": {
@@ -25,7 +25,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-1002" },
-    "speciality": "cardiologia"
+    "speciality": "Cardiología"
   },
 
   {
@@ -40,7 +40,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-2001" },
-    "speciality": "psiquiatria"
+    "speciality": "Psiquiatría"
   },
   {
     "user": {
@@ -54,7 +54,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-2002" },
-    "speciality": "psiquiatria"
+    "speciality": "Psiquiatría"
   },
 
   {
@@ -69,7 +69,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-3001" },
-    "speciality": "psicologia"
+    "speciality": "Psicología"
   },
   {
     "user": {
@@ -83,7 +83,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-3002" },
-    "speciality": "psicologia"
+    "speciality": "Psicología"
   },
 
   {
@@ -98,7 +98,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-4001" },
-    "speciality": "clinica medica"
+    "speciality": "Clínica Medica"
   },
   {
     "user": {
@@ -112,7 +112,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-4002" },
-    "speciality": "clinica medica"
+    "speciality": "Clínica Medica"
   },
 
   {
@@ -127,7 +127,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-5001" },
-    "speciality": "pediatria"
+    "speciality": "Pediatría"
   },
   {
     "user": {
@@ -141,7 +141,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-5002" },
-    "speciality": "pediatria"
+    "speciality": "Pediatría"
   },
 
   {
@@ -156,7 +156,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-6001" },
-    "speciality": "oftalmologia"
+    "speciality": "Oftalmología"
   },
   {
     "user": {
@@ -170,7 +170,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-6002" },
-    "speciality": "oftalmologia"
+    "speciality": "Oftalmología"
   },
 
   {
@@ -185,7 +185,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-7001" },
-    "speciality": "nutricion"
+    "speciality": "Nutrición"
   },
   {
     "user": {
@@ -199,7 +199,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-7002" },
-    "speciality": "nutricion"
+    "speciality": "Nutrición"
   },
 
   {
@@ -214,7 +214,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-8001" },
-    "speciality": "urologia"
+    "speciality": "Urología"
   },
   {
     "user": {
@@ -228,7 +228,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-8002" },
-    "speciality": "urologia"
+    "speciality": "Urología"
   },
 
   {
@@ -243,7 +243,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-9001" },
-    "speciality": "nefrologia"
+    "speciality": "Nefrología"
   },
   {
     "user": {
@@ -257,7 +257,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-9002" },
-    "speciality": "nefrologia"
+    "speciality": "Nefrología"
   },
 
   {
@@ -272,7 +272,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-10001" },
-    "speciality": "endocrinologia"
+    "speciality": "Endocrinología"
   },
   {
     "user": {
@@ -286,7 +286,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-10002" },
-    "speciality": "endocrinologia"
+    "speciality": "Endocrinología"
   },
 
   {
@@ -301,7 +301,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-11001" },
-    "speciality": "traumatologia"
+    "speciality": "Traumatología"
   },
   {
     "user": {
@@ -315,7 +315,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-11002" },
-    "speciality": "traumatologia"
+    "speciality": "Traumatología"
   },
 
   {
@@ -330,7 +330,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-12001" },
-    "speciality": "kinesiologia"
+    "speciality": "Kinesiología"
   },
   {
     "user": {
@@ -344,7 +344,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-12002" },
-    "speciality": "kinesiologia"
+    "speciality": "Kinesiología"
   },
 
   {
@@ -359,7 +359,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-13001" },
-    "speciality": "odontologia"
+    "speciality": "OdontologÍa"
   },
   {
     "user": {
@@ -373,7 +373,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-13002" },
-    "speciality": "odontologia"
+    "speciality": "OdontologÍa"
   },
 
   {
@@ -388,7 +388,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-14001" },
-    "speciality": "otorrinolaringologia"
+    "speciality": "Otorrinolaringología"
   },
   {
     "user": {
@@ -402,7 +402,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-14002" },
-    "speciality": "otorrinolaringologia"
+    "speciality": "Otorrinolaringología"
   },
 
   {
@@ -417,7 +417,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-15001" },
-    "speciality": "reumatologia"
+    "speciality": "Reumatología"
   },
   {
     "user": {
@@ -431,7 +431,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-15002" },
-    "speciality": "reumatologia"
+    "speciality": "Reumatología"
   },
 
   {
@@ -446,7 +446,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-16001" },
-    "speciality": "diagnostico por imagenes"
+    "speciality": "Diagnóstico por Imágenes"
   },
   {
     "user": {
@@ -460,7 +460,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-16002" },
-    "speciality": "diagnostico por imagenes"
+    "speciality": "Diagnóstico por Imágenes"
   },
 
   {
@@ -475,7 +475,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-17001" },
-    "speciality": "ginecologia"
+    "speciality": "Ginecología"
   },
   {
     "user": {
@@ -489,7 +489,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-17002" },
-    "speciality": "ginecologia"
+    "speciality": "Ginecología"
   },
 
   {
@@ -504,7 +504,7 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-18001" },
-    "speciality": "gastroenterologia"
+    "speciality": "Gastroenterología"
   },
   {
     "user": {
@@ -518,6 +518,6 @@
       "isActive": true
     },
     "doctor": { "licence_number": "MP-18002" },
-    "speciality": "gastroenterologia"
+    "speciality": "Gastroenterología"
   }
 ]

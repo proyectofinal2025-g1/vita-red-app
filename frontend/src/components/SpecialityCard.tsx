@@ -15,7 +15,7 @@ export default function SpecialityCard({ especialidad }: Props) {
 
         <p className="mt-1 max-w-2xl text-gray-600">
           {especialidad.description}
-        </p> 
+        </p>
       </div>
 
       {especialidad.isActive && (
