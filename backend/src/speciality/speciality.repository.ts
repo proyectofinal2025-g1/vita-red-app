@@ -53,4 +53,16 @@ export class SpecialityRepository {
       relations: ['doctor', 'doctor.user'],
     });
   }
+
+  async findByIdWithDoctors(id: string) {
+  return this.specialityRepository.findOne({
+    where: { id },
+    relations: {
+      doctor: {
+        user: true,
+      },
+    },
+  });
+}
+
 }
