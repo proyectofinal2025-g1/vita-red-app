@@ -16,7 +16,6 @@ import { CreateAppointmentPreReserveDto } from "../appointments/dto/create-appoi
 import { AppointmentsService } from "../appointments/appointments.service";
 import { PatientAppointmentListResponseDto } from "../appointments/dto/patient-appointment-list-response.dto";
 import { DoctorAppointmentListResponseDto } from "../appointments/dto/doctor-appointment-list.dto";
-import { UpdateDoctorScheduleDto } from "../doctor/schedule/dto/update-doctor-schedule.dto";
 import { DoctorScheduleService } from "../doctor/schedule/schedule.service";
 import { UpdateDoctorScheduleDtoBySecretary } from "./dto/scheduleDoctor.dto";
 import { CreateDoctorScheduleDto } from "../doctor/schedule/dto/create-doctor-schedule.dto";
@@ -127,20 +126,40 @@ export class SecretaryService {
   }
 
 
-  async getDoctorById(doctorId: string){
+  async getDoctorById(doctorId: string) {
     return await this.doctorService.findyById(doctorId)
   }
 
 
-  async createScheduleDoctor(dto: CreateDoctorScheduleDto, doctorId: string){
-    return await this.doctorScheduleService.create({...dto, dayOfWeek: mapDayToNumber(dto.dayOfWeek),},
-    doctorId,
+  async createScheduleDoctor(
+    dto: CreateDoctorScheduleDto,
+    userId: string,
+    role: RolesEnum,
+  ) {
+    return this.doctorScheduleService.create(dto, userId, role);
+  }
+
+
+
+  async updateScheduleDoctor(
+    doctorId: string,
+    dto: UpdateDoctorScheduleDtoBySecretary,
+  ) {
+    return this.doctorScheduleService.updateScheduleDoctor(
+      doctorId,
+      dto,
+      RolesEnum.Secretary,
     );
   }
 
 
-  async updateScheduleDoctor(doctorId: string, dto: UpdateDoctorScheduleDtoBySecretary){
-    return await this.doctorScheduleService.updateScheduleDoctor(doctorId, dto)
+
+  async findSchedulesByDoctor(doctorId: string, userId: string, userRole: RolesEnum) {
+    return this.doctorScheduleService.findByDoctor(
+      doctorId,
+      userId,
+      userRole,
+    );
   }
 
   async getBySpeciality(specialityName?: string): Promise<DoctorFindResponseDto[]> {
@@ -176,96 +195,96 @@ export class SecretaryService {
   }
 
   /*   APPOINTMENTS     */
-  async preReserveAppointment(dto: CreateAppointmentPreReserveDto, userId: string){
+  async preReserveAppointment(dto: CreateAppointmentPreReserveDto, userId: string) {
     return await this.appointmentsService.preReserveAppointment(dto, userId)
   }
 
-async findAppointmentsByPatientId(
-  patientId: string,
-  date?: string,
-  speciality?: string,
-): Promise<PatientAppointmentListResponseDto[]> {
-  await this.userService.findById(patientId);
+  async findAppointmentsByPatientId(
+    patientId: string,
+    date?: string,
+    speciality?: string,
+  ): Promise<PatientAppointmentListResponseDto[]> {
+    await this.userService.findById(patientId);
 
-  const appointments = await this.appointmentsService.findByFiltersPatient({
-    patientId,
-    date,
-    speciality,
-  });
+    const appointments = await this.appointmentsService.findByFiltersPatient({
+      patientId,
+      date,
+      speciality,
+    });
 
 
-   if (!appointments.length) {
-    if (date && speciality) {
+    if (!appointments.length) {
+      if (date && speciality) {
+        throw new NotFoundException(
+          `No appointments were found for the selected speciality on ${date}.`,
+        );
+      }
+
+      if (date) {
+        throw new NotFoundException(
+          `No appointments were found on ${date}.`,
+        );
+      }
+
+      if (speciality) {
+        throw new NotFoundException(
+          `No appointments were found for the selected speciality.`,
+        );
+      }
+
       throw new NotFoundException(
-        `No appointments were found for the selected speciality on ${date}.`,
+        'No appointments were found for this patient.',
       );
     }
 
-    if (date) {
-      throw new NotFoundException(
-        `No appointments were found on ${date}.`,
-      );
-    }
-
-    if (speciality) {
-      throw new NotFoundException(
-        `No appointments were found for the selected speciality.`,
-      );
-    }
-
-    throw new NotFoundException(
-      'No appointments were found for this patient.',
-    );
+    return appointments.map((appointment) => ({
+      id: appointment.id,
+      date: appointment.date.toISOString().substring(0, 10),
+      time: appointment.date.toISOString().substring(11, 16),
+      doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
+      speciality: appointment.speciality.name,
+      status: appointment.status,
+    }));
   }
 
-  return appointments.map((appointment) => ({
-    id: appointment.id,
-    date: appointment.date.toISOString().substring(0, 10),
-    time: appointment.date.toISOString().substring(11, 16),
-    doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
-    speciality: appointment.speciality.name,
-    status: appointment.status,
-  }));
-}
+
+  async findAgendByDoctor(
+    doctorId: string,
+    date?: string,
+    patientId?: string
+  ): Promise<DoctorAppointmentListResponseDto[]> {
+    await this.doctorService.findyById(doctorId)
+
+    const appointments = await this.appointmentsService.findByFiltersDoctor({
+      doctorId,
+      date,
+      patientId
+    });
+
+    if (!appointments.length) {
+      if (date) {
+        throw new NotFoundException(
+          `No appointments were found on ${date}.`,
+        );
+      }
 
 
-async findAgendByDoctor(
-  doctorId: string,
-  date?: string,
-  patientId?: string
-): Promise<DoctorAppointmentListResponseDto[]> {
-  await this.doctorService.findyById(doctorId)
-
-  const appointments = await this.appointmentsService.findByFiltersDoctor({
-    doctorId,
-    date,
-    patientId
-  });
-
-   if (!appointments.length) {
-    if (date) {
       throw new NotFoundException(
-        `No appointments were found on ${date}.`,
+        'No appointments were found for this doctor.',
       );
     }
 
-
-    throw new NotFoundException(
-      'No appointments were found for this doctor.',
-    );
+    return appointments.map((appointment) => ({
+      id: appointment.id,
+      date: appointment.date.toISOString().substring(0, 10),
+      time: appointment.date.toISOString().substring(11, 16),
+      patientName: `${appointment.patient.first_name} ${appointment.patient.last_name}`,
+      status: appointment.status,
+    }));
   }
 
-  return appointments.map((appointment) => ({
-    id: appointment.id,
-    date: appointment.date.toISOString().substring(0, 10),
-    time: appointment.date.toISOString().substring(11, 16),
-    patientName: `${appointment.patient.first_name} ${appointment.patient.last_name}`,
-    status: appointment.status,
-  }));
-}
 
-
-async getAppointmentById(id: string){
-  return await this.appointmentsService.findById(id)
-}
+  async getAppointmentById(id: string) {
+    return await this.appointmentsService.findById(id)
+  }
 }
