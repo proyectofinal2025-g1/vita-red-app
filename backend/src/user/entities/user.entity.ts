@@ -20,14 +20,14 @@ export class User {
     @Column({type: 'varchar', nullable: false, length: 30})
     last_name: string;
 
-    @Column({type: 'varchar', nullable: false, unique: true, length: 15})
-    dni: string;
+    @Column({type: 'varchar', nullable: true, unique: true, length: 15})
+    dni: string | null;
 
     @Column({ length: 50, nullable: false, type: 'varchar', unique: true })
     email: string;
 
-    @Column({ nullable: false, type: 'varchar' })
-    password: string;
+    @Column({ nullable: true, type: 'varchar' })
+    password: string | null;
 
     @Column({ type: 'enum', enum: RolesEnum, default: RolesEnum.User })
     role: RolesEnum

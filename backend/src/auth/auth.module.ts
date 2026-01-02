@@ -9,8 +9,13 @@ import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), CloudinaryModule, NotificationModule],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    CloudinaryModule,
+    NotificationModule,
+  ],
   controllers: [AuthController],
   providers: [AuthService, UserRepository, UserService],
+  exports: [AuthService],
 })
 export class AuthModule {}
