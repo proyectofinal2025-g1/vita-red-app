@@ -97,6 +97,60 @@ export default function RegisterPage() {
               </div>
             )}
 
+            <button
+              onClick={() =>
+                (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
+              }
+              className="
+    flex items-center justify-center gap-3
+    w-full max-w-sm
+    px-5 py-3
+    border border-gray-300
+    rounded-lg
+    bg-white
+    text-gray-700 font-medium
+    shadow-sm
+    hover:bg-gray-50
+    hover:shadow-md
+    transition
+    focus:outline-none
+    focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+  "
+            >
+              <img src="https://res.cloudinary.com/ds6anafmo/image/upload/v1767363345/pngtree-google-internet-icon-vector-png-image_9183287_zv82g1.png" alt="Google" className="w-5 h-5" />
+              <span>Registrarse con Google</span>
+            </button>
+
+            {/* Email */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="tu@email.com"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  formik.touched.email && formik.errors.email
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300"
+                }`}
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              {formik.touched.email && formik.errors.email && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formik.errors.email}
+                </p>
+              )}
+            </div>
+
+
             {/* Primer nombre */}
             <div>
               <label

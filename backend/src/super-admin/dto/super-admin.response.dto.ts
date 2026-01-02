@@ -16,7 +16,7 @@ export class SuperAdminResponse {
     last_name: string;
 
     @ApiProperty({ example: '12345678' })
-    dni: string;
+    dni: string | null;
 
     @ApiProperty({ example: 'juan@mail.com' })
     email: string;

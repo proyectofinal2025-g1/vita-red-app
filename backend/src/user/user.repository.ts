@@ -5,57 +5,83 @@ import { ILike, Repository } from 'typeorm';
 
 @Injectable()
 export class UserRepository {
-    constructor(@InjectRepository(User) private readonly userRepository: Repository<User>) { }
+  constructor(
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+  ) {}
 
-    async findByEmail(email: string) {
-        const userFound = await this.userRepository.findOneBy({ email })
-        return userFound
+  async findByEmail(email: string) {
+    const userFound = await this.userRepository.findOneBy({ email });
+    return userFound;
+  }
+
+  save(user: User): Promise<User> {
+    return this.userRepository.save(user);
+  }
+
+  async create(
+    createUser: Pick<
+      User,
+      | 'email'
+      | 'password'
+      | 'first_name'
+      | 'last_name'
+      | 'dni'
+      | 'profileImageUrl'
+    >,
+  ): Promise<User> {
+    const userCreate = await this.userRepository.create(createUser);
+    return await this.userRepository.save(userCreate);
+  }
+
+  async findAll() {
+    return await this.userRepository.find();
+  }
+
+  async findById(id: string) {
+    return await this.userRepository.findOneBy({ id });
+  }
+
+  async findByName(first_name?: string, last_name?: string) {
+    const where: any = {};
+
+    if (first_name) {
+      where.first_name = ILike(`%${first_name}%`);
     }
 
-
-    async create(createUser: Pick<User, 'email' | 'password' | 'first_name' | 'last_name' | 'dni' | 'profileImageUrl'>) {
-        const userCreate = await this.userRepository.create(createUser)
-        const userSave = await this.userRepository.save(userCreate)
-        return userSave.id
+    if (last_name) {
+      where.last_name = ILike(`%${last_name}%`);
     }
 
-    async findAll() {
-        return await this.userRepository.find()
-    }
+    return this.userRepository.find({ where });
+  }
 
-    async findById(id: string) {
-        return await this.userRepository.findOneBy({ id })
-    }
+  async findByDni(dni: string) {
+    return await this.userRepository.findOneBy({ dni });
+  }
 
-    async findByName(first_name?: string, last_name?: string) {
-        const where: any = {};
+  async update(id: string, updateUser: Partial<User>) {
+    await this.userRepository.update(id, updateUser);
+    return `The user with id: ${id} was successfully updated`;
+  }
 
-        if (first_name) {
-            where.first_name = ILike(`%${first_name}%`);
-        }
+  async disable(user: User) {
+    await this.userRepository.save(user);
+  }
 
-        if (last_name) {
-            where.last_name = ILike(`%${last_name}%`);
-        }
+  async updatePassword(user: any) {
+    return await this.userRepository.save(user);
+  }
 
-        return this.userRepository.find({ where });
-    }
-
-    async findByDni(dni: string) {
-        return await this.userRepository.findOneBy({ dni })
-    }
-
-
-    async update(id: string, updateUser: Partial<User>) {
-        await this.userRepository.update(id, updateUser)
-        return `The user with id: ${id} was successfully updated`
-    }
-
-    async disable(user: User) {
-        await this.userRepository.save(user);
-    }
-
-    async updatePassword(user: any) {
-        return await this.userRepository.save(user)
-    }
+  async createGoogleUser(data: CreateGoogleUserInput): Promise<User> {
+    const user = await this.create(data);
+    return this.save(user);
+  }
 }
+
+export type CreateGoogleUserInput = Pick<
+  User,
+  'email' | 'first_name' | 'last_name'
+> & {
+  password: null;
+  dni: null;
+};
