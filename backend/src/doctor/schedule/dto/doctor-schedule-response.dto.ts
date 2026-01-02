@@ -6,6 +6,9 @@ export class DoctorScheduleResponseDto {
   id: string;
 
   @ApiProperty()
+  doctorId: string
+
+  @ApiProperty()
   dayOfWeek: DayOfWeekEnum;
 
   @ApiProperty()
