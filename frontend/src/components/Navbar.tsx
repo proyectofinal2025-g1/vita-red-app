@@ -141,7 +141,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* MENU MÓVIL (solo visible en pantallas pequeñas) */}
+      {/* MENU MÓVIL */}
       {openMenu && (
         <div className='md:hidden bg-chocolate border-t border-default w-full flex flex-col items-center gap-4 py-4'>
           {navItems.map((navigationItem) => (

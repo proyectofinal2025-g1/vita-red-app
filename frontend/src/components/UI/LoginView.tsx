@@ -1,3 +1,4 @@
+// src/components/UI/LoginView.tsx
 'use client';
 
 import { useFormik } from 'formik';
@@ -11,11 +12,11 @@ import { ILoginFormValues } from '@/interfaces/ILoginFormValues';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
-import { IUserSession } from '@/interfaces/IUserSession';
 import { decodeJWT } from '@/utils/decodeJWT';
+import { getDashboardRoute } from '@/utils/getDashboardRoute';
 
 const LoginForm = () => {
-  const { setDataUser } = useAuth();
+  const { loginWithToken } = useAuth();
   const router = useRouter();
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +29,7 @@ const LoginForm = () => {
       setSubmitting(true);
 
       try {
-        const data = await loginUserService(values); // Devuelve { Token: "...", success: "..." }
+        const data = await loginUserService(values);
 
         const token = data.Token;
         const payload = decodeJWT(token);
@@ -37,34 +38,25 @@ const LoginForm = () => {
           throw new Error('Token inválido');
         }
 
-        // userSession con los datos reales del token
-        const userSession: IUserSession = {
-          login: true,
-          token,
-          user: {
-            id: payload.sub, // UUID del usuario
-            first_name: payload.first_name,
-            last_name: payload.last_name,
-            email: payload.email,
-            role: payload.role,
-            appointments: [],
-          },
-        };
-
-        // Guardar en AuthContext → persiste en localStorage
-        setDataUser(userSession);
-
-        // Mostrar éxito
+        loginWithToken(token);
 
         Swal.fire({
           icon: 'success',
           title: '¡Bienvenido!',
-          text: `Hola ${payload.first_name}, has iniciado sesión correctamente.`,
+          text: `Hola ${payload.first_name}, has iniciado sesión correctamente.           Ten encuenta que tu sesion expirara en 1 hora.`,
           confirmButtonText: 'Continuar',
           timer: 6000,
           timerProgressBar: true,
         }).then(() => {
-          router.push('/');
+          console.log(
+            'Role recibido:',
+            payload.role,
+            'Tipo:',
+            typeof payload.role
+          );
+          const route = getDashboardRoute(payload.role);
+          console.log('Ruta calculada:', route);
+          router.push(route);
         });
       } catch (err: unknown) {
         if (err instanceof Error) {

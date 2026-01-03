@@ -1,61 +1,66 @@
 // src/hooks/useSessionTimer.ts
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { decodeJWT } from '@/utils/decodeJWT';
 
-const SESSION_DURATION_MS = 60 * 60 * 1000; // 1 hora = 3600000 ms
-
-export const useSessionTimer = (token: string | null) => {
-  const [timeLeft, setTimeLeft] = useState<number>(SESSION_DURATION_MS);
-  const [isExpired, setIsExpired] = useState<boolean>(false);
+export const useSessionTimer = (
+  token: string | null,
+  onExpire?: () => void
+) => {
+  const [timeLeft, setTimeLeft] = useState<number>(0);
+  const hasExpired = useRef(false);
 
   useEffect(() => {
+    hasExpired.current = false; // Reset al cambiar el token
+
     if (!token) {
-      setTimeLeft(0);
-      setIsExpired(true);
+      if (!hasExpired.current) {
+        hasExpired.current = true;
+        onExpire?.();
+      }
       return;
     }
 
     const payload = decodeJWT(token);
-    if (!payload || !payload.exp) {
-      setTimeLeft(0);
-      setIsExpired(true);
+    if (!payload || typeof payload.exp !== 'number') {
+      if (!hasExpired.current) {
+        hasExpired.current = true;
+        onExpire?.();
+      }
       return;
     }
 
-    const expiryTime = payload.exp * 1000; // exp en milisegundos
-    const now = Date.now();
-    let remaining = Math.max(0, expiryTime - now);
+    const expiryTime = Date.now() + 60 * 60 * 1000; //  + 30 * 1000; para expirar en 30 segundos
+    const updateTimer = () => {
+      const now = Date.now();
+      const remaining = expiryTime - now;
 
-    // Si el token ya expiró
-    if (remaining <= 0) {
-      setIsExpired(true);
-      setTimeLeft(0);
-      return;
-    }
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        if (!hasExpired.current) {
+          hasExpired.current = true;
+          onExpire?.();
+        }
+        return false;
+      } else {
+        setTimeLeft(remaining);
+        return true;
+      }
+    };
 
-    setTimeLeft(remaining);
+    const continueTimer = updateTimer();
+    if (!continueTimer) return;
 
     const interval = setInterval(() => {
-      setTimeLeft((prev) => {
-        const next = prev - 1000;
-        if (next <= 0) {
-          setIsExpired(true);
-          clearInterval(interval);
-          return 0;
-        }
-        return next;
-      });
+      const shouldContinue = updateTimer();
+      if (!shouldContinue) {
+        clearInterval(interval);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token]); // 👈 ¡Solo depende de token!
 
-  const percentage = Math.max(
-    0,
-    Math.min(100, (timeLeft / SESSION_DURATION_MS) * 100)
-  );
-
-  return { timeLeft, percentage, isExpired };
+  return { timeLeft };
 };
