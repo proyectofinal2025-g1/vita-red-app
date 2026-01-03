@@ -6,6 +6,8 @@ import {
   Req,
   Param,
   Patch,
+  Get,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -44,5 +46,12 @@ export class AppointmentsController {
   @Patch(':id/cancel')
   async cancel(@Param('id') id: string, @Req() req) {
     return this.appointmentsService.cancelAppointment(id, req.user.sub);
+  }
+
+  @ApiOperation({ summary: 'Obtener todos mis turnos' })
+  @ApiOkResponse({ type: [AppointmentResponseDto] })
+  @Get('my')
+  async getMyAppointments(@Req() req): Promise<AppointmentResponseDto[]> {
+    return this.appointmentsService.findAllByPatientId(req.user.sub);
   }
 }
