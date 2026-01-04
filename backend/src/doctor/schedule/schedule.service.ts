@@ -10,9 +10,7 @@ import { DoctorSchedule } from './entities/schedule.entity';
 import { Doctor } from '../entities/doctor.entity';
 import { UpdateDoctorScheduleDto } from './dto/update-doctor-schedule.dto';
 import { DoctorService } from '../doctor.service';
-import { mapDayToNumber } from './helper/mapDayOfWeek.helper';
 import { DoctorScheduleResponseDto } from './dto/doctor-schedule-response.dto';
-import { mapNumberToDay } from './helper/mapDaysOfWeekNumToString.helper';
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
 import { RolesEnum } from '../../user/enums/roles.enum';
 
@@ -65,6 +63,17 @@ export class DoctorScheduleService {
       }
     }
 
+    if (role === RolesEnum.User) {
+  doctor = await this.doctorRepo.findOne({
+    where: { id: dto.doctorId, isActive: true },
+  });
+
+  if (!doctor) {
+    throw new NotFoundException('Not found doctor.');
+  }
+}
+
+
     if (!doctor) {
       throw new ForbiddenException('Unauthorized role.');
     }
@@ -79,14 +88,14 @@ export class DoctorScheduleService {
     const findDay = await this.scheduleRepo.findOne({
       where: {
         doctor: { id: doctor.id },
-        dayOfWeek: mapDayToNumber(dto.dayOfWeek),
+        dayOfWeek: dto.dayOfWeek,
       },
     })
     if (findDay) throw new BadRequestException('There is already a schedule available for the requested day.')
 
     const schedule = await this.scheduleRepo.create({
       doctor,
-      dayOfWeek: mapDayToNumber(dto.dayOfWeek),
+      dayOfWeek: dto.dayOfWeek,
       startTime: dto.startTime,
       endTime: dto.endTime,
       slotDuration: dto.slotDuration,
@@ -97,7 +106,7 @@ export class DoctorScheduleService {
     return {
       id: saved.id,
       doctorId: doctor.id,
-      dayOfWeek: mapNumberToDay(saved.dayOfWeek),
+      dayOfWeek: saved.dayOfWeek,
       startTime: saved.startTime,
       endTime: saved.endTime,
       slotDuration: saved.slotDuration,
@@ -135,7 +144,7 @@ export class DoctorScheduleService {
 
     if (
       userRole === RolesEnum.Secretary ||
-      userRole === RolesEnum.SuperAdmin
+      userRole === RolesEnum.SuperAdmin || userRole === RolesEnum.User
     ) {
       doctor = await this.doctorRepo.findOne({
         where: { id: doctorId, isActive: true },
@@ -165,7 +174,7 @@ export class DoctorScheduleService {
     return schedulesList.map((sch) => ({
       id: sch.id,
       doctorId: sch.doctor.id,
-      dayOfWeek: mapNumberToDay(sch.dayOfWeek),
+      dayOfWeek: sch.dayOfWeek,
       startTime: sch.startTime,
       endTime: sch.endTime,
       slotDuration: sch.slotDuration,
@@ -232,12 +241,10 @@ export class DoctorScheduleService {
       throw new NotFoundException('Doctor not found');
     }
 
-    const dayNumber = mapDayToNumber(dto.dayOfWeek);
-
     const schedule = await this.scheduleRepo.findOne({
       where: {
         doctor: { id: doctor.id },
-        dayOfWeek: dayNumber,
+        dayOfWeek: dto.dayOfWeek,
       },
       relations: { doctor: true },
     });
@@ -254,7 +261,7 @@ export class DoctorScheduleService {
 
     const updateData: Partial<DoctorSchedule> = {
       ...dto,
-      dayOfWeek: dayNumber,
+      dayOfWeek: dto.dayOfWeek,
     };
 
     await this.scheduleRepo.update(schedule.id, updateData);
@@ -269,7 +276,7 @@ export class DoctorScheduleService {
     return {
       id: updatedSchedule.id,
       doctorId: updatedSchedule.doctor.id,
-      dayOfWeek: mapNumberToDay(updatedSchedule.dayOfWeek),
+      dayOfWeek: updatedSchedule.dayOfWeek,
       startTime: updatedSchedule.startTime,
       endTime: updatedSchedule.endTime,
       slotDuration: updatedSchedule.slotDuration,

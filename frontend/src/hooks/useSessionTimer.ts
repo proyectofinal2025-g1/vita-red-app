@@ -31,7 +31,8 @@ export const useSessionTimer = (
       return;
     }
 
-    const expiryTime = Date.now() + 60 * 60 * 1000; //  + 30 * 1000; para expirar en 30 segundos
+
+    const expiryTime = payload.exp * 1000;
     const updateTimer = () => {
       const now = Date.now();
       const remaining = expiryTime - now;
