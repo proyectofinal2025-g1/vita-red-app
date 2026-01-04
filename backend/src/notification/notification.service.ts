@@ -27,16 +27,31 @@ export class NotificationService {
         }
     }
 
-    async sendAppointmentCreatedNotification(email: string, first_name: string) {
+    async sendAppointmentCreatedNotification(params: {
+        email: string;
+        first_name: string;
+        date: Date;
+        doctorName: string;
+    }) {
         const notification = {
             type: NotificationType.APPOINTMENT_CREATED,
             channel: NotificationChannel.EMAIL,
-            recipientEmail: email
+            recipientEmail: params.email
         }
         const newNotification = await this.notificationRepository.createNotification(notification)
 
         try {
-            await this.mailerService.sendAppointmentCreatedEmail(email, first_name)
+            let html = this.mailerService.loadTemplate('appointment-created.html');
+            html = html.replace('{{name}}', params.first_name);
+            html = html.replace('{{date}}', params.date.toLocaleDateString('es-AR'))
+            html = html.replace('{{time}}', params.date.toLocaleTimeString('es-AR', {
+                hour: '2-digit',
+                minute: '2-digit',
+            })
+            )
+            html = html.replace('{{doctor}}', params.doctorName);
+            const subject = 'Turno confirmado';
+            await this.mailerService.sendEmail(params.email, subject, html)
             await this.notificationRepository.markAsSent(newNotification.id)
         } catch (error) {
             await this.notificationRepository.markAsFailed(newNotification.id, error.message)
@@ -44,16 +59,29 @@ export class NotificationService {
 
     }
 
-    async sendAppointmentCancelledNotification(email: string, first_name: string) {
+    async sendAppointmentCancelledNotification(params: {
+        email: string;
+        first_name: string;
+        date: Date;
+    }) {
         const notification = {
             type: NotificationType.APPOINTMENT_CANCELLED,
             channel: NotificationChannel.EMAIL,
-            recipientEmail: email
+            recipientEmail: params.email
         }
         const newNotification = await this.notificationRepository.createNotification(notification)
 
         try {
-            await this.mailerService.sendAppointmentCancelledEmail(email, first_name)
+            let html = this.mailerService.loadTemplate('appointment-cancelled.html');
+            html = html.replace('{{name}}', params.first_name);
+            html = html.replace('{{date}}', params.date.toLocaleDateString('es-AR'))
+            html = html.replace('{{time}}', params.date.toLocaleTimeString('es-AR', {
+                hour: '2-digit',
+                minute: '2-digit',
+            })
+            )
+            const subject = 'Turno cancelado';
+            await this.mailerService.sendEmail(params.email, subject, html)
             await this.notificationRepository.markAsSent(newNotification.id)
         } catch (error) {
             await this.notificationRepository.markAsFailed(newNotification.id, error.message)

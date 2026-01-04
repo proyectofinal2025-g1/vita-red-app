@@ -12,7 +12,7 @@ const images = [
   "/medico-clinico.jpg",
   "/nutricion.jpg",
   "/oftalmologia.jpg",
-  "/rehabilitacion.jpg",
+  "/rehabilitacion.jpg", 
 ];
 
 export default function CarrouselHome() {

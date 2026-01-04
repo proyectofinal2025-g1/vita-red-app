@@ -6,6 +6,8 @@ import {
   Req,
   Param,
   Patch,
+  Get,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -20,21 +22,22 @@ import { CreateAppointmentPreReserveDto } from './dto/create-appointment-pre-res
 import { AppointmentResponseDto } from './dto/appointment-response.dto';
 
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
 
 @ApiTags('Appointments')
-//@ApiBearerAuth()
-//@UseGuards(AuthGuard)
+@ApiBearerAuth()
+@UseGuards(AuthGuard)
 @Controller('appointments')
 export class AppointmentsController {
   constructor(private readonly appointmentsService: AppointmentsService) {}
 
   @Post('pre-reserve')
   @ApiOperation({ summary: 'Pre-reservar un turno (requiere pago)' })
-  @ApiCreatedResponse({ type: AppointmentResponseDto })
+  @ApiCreatedResponse({ type: PreReserveAppointmentResponseDto })
   async preReserve(
     @Req() req,
     @Body() dto: CreateAppointmentPreReserveDto,
-  ): Promise<AppointmentResponseDto> {
+  ): Promise<PreReserveAppointmentResponseDto> {
     return this.appointmentsService.preReserveAppointment(dto, req.user.sub);
   }
 
@@ -43,5 +46,12 @@ export class AppointmentsController {
   @Patch(':id/cancel')
   async cancel(@Param('id') id: string, @Req() req) {
     return this.appointmentsService.cancelAppointment(id, req.user.sub);
+  }
+
+  @ApiOperation({ summary: 'Obtener todos mis turnos' })
+  @ApiOkResponse({ type: [AppointmentResponseDto] })
+  @Get('my')
+  async getMyAppointments(@Req() req): Promise<AppointmentResponseDto[]> {
+    return this.appointmentsService.findAllByPatientId(req.user.sub);
   }
 }

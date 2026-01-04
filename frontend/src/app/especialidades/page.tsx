@@ -1,7 +1,7 @@
-import React from "react";
 import { getAllSpecialityService } from "@/services/specialityServices";
 import SpecialityList from "@/components/SpecialityList";
 
+export const dynamic = "force-dynamic";
 const page = async () => {
   const allSpecialitys = await getAllSpecialityService();
   return (

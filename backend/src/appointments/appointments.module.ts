@@ -12,11 +12,13 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { ScheduleModule } from '../doctor/schedule/schedule.module';
 import { AppointmentsExpirationService } from './appointments-expiration.service';
 import { AppointmentsRepository } from './appointments.repository';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Appointment, User, Speciality, Doctor]),
     DoctorModule,
+    NotificationModule,
     ScheduleModule,
   ],
   controllers: [AppointmentsController],

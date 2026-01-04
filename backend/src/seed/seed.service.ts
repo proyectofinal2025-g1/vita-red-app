@@ -15,6 +15,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 interface Seeder {
   user: {
+    profileImageUrl: string;
     first_name: string;
     last_name: string;
     dni: string;
@@ -39,8 +40,8 @@ export class SeederService {
     private readonly userRepository: UserRepository,
     private readonly doctorService: DoctorService,
     private readonly specialityService: SpecialityService,
-    @InjectRepository(User) private readonly userDb: Repository<User>
-  ) { }
+    @InjectRepository(User) private readonly userDb: Repository<User>,
+  ) {}
 
   async seedSuperAdmin() {
     const SuperAdmin: Partial<User> = {
@@ -48,19 +49,23 @@ export class SeederService {
       last_name: process.env.LAST_NAME_SUPERADMIN,
       dni: process.env.DNI_SUPERADMIN,
       email: process.env.EMAIL_SUPERADMIN,
-      password: process.env.PASSWORD_SUPERADMIN
+      password: process.env.PASSWORD_SUPERADMIN,
     };
 
-    const userFound = await this.userRepository.findByEmail(SuperAdmin.email!)
+    const userFound = await this.userRepository.findByEmail(SuperAdmin.email!);
     if (userFound) {
-      this.logger.warn('Ya existe un superAdmin')
+      this.logger.warn('Ya existe un superAdmin');
     } else {
-      if (!process.env.PASSWORD_SUPERADMIN) throw new Error('No existe la password') 
-      const passwordHash = await bcrypt.hashSync(process.env.PASSWORD_SUPERADMIN, 10)
+      if (!process.env.PASSWORD_SUPERADMIN)
+        throw new Error('No existe la password');
+      const passwordHash = await bcrypt.hashSync(
+        process.env.PASSWORD_SUPERADMIN,
+        10,
+      );
       SuperAdmin.role = RolesEnum.SuperAdmin;
-      SuperAdmin.password = passwordHash
-      await this.userDb.save(SuperAdmin)
-      this.logger.log('SuperAdmin creado correctamente')
+      SuperAdmin.password = passwordHash;
+      await this.userDb.save(SuperAdmin);
+      this.logger.log('SuperAdmin creado correctamente');
     }
   }
 
@@ -78,15 +83,23 @@ export class SeederService {
         if (!user) {
           const hashedPassword = await bcrypt.hash(seed.user.password, 10);
 
-          const userId = await this.userService.create({
+          user = await this.userService.create({
+            profileImageUrl: seed.user.profileImageUrl,
             email: seed.user.email,
             password: hashedPassword,
             first_name: seed.user.first_name,
             last_name: seed.user.last_name,
             dni: seed.user.dni,
           });
+        }
 
-          user = await this.userRepository.findById(userId);
+        if (user.role !== RolesEnum.Medic) {
+          await this.userRepository.update(user.id, {
+            role: RolesEnum.Medic,
+            is_active: true,
+          });
+
+          user = await this.userRepository.findById(user.id);
         }
 
         if (!user) {
@@ -124,10 +137,6 @@ export class SeederService {
           user_id: user!.id,
           speciality_id: speciality.id,
         });
-
-        this.logger.log(
-          `Doctor ${seed.doctor.licence_number} cargado correctamente`,
-        );
       } catch (error) {
         this.logger.error(
           `Error al procesar doctor ${seed.doctor.licence_number}: ${error.message}`,

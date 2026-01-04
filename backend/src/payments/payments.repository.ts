@@ -15,14 +15,27 @@ export class PaymentsRepository {
     return this.paymentsRepository.create(payment);
   }
 
-  save(payment: Payment): Promise<Payment> {
+  async save(payment: Payment): Promise<Payment> {
     return this.paymentsRepository.save(payment);
   }
 
-  findByExternalPaymentId(externalPaymentId: string): Promise<Payment | null> {
+  async findByExternalPaymentId(
+    externalPaymentId: string,
+  ): Promise<Payment | null> {
     return this.paymentsRepository.findOne({
       where: { externalPaymentId },
       relations: { appointment: true },
+    });
+  }
+
+  async findPendingByAppointmentId(
+    appointmentId: string,
+  ): Promise<Payment | null> {
+    return this.paymentsRepository.findOne({
+      where: {
+        appointment: { id: appointmentId },
+        status: PaymentStatus.PENDING,
+      },
     });
   }
 }

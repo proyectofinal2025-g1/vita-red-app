@@ -4,14 +4,14 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-sky-100 to-blue-200 text-blue-900 px-6 text-center">
-      {/* Emoji principal */}
+    <div className="flex flex-col items-center justify-center text-blue-900 px-6 text-center mt-20">
+      
       <div className="text-7xl mb-6 animate-bounce">🩺</div>
 
       <h1 className="text-6xl font-extrabold mb-2">404</h1>
       <h2 className="text-2xl font-semibold mb-4">
         Ups… esta página no pasó por admisión
-      </h2>
+      </h2> 
 
       <p className="max-w-md text-blue-800 mb-8">
         Revisamos la historia clínica, buscamos en todos los consultorios… pero

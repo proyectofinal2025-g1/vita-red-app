@@ -6,6 +6,7 @@ import { MercadoPagoService } from '../mercado-pago.service';
 import { PaymentsService } from '../payments.service';
 import { Payment } from '../entities/payment.entity';
 import { PaymentStatus } from '../enums/payment-status.enum';
+import { PaymentsRepository } from '../payments.repository';
 
 @Injectable()
 export class MercadoPagoWebhookService {
@@ -14,74 +15,62 @@ export class MercadoPagoWebhookService {
   constructor(
     private readonly mercadoPagoService: MercadoPagoService,
     private readonly paymentsService: PaymentsService,
-    @InjectRepository(Payment)
-    private readonly paymentsRepository: Repository<Payment>,
   ) {}
 
   async handle(rawBody: Buffer): Promise<void> {
     try {
       const body = JSON.parse(rawBody.toString());
 
-      // Solo procesamos eventos de pago
-      if (body.type !== 'payment') return;
+      this.logger.log(`Webhook recibido | topic=${body.topic}`);
 
-      const paymentId = body.data?.id;
-      if (!paymentId) return;
+      // SOLO merchant_order
+      if (body.topic !== 'merchant_order') {
+        this.logger.warn('Webhook ignorado (no merchant_order)');
+        return;
+      }
 
-      // Fuente de verdad: API de Mercado Pago
-      const payment = await this.mercadoPagoService.getPayment(paymentId);
+      const merchantOrderId = body.id || body.resource?.split('/').pop();
+      if (!merchantOrderId) {
+        this.logger.warn('merchant_order sin id');
+        return;
+      }
 
-      if (payment.status !== 'approved') {
+      // Fuente de verdad
+      const merchantOrder =
+        await this.mercadoPagoService.getMerchantOrder(merchantOrderId);
+
+      const approvedPayment = merchantOrder.payments?.find(
+        (p) => p.status === 'approved',
+      );
+
+      if (!approvedPayment) {
         this.logger.warn(
-          `Webhook MP ignorado | paymentId=${paymentId} | status=${payment.status}`,
+          `Merchant order ${merchantOrderId} sin pagos aprobados`,
         );
         return;
       }
 
-      if (!payment.external_reference) {
+      const appointmentId = merchantOrder.external_reference;
+      if (!appointmentId) {
         this.logger.warn(
-          `Pago aprobado sin external_reference | paymentId=${paymentId}`,
+          `Pago aprobado sin external_reference | paymentId=${approvedPayment.id}`,
         );
         return;
       }
 
-      const externalPaymentId = payment.id.toString();
-      const appointmentId = payment.external_reference;
-
-      // Idempotencia
-      const existingPayment = await this.paymentsRepository.findOne({
-        where: { externalPaymentId },
-      });
-
-      if (existingPayment) {
-        // Solo actualizamos si aún no tenía fecha de pago
-        if (!existingPayment.paidAt) {
-          existingPayment.status = PaymentStatus.APPROVED;
-          existingPayment.paidAt = new Date(payment.date_approved);
-          existingPayment.amount = payment.transaction_amount;
-
-          await this.paymentsRepository.save(existingPayment);
-
-          this.logger.log(`Pago actualizado | paymentId=${externalPaymentId}`);
-        }
-
-        return;
-      }
-
-      // Confirmación final (turno + pago)
       await this.paymentsService.processApprovedPayment({
         appointmentId,
-        externalPaymentId,
-        amount: payment.transaction_amount,
-        paidAt: new Date(payment.date_approved),
+        externalPaymentId: approvedPayment.id.toString(),
+        amount: approvedPayment.transaction_amount,
+        paidAt: new Date(approvedPayment.date_approved),
       });
 
       this.logger.log(
-        `Pago confirmado | paymentId=${externalPaymentId} | appointmentId=${appointmentId}`,
+        `Pago confirmado | paymentId=${approvedPayment.id} | appointmentId=${appointmentId}`,
       );
     } catch (error) {
       this.logger.error(
-        'Error procesando webhook de Mercado Pago',
+        '❌ Error procesando webhook Mercado Pago',
         error.stack,
       );
     }

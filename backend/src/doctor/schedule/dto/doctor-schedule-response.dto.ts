@@ -1,12 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { DayOfWeekEnum } from '../enum/enumDays';
 
 export class DoctorScheduleResponseDto {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  dayOfWeek: DayOfWeekEnum;
+  doctorId: string
+
+  @ApiProperty()
+  dayOfWeek: number;
 
   @ApiProperty()
   startTime: string;

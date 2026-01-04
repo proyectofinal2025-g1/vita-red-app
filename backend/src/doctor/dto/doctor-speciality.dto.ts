@@ -24,4 +24,10 @@ export class DoctorForSpecialityDto {
     description: 'Apellido del médico',
   })
   last_name: string;
+
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/ds6anafmo/image/upload/v1767278713/istockphoto-1162198273-612x612_whldhm.jpg',
+    description: 'Foto de perfil del médico',
+  })
+  profileImageUrl:string
 }

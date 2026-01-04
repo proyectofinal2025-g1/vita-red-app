@@ -18,6 +18,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationModule } from './notification/notification.module';
 import { MedicalRecordModule } from './medical-record/medical-record.module';
+import { AuthGoogleModule } from './auth/google/auth.google.module'
 
 dotenvConfig({ path: './.env.development' });
 
@@ -55,6 +56,7 @@ dotenvConfig({ path: './.env.development' });
     MedicalRecordModule,
     AppointmentsModule,
     PaymentsModule,
+    AuthGoogleModule
   ],
   controllers: [],
   providers: [],
