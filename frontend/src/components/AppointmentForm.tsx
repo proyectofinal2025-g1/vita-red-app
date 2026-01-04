@@ -88,8 +88,14 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
     setLoadingTimes(true);
     setErrorMessage(null);
+    const token = getAuthToken();
 
-    getDoctorSchedules(selectedDoctor)
+    if (!token) {
+      setErrorMessage("Sesión expirada");
+      return;
+    }
+
+    getDoctorSchedules(selectedDoctor, token)
       .then((schedules) => {
         const date = new Date(`${selectedDate}T00:00:00`);
         const dayOfWeek = getDayOfWeekAsNumber(date);
@@ -240,13 +246,24 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         </select>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-600 text-white py-2 rounded"
-      >
-        {isSubmitting ? "Redirigiendo…" : "Confirmar turno"}
-      </button>
+      <div className="flex gap-3">
+  <button
+    type="button"
+    onClick={onClose}
+    className="w-1/2 border border-gray-300 text-white py-2 rounded hover:bg-red-600 bg-red-500"
+  >
+    Cancelar
+  </button>
+
+  <button
+    type="submit"
+    disabled={isSubmitting}
+    className="w-1/2 bg-blue-500 text-white py-2 rounded disabled:opacity-50 hover:bg-blue-600"
+  >
+    {isSubmitting ? "Redirigiendo…" : "Confirmar turno"}
+  </button>
+</div>
+
     </form>
   );
 }

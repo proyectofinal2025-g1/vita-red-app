@@ -1,17 +1,14 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { CreateDoctorScheduleDto } from './create-doctor-schedule.dto';
-import { IsEnum, IsInt, IsOptional, Matches, Max, Min } from 'class-validator';
-import { DayOfWeekEnum } from '../enum/enumDays';
+import { IsInt, IsOptional, Matches, Min } from 'class-validator';
 
 export class UpdateDoctorScheduleDto extends PartialType(
   CreateDoctorScheduleDto,
 ) {
   @ApiProperty({
-    enum: DayOfWeekEnum,
-    example: 'Lunes',
+    example: '1',
   })
-  @IsEnum(DayOfWeekEnum)
-  dayOfWeek: DayOfWeekEnum;
+  dayOfWeek: number;
 
   @ApiProperty({ example: '08:00' })
   @Matches(/^([01]\d|2[0-3]):([0-5]\d)$/)

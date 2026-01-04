@@ -372,4 +372,28 @@ export class AppointmentsService {
     return appointments;
   }
 
+
+  async findAllByPatientId(
+  patientId: string,
+): Promise<AppointmentResponseDto[]> {
+  const appointments = await this.appointmentRepository.find({
+    where: {
+      patient: { id: patientId },
+    },
+    relations: {
+      doctor: { user: true },
+      speciality: true,
+      patient: true,
+    },
+    order: {
+      date: 'ASC',
+    },
+  });
+
+  return appointments.map((appointment) =>
+    this.toResponseDto(appointment),
+  );
+}
+
+
 }

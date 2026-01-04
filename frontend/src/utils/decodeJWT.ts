@@ -6,6 +6,7 @@ export interface JWTPayload {
   role: string;
   iat: number;
   exp: number;
+  dni?: string;
 }
 
 export const decodeJWT = (token: string): JWTPayload | null => {

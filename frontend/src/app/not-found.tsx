@@ -4,8 +4,8 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-linear-to-br from-sky-100 to-blue-200 text-blue-900 px-6 text-center">
-      {/* Emoji principal */}
+    <div className="flex flex-col items-center justify-center text-blue-900 px-6 text-center mt-20">
+      
       <div className="text-7xl mb-6 animate-bounce">🩺</div>
 
       <h1 className="text-6xl font-extrabold mb-2">404</h1>

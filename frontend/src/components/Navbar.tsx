@@ -4,6 +4,7 @@ import { navItems } from '@/utils/navItems';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import SessionTimer from '@/components/UI/SessionTimer';
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
@@ -86,7 +87,6 @@ export const Navbar = () => {
           ☰
         </button>
 
-        {/* MENU DE ESCRITORIO */}
         <div className='hidden w-full md:block md:w-auto' id='navbar-default'>
           <div className='hidden md:flex items-center gap-10 ml-10 text-white'>
             {navItems.map((navigationItem) => (
@@ -98,6 +98,11 @@ export const Navbar = () => {
                 {navigationItem.name}
               </Link>
             ))}
+              {dataUser && (
+                  <Link href="/dashboard/patient" className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'>
+                    Mis turnos
+                  </Link>
+                )}
 
             <div>
               {!dataUser ? (
@@ -117,14 +122,17 @@ export const Navbar = () => {
                 </div>
               ) : (
                 <div className='flex flex-col md:flex-row md:items-center gap-1'>
-                  <div className='text-xs text-blue-900 font-bold space-y-0.1'>
+                  <div className='text-xs text-blue-900 font-bold space-y-0.5 md:space-y-0 md:mr-4 text-center cursor-pointer'>
+                    <Link href="/dashboard/patient" onClick={() => setOpenMenu(false)}>
                     <div>Bienvenid@</div>
-                    <div className='text-base text-blue-900'>
+                    <div className='text-base text-blue-900 flex items-center'>
                       {getDisplayName()}
+                      <SessionTimer />
                     </div>
                     <div className='text-xs text-blue-900 capitalize'>
                       {getRole()}
                     </div>
+                    </Link>
                   </div>
                   <button
                     onClick={logout}
@@ -139,7 +147,7 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* MENU MÓVIL (solo visible en pantallas pequeñas) */}
+      {/* MENU MÓVIL */}
       {openMenu && (
         <div className='md:hidden bg-chocolate border-t border-default w-full flex flex-col items-center gap-4 py-4'>
           {navItems.map((navigationItem) => (
@@ -152,6 +160,12 @@ export const Navbar = () => {
               {navigationItem.name}
             </Link>
           ))}
+
+          {dataUser && (
+            <Link href='/dashboard/patient' className='text-white font-bold hover:text-cyan-800 transition mt-2' onClick={() => setOpenMenu(false)}>
+              Mis turnos
+            </Link>
+          )}
 
           {!dataUser ? (
             <div className='flex flex-col items-center gap-2 mt-4'>
@@ -172,7 +186,8 @@ export const Navbar = () => {
             </div>
           ) : (
             <div className='flex flex-col items-center gap-2 mt-4'>
-              <div className='text-center text-white font-bold text-lg'>
+                <Link href='/dashboard/patient' onClick={() => setOpenMenu(false)}>
+              <div className='text-center text-white font-bold text-lg hover:text-cyan-800 transition mb-2'>
                 Hola, bienvenid@
                 <br />
                 {getDisplayName()}
@@ -181,6 +196,7 @@ export const Navbar = () => {
                   ({getRole()})
                 </span>
               </div>
+                </Link>
               <button
                 onClick={() => {
                   logout();

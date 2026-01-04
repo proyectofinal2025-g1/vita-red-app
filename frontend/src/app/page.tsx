@@ -8,6 +8,7 @@ import AppointmentForm from '@/components/AppointmentForm';
 import CarrouselHome from '@/components/CarrouselHome';
 import SectionOneTwoHome from '@/components/SectionOneTwoHome';
 import Image from 'next/image';
+import { Footer } from '@/components/Footer';
 
 export default function Home() {
   const { dataUser } = useAuth();

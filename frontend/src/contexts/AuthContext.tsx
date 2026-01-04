@@ -1,9 +1,11 @@
-"use client";
+// src/contexts/AuthContext.tsx
+'use client';
 
-import { useState, useEffect, createContext, useContext } from "react";
-import { IAuthContextProps } from "@/interfaces/IAuthContextProps";
-import { IAuthProviderProps } from "@/interfaces/IAuthProviderProps";
-import { IUserSession } from "@/interfaces/IUserSession";
+import { useState, useEffect, createContext, useContext } from 'react';
+import { IAuthContextProps } from '@/interfaces/IAuthContextProps';
+import { IAuthProviderProps } from '@/interfaces/IAuthProviderProps';
+import { IUserSession } from '@/interfaces/IUserSession';
+import { decodeJWT } from '@/utils/decodeJWT';
 
 export const AuthContext = createContext<IAuthContextProps>({
   dataUser: null,
@@ -13,49 +15,60 @@ export const AuthContext = createContext<IAuthContextProps>({
 });
 
 const getUserFromLocalStorage = (): IUserSession | null => {
-  if (typeof window === "undefined") return null;
-  const userInfo = localStorage.getItem("userSession");
+  if (typeof window === 'undefined') return null;
+
+  const userInfo = localStorage.getItem('userSession');
   if (!userInfo) return null;
+
   try {
-    return JSON.parse(userInfo);
-  } catch {
-    console.warn("Error parsing userSession from localStorage");
+    const parsed = JSON.parse(userInfo) as IUserSession;
+
+    if (!parsed.token) return null;
+
+    const payload = decodeJWT(parsed.token);
+    if (!payload || typeof payload.exp !== 'number') return null;
+
+    const now = Date.now();
+    if (payload.exp * 1000 < now) {
+      return null;
+    }
+
+    return parsed;
+  } catch (e) {
     return null;
   }
 };
 
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
-  // Inicializa el estado directamente desde localStorage
   const [dataUser, setDataUser] = useState<IUserSession | null>(
-    getUserFromLocalStorage
+    getUserFromLocalStorage()
   );
 
-  // useEffect solo para guardar (no para leer)
   useEffect(() => {
     if (dataUser) {
-      localStorage.setItem("userSession", JSON.stringify(dataUser));
+      localStorage.setItem('userSession', JSON.stringify(dataUser));
     } else {
-      localStorage.removeItem("userSession");
+      localStorage.removeItem('userSession');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
     }
   }, [dataUser]);
 
   const logout = () => {
     setDataUser(null);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("userSession");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("userEmail");
-    }
   };
 
   const loginWithToken = (token: string) => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
 
-    // guardar token
-    localStorage.setItem("authToken", token);
-
-    // decodificar payload del JWT
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const payload = decodeJWT(token);
+    if (
+      !payload ||
+      typeof payload.exp !== 'number' ||
+      payload.exp * 1000 < Date.now()
+    ) {
+      return;
+    }
 
     const userSession: IUserSession = {
       login: true,
@@ -70,6 +83,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         appointments: [],
       },
     };
+
     setDataUser(userSession);
   };
 
