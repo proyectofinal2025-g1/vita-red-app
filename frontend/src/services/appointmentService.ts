@@ -1,42 +1,86 @@
-import { IAppointment } from "@/interfaces/IAppointment";
-import { ICreateAppointmentDTO } from "@/interfaces/ICreateAppointmentDTO";
+const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
-export async function getAppointmentsPatient(): Promise<IAppointment[]> {
-
-    await new Promise(resolve => setTimeout(resolve, 600));
-
-    return [
-        {
-        id: 1,
-        specialty: "Cardiología",
-        doctorName: "Dr. Juan",
-        date: "2025-01-20",
-        time: "10:00",
-        status: "ACTIVO",
-        },
-        {
-        id: 2,
-        specialty: "Dermatología",
-        doctorName: "Dra. Silvina",
-        date: "2024-12-10",
-        time: "15:30",
-        status: "CANCELADO",
-        },
-    ];
+export interface DoctorSchedule {
+  id: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  slotDuration: number;
+  doctorId: string;
 }
 
-export async function createAppointment(
-    payload: ICreateAppointmentDTO
-): Promise<IAppointment> {
-
-    console.log("MOCK - creando turno", payload);
-
-    return {
-        id: Math.random(),
-        specialty: payload.specialty,
-        doctorName: "Pendiente asignación",
-        date: payload.date,
-        time: payload.time,
-        status: "ACTIVO"
-    };
+export interface AppointmentPreReserveDto {
+  doctorId: string;
+  dateTime: string; // ISO 8601
+  specialtyId?: string;
 }
+
+export const getDoctorSchedules = async (
+  doctorId: string,
+  token: string
+): Promise<DoctorSchedule[]> => {
+  const res = await fetch(`${apiURL}/doctors/schedules/${doctorId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('No se pudieron cargar los horarios del médico');
+  }
+
+  return res.json();
+};
+
+
+export const preReserveAppointment = async (
+  dto: AppointmentPreReserveDto,
+  token: string
+): Promise<any> => {
+  try {
+    const res = await fetch(`${apiURL}/appointments/pre-reserve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(dto),
+    });
+
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({}));
+      throw new Error(error.message || 'No se pudo crear la cita');
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('Error en preReserveAppointment:', error);
+    throw error;
+  }
+};
+
+export const generateTimeSlots = (
+  startTime: string,
+  endTime: string,
+  duration: number
+): string[] => {
+  const cleanStart =
+    startTime.length > 5 ? startTime.substring(0, 5) : startTime;
+  const cleanEnd = endTime.length > 5 ? endTime.substring(0, 5) : endTime;
+
+  const [startH, startM] = cleanStart.split(':').map(Number);
+  const [endH, endM] = cleanEnd.split(':').map(Number);
+
+  const start = startH * 60 + startM;
+  const end = endH * 60 + endM;
+
+  const slots: string[] = [];
+  for (let time = start; time < end; time += duration) {
+    const h = Math.floor(time / 60);
+    const m = time % 60;
+    slots.push(
+      `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`
+    );
+  }
+  return slots;
+};

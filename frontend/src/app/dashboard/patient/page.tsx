@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function PatientDashboardHome() {
     const { dataUser } = useAuth();
     const [firstName, setFirstName] = useState("Paciente");
+    const [avatar, setAvatar] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
         const token = dataUser?.Token || dataUser?.token;
@@ -31,29 +33,56 @@ export default function PatientDashboardHome() {
         }
     }, [dataUser]);
 
-    return (
-        <div className="p-8 space-y-6 max-w-3xl mx-auto">
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
 
-            <div className="flex flex-col items-center space-y-3">
-                <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-3xl">
-                    👤
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            alert("Por favor seleccioná una imagen válida");
+            return;
+        }
+        const imageUrl = URL.createObjectURL(file);
+        setAvatar(imageUrl);
+    }; 
+
+    return (
+        <div className="min-h-[70vh] flex items-center justify-center px-4">
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-6">
+                
+                <div className="flex flex-col items-center mb-8">
+                    <div onClick={handleAvatarClick} className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-5 cursor-pointer overflow-hidden hover:ring-2 hover:ring-blue-500 transition">
+                        {avatar ? (
+                            <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
+                        ): (
+                            <span className="text-3xl">👤</span>
+                        )}
+                    </div>
+
+                    <input type="file" accept="image/*" ref={fileInputRef} onChange={handleAvatarChange} className="hidden"/>
+                    
+                    <h1 className="text-2xl font-bold text-gray-800">
+                        ¡Hola {firstName}! <span className="inline-block">👋🏻</span>
+                    </h1>
+                    
+                    <p className="text-sm text-gray-500 text-center">
+                        Bienvenid@ a tu panel de paciente
+                    </p>
                 </div>
                 
-                <h1 className="text-2xl font-bold">
-                    ¡Hola {firstName}!👋🏻
-                </h1>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+                    <Link href="/dashboard/patient/appointments" className="flex-1 text-center px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition shadow-md">
+                    Mis turnos
+                    </Link>
+                    
+                    <Link href="/dashboard/patient/profile" className="flex-1 text-center px-6 py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-800 transition shadow-md">
+                    Mis datos
+                    </Link>
+                </div>
             </div>
-            
-            <div className="flex gap-4 justify-center mt-6">
-                <Link href="/dashboard/patient/appointments" className="px-6 py-3 bg-blue-600 text-white rounded">
-                Mis turnos
-                </Link>
-
-                <Link href="/dashboard/patient/profile" className="px-6 py-3 bg-gray-700 text-white rounded">
-                Mis datos
-                </Link>
-            </div>
-
         </div>
     );
 }
