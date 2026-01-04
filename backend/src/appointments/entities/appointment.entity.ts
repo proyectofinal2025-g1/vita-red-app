@@ -6,12 +6,14 @@ import {
   CreateDateColumn,
   Index,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { AppointmentStatus } from '../enums/appointment-status.enum';
 import { User } from '../../user/entities/user.entity';
 import { Speciality } from '../../speciality/entities/speciality.entity';
 import { Doctor } from '../../doctor/entities/doctor.entity';
+import { Notification } from '../../notification/entities/notification.entity';
 
 @Entity({ name: 'appointments' })
 @Index(['doctor', 'date'])
@@ -144,4 +146,7 @@ export class Appointment {
   })
   @ManyToOne(() => User, { nullable: false })
   createdBy: User;
+
+  @OneToMany(() => Notification, notification => notification.appointment)
+  notifications: Notification[];
 }

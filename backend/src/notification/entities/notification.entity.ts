@@ -1,7 +1,8 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { NotificationStatus } from "../enums/notification-status.enum";
 import { NotificationType } from "../enums/notification-type.enum";
 import { NotificationChannel } from "../enums/notification-channel.enum";
+import { Appointment } from "../../appointments/entities/appointment.entity";
 
 @Entity()
 export class Notification {
@@ -36,6 +37,12 @@ export class Notification {
     })
     errorMessage: string | null
 
+    @Column({ type: 'timestamp', nullable: true })
+    sentAt: Date
+
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
+
+    @ManyToOne(()=> Appointment, appointment => appointment.notifications)
+    appointment: Appointment;
 }
