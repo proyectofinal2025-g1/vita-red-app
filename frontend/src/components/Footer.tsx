@@ -22,7 +22,7 @@ export const Footer = () => {
               <Link href="/especialidades" className="text-white hover:underline">Especialidades</Link>
             </li>
             <li>
-              <Link href="/contacto" className="text-white hover:underline">Contacto</Link>
+              <Link href="/contact" className="text-white hover:underline">Contacto</Link>
             </li>
           </ul>
 

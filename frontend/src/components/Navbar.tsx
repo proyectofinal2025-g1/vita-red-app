@@ -109,30 +109,37 @@ export const Navbar = () => {
                 <div className='hidden md:flex items-center gap-10'>
                   <Link
                     href='/auth/login'
-                    className=' text-white font-bold hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+                    className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Iniciar sesión
                   </Link>
                   <Link
                     href='/auth/register'
-                    className=' text-white font-bold hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+                    className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
                   >
                     Registrarse
                   </Link>
                 </div>
               ) : (
-                <div>
-                  <Link href='/dashboard/patient' className='text-bone font-bold'>
-                    {dataUser.user?.first_name} {dataUser.user?.last_name}
-                  </Link>
-                  <Link href='/auth/login'>
-                    <button
-                      onClick={logout}
-                      className='text-white font-bold hover:bg-cyan-800 px-3 py-1 rounded-3xl transition cursor-pointer'
-                    >
-                      Cerrar sesión
-                    </button>
-                  </Link>
+                <div className='flex flex-col md:flex-row md:items-center gap-1'>
+                  <div className='text-xs text-blue-900 font-bold space-y-0.5 md:space-y-0 md:mr-4 text-center cursor-pointer'>
+                    <Link href="/dashboard/patient" onClick={() => setOpenMenu(false)}>
+                    <div>Bienvenid@</div>
+                    <div className='text-base text-blue-900 flex items-center'>
+                      {getDisplayName()}
+                      <SessionTimer />
+                    </div>
+                    <div className='text-xs text-blue-900 capitalize'>
+                      {getRole()}
+                    </div>
+                    </Link>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className='text-sm ml-2 bg-blue-600 hover:bg-red-700 text-white font-bold px-4 py-1 rounded-3xl transition cursor-pointer'
+                  >
+                    Cerrar sesión
+                  </button>
                 </div>
               )}
             </div>
@@ -178,14 +185,18 @@ export const Navbar = () => {
               </Link>
             </div>
           ) : (
-            <div className='flex flex-col items-center gap-2'>
-              <Link
-                href='/dashboard/patient'
-                onClick={() => setOpenMenu(false)}
-                className=' text-white font-bold hover:text-cyan-800'
-              >
-                {dataUser.user?.first_name} {dataUser.user?.last_name}
-              </Link>
+            <div className='flex flex-col items-center gap-2 mt-4'>
+                <Link href='/dashboard/patient' onClick={() => setOpenMenu(false)}>
+              <div className='text-center text-white font-bold text-lg hover:text-cyan-800 transition mb-2'>
+                Hola, bienvenid@
+                <br />
+                {getDisplayName()}
+                <br />
+                <span className='text-xs text-gray-300 capitalize'>
+                  ({getRole()})
+                </span>
+              </div>
+                </Link>
               <button
                 onClick={() => {
                   logout();

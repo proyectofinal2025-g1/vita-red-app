@@ -10,7 +10,8 @@ import { decodeJWT } from '@/utils/decodeJWT';
 export const AuthContext = createContext<IAuthContextProps>({
   dataUser: null,
   setDataUser: () => {},
-  logout: () => {}
+  logout: () => {},
+  loginWithToken: () => {},
 });
 
 const getUserFromLocalStorage = (): IUserSession | null => {

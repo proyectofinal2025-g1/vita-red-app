@@ -1,260 +1,271 @@
-'use client'
+"use client";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+
+interface UserData {
+  sub: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
 export default function ProfilePage() {
-    const { dataUser } = useAuth();
-    const [userData, setUserData] = useState({
-        id: '',
-        first_name: '',
-        last_name: '',
-        dni: '',
-        email: ''
-    });
-    const [isEditing, setIsEditing] = useState(false);
-    const [formData, setFormData] = useState({
-        first_name: '',
-        last_name: '',
-        email: ''
-    });
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+  });
 
-    useEffect(() => {
-        const savedData = localStorage.getItem('userProfileData');
-        
-        let currentUserId = '';
-        if (dataUser?.Token) {
-            try {
-                const parts = dataUser.Token.split('.');
-                if (parts.length === 3) {
-                    const decoded = JSON.parse(atob(parts[1]));
-                    currentUserId = decoded.sub;
-                }
-            } catch (error) {
-                console.error("Error extrayendo ID:", error);
-            }
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const userSession = localStorage.getItem("userSession");
+      
+      if (!userSession) {
+        throw new Error("No se encontró la sesión de usuario");
+      }
+      
+      const session = JSON.parse(userSession);
+      const token = session.token;
+      
+      if (!token) {
+        throw new Error("No se encontró el token de autenticación");
+      }
+      
+      const response = await fetch("http://localhost:3000/user/me", {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
         }
+        throw new Error("Error al cargar los datos del usuario");
+      }
 
-        if (savedData) {
-            try {
-                const parsed = JSON.parse(savedData);
-                if (parsed.id !== currentUserId) {
-                    localStorage.removeItem('userProfileData');
-                } else {
-                    setUserData(parsed);
-                    setFormData({
-                        first_name: parsed.first_name,
-                        last_name: parsed.last_name,
-                        email: parsed.email
-                    });
-                    return;
-                }
-            } catch (error) {
-                console.error('Error en localStorage:', error);
-                localStorage.removeItem('userProfileData');
-            }
+      const data = await response.json();
+      setUserData(data);
+      console.log("Datos del usuario:", data);
+      setFormData({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleEdit = () => {
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    if (userData) {
+      setFormData({
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        email: userData.email,
+      });
+    }
+    setIsEditing(false);
+    setError(null);
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+
+      const userSession = localStorage.getItem("userSession");
+      
+      if (!userSession) {
+        throw new Error("No se encontró la sesión de usuario");
+      }
+      
+      const session = JSON.parse(userSession);
+      const token = session.token;
+      
+      if (!token) {
+        throw new Error("No se encontró el token de autenticación");
+      }
+      console.log("Enviando al backend:", formData);
+      const response = await fetch(`http://localhost:3000/user/${userData?.sub}`, {
+        method: "PATCH",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
         }
+        throw new Error("Error al actualizar los datos");
+      }
 
-        if (dataUser?.Token) {
-            try {
-                const parts = dataUser.Token.split('.');
-                if (parts.length === 3) {
-                    const decoded = JSON.parse(atob(parts[1]));
-                    const newData = {
-                        id: decoded.sub,
-                        first_name: decoded.first_name,
-                        last_name: decoded.last_name,
-                        dni: '',
-                        email: decoded.email
-                    };
-                    setUserData(newData);
-                    setFormData({
-                        first_name: decoded.first_name,
-                        last_name: decoded.last_name,
-                        email: decoded.email
-                    });
-                    localStorage.setItem('userProfileData', JSON.stringify(newData));
-                }
-            } catch (error) {
-                console.error("Error:", error);
-            }
-        }
-    }, [dataUser]);
+      setUserData({
+      ...userData,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+    } as UserData);
+    setIsEditing(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
+    await fetchUserData();
+    alert("Para ver impactados los cambios, por favor vuelve a iniciar sesión");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al guardar los cambios");
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setLoading(true);
-        setMessage('');
-
-        try {
-            let userId = userData.id;
-            if (!userId && dataUser?.Token) {
-                try {
-                    const parts = dataUser.Token.split('.');
-                    if (parts.length === 3) {
-                        const decoded = JSON.parse(atob(parts[1]));
-                        userId = decoded.sub;
-                    }
-                } catch (error) {
-                    console.error("Error extrayendo ID del token:", error);
-                }
-            }
-
-            if (!userId) {
-                setMessage('Error: No se pudo obtener el ID del usuario');
-                setLoading(false);
-                return;
-            }
-
-            const response = await fetch(`http://localhost:3000/user/${userId}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${dataUser?.Token}`
-                },
-                body: JSON.stringify(formData)
-            });
-
-            console.log('Response status:', response.status);
-            
-            if (response.ok) {
-                const updatedData = {
-                    id: userData.id,
-                    first_name: formData.first_name,
-                    last_name: formData.last_name,
-                    dni: userData.dni,
-                    email: formData.email
-                };
-                setUserData(updatedData);
-                
-                localStorage.setItem('userProfileData', JSON.stringify(updatedData));
-
-                setMessage('Datos actualizados correctamente');
-                setIsEditing(false);
-                setTimeout(() => setMessage(''), 3000);
-            } else {
-                const error = await response.text();
-                console.error('Error response:', error);
-                setMessage('Error al actualizar los datos');
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            setMessage('Error al actualizar los datos');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleCancel = () => {
-        setFormData({
-            first_name: userData.first_name,
-            last_name: userData.last_name,
-            email: userData.email
-        });
-        setIsEditing(false);
-    };
-
+  if (loading) {
     return (
-        <div className="p-8 max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold mb-8">Mis datos</h1>
-
-            {message && (
-                <div className={`mb-6 p-4 rounded ${message.includes('Error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                    {message}
-                </div>
-            )}
-
-            <div className="bg-white rounded-lg shadow-md p-6">
-                {!isEditing ? (
-                    <>
-                        <div className="space-y-4 mb-6">
-                            <div>
-                                <label className="text-sm font-semibold text-gray-600">Nombre</label>
-                                <p className="text-lg text-gray-800">{userData.first_name}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-600">Apellido</label>
-                                <p className="text-lg text-gray-800">{userData.last_name}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-600">Email</label>
-                                <p className="text-lg text-gray-800">{userData.email}</p>
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-600">DNI</label>
-                                <p className="text-lg text-gray-800">{userData.dni}</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        >
-                            Modificar
-                        </button>
-                    </>
-                ) : (
-                    <form onSubmit={handleSubmit}>
-                        <div className="space-y-4 mb-6">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-600 mb-2">Nombre</label>
-                                <input
-                                    type="text"
-                                    name="first_name"
-                                    value={formData.first_name}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-600 mb-2">Apellido</label>
-                                <input
-                                    type="text"
-                                    name="last_name"
-                                    value={formData.last_name}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-600 mb-2">Email</label>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                />
-                            </div>
-                        </div>
-                        <div className="flex gap-4">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400"
-                            >
-                                {loading ? 'Guardando...' : 'Guardar cambios'}
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="px-6 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition"
-                            >
-                                Cancelar
-                            </button>
-                        </div>
-                    </form>
-                )}
-            </div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Cargando...</div>
+      </div>
     );
+  }
+
+  if (error && !userData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-red-600">
+          <p className="font-semibold">Error:</p>
+          <p>{error}</p>
+          <button
+            onClick={fetchUserData}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <div className="bg-white shadow-md rounded-lg p-8">
+        <h1 className="text-3xl font-bold mb-6 text-center">Mi Perfil</h1>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-6">
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre
+            </label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <p className="text-lg text-gray-900">{userData?.first_name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Apellido
+            </label>
+            {isEditing ? (
+              <input
+                type="text"
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <p className="text-lg text-gray-900">{userData?.last_name}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email
+            </label>
+            {isEditing ? (
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            ) : (
+              <p className="text-lg text-gray-900">{userData?.email}</p>
+            )}
+          </div>
+          </div>
+
+        <div className="mt-8 flex gap-4 justify-center">
+          {!isEditing ? (
+            <button
+              onClick={handleEdit}
+              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Modificar
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {saving ? "Guardando..." : "Guardar"}
+              </button>
+              <button
+                onClick={handleCancel}
+                disabled={saving}
+                className="px-6 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Cancelar
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
