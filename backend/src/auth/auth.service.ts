@@ -10,7 +10,6 @@ import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { UserRepository } from '../user/user.repository';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class AuthService {
