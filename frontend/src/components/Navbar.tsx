@@ -4,6 +4,7 @@ import { navItems } from '@/utils/navItems';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import SessionTimer from '@/components/UI/SessionTimer';
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
@@ -124,8 +125,9 @@ export const Navbar = () => {
                   <div className='text-xs text-blue-900 font-bold space-y-0.5 md:space-y-0 md:mr-4 text-center cursor-pointer'>
                     <Link href="/dashboard/patient" onClick={() => setOpenMenu(false)}>
                     <div>Bienvenid@</div>
-                    <div className='text-base text-blue-900 hover:text-white transition'>
+                    <div className='text-base text-blue-900 flex items-center'>
                       {getDisplayName()}
+                      <SessionTimer />
                     </div>
                     <div className='text-xs text-blue-900 capitalize'>
                       {getRole()}
@@ -145,6 +147,7 @@ export const Navbar = () => {
         </div>
       </div>
 
+      {/* MENU MÓVIL */}
       {openMenu && (
         <div className='md:hidden bg-chocolate border-t border-default w-full flex flex-col items-center gap-4 py-4'>
           {navItems.map((navigationItem) => (

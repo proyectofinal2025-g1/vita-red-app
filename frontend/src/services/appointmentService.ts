@@ -16,19 +16,22 @@ export interface AppointmentPreReserveDto {
 }
 
 export const getDoctorSchedules = async (
-  doctorId: string
+  doctorId: string,
+  token: string
 ): Promise<DoctorSchedule[]> => {
-  try {
-    const res = await fetch(`${apiURL}/doctors/schedules/${doctorId}`);
-    if (!res.ok) {
-      throw new Error('No se pudieron cargar los horarios del médico');
-    }
-    return await res.json();
-  } catch (error) {
-    console.error('Error en getDoctorSchedules:', error);
-    throw error;
+  const res = await fetch(`${apiURL}/doctors/schedules/${doctorId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error('No se pudieron cargar los horarios del médico');
   }
+
+  return res.json();
 };
+
 
 export const preReserveAppointment = async (
   dto: AppointmentPreReserveDto,

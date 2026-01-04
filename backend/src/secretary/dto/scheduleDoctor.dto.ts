@@ -1,11 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { DayOfWeekEnum } from "../../doctor/schedule/enum/enumDays";
-import { IsOptional, IsString } from "class-validator";
+import { IsNumber, IsOptional } from "class-validator";
 
 export class UpdateDoctorScheduleDtoBySecretary {
-  @ApiProperty({ example: 'lunes' })
-  @IsString()
-  dayOfWeek: DayOfWeekEnum;
+  @ApiProperty({ example: '1' })
+  @IsNumber()
+  dayOfWeek: number;
 
   @ApiProperty({ example: '09:00' })
   @IsOptional()
