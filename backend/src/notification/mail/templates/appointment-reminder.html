@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Recordatorio de turno</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    p {
+      font-size: 16px;
+      color: #333333;
+    }
+    .highlight {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Recordatorio de turno 🕒</h1>
+
+    <p>Hola <span class="highlight">{{name}}</span>,</p>
+
+    <p>
+      Te recordamos que tenés un turno programado para:
+    </p>
+
+    <p>
+      📅 <strong>Fecha:</strong> {{date}} <br />
+      ⏰ <strong>Hora:</strong> {{time}} <br />
+      🩺 <strong>Médico:</strong> {{doctor}}
+    </p>
+
+    <p>
+      Por favor, asegurate de llegar con unos minutos de anticipación.
+    </p>
+
+    <p>
+      ¡Te esperamos!
+    </p>
+
+    <p>
+      <strong>Equipo Vita Red</strong>
+    </p>
+  </div>
+</body>
+</html>

@@ -11,6 +11,31 @@ export class NotificationService {
         private readonly mailerService: MailerService
     ) { }
 
+    async sendAppointmentReminder(params: { email: string; first_name: string; date: Date; doctorName: string; }) {
+        const notification = {
+            type: NotificationType.APPOINTMENT_REMINDER,
+            channel: NotificationChannel.EMAIL,
+            recipientEmail: params.email
+        }
+        const newNotification = await this.notificationRepository.createNotification(notification)
+        try {
+            let html = this.mailerService.loadTemplate('appointment-reminder.html');
+            html = html.replace('{{name}}', params.first_name);
+            html = html.replace('{{date}}', params.date.toLocaleDateString('es-AR'))
+            html = html.replace('{{time}}', params.date.toLocaleTimeString('es-AR', {
+                hour: '2-digit',
+                minute: '2-digit',
+            })
+            )
+            html = html.replace('{{doctor}}', params.doctorName);
+            const subject = 'Recordatorio de turno';
+            await this.mailerService.sendEmail(params.email, subject, html)
+            await this.notificationRepository.markAsSent(newNotification.id)
+        } catch (error) {
+            await this.notificationRepository.markAsFailed(newNotification.id, error.message)
+        }
+    }
+
     async sendWelcomeNotification(email: string, first_name: string) {
         const notification = {
             type: NotificationType.USER_REGISTERED,

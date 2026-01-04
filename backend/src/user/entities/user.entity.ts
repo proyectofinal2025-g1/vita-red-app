@@ -42,6 +42,3 @@ export class User {
     doctor?: Doctor;
 }
 
-
-// admin@vitared.test
-// SuperAdmin123!
