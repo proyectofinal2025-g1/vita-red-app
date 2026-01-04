@@ -81,44 +81,5 @@ export class AuthService {
     return {
       success: 'User successfully logged in',
       Token,
-    };
-  }
-
-  async loginWithGoogle(googleUser: {
-    email: string;
-    firstName: string;
-    lastName: string;
-    picture?: string;
-  }) {
-    let user = await this.userRepository.findByEmail(googleUser.email);
-
-    if (!user) {
-      user = await this.userRepository.create({
-    email: googleUser.email,
-    first_name: googleUser.firstName,
-    last_name: googleUser.lastName,
-    password: null,
-    dni: null,
-    profileImageUrl: googleUser.picture,
-      });
-
-      user = await this.userRepository.save(user);
-    }
-
-    if (user.is_active === false && user.role !== RolesEnum.SuperAdmin) {
-      throw new UnauthorizedException('Invalid credentials!');
-    }
-
-    const payload = {
-      first_name: user.first_name,
-      last_name: user.last_name,
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-    };
-
-    const Token = this.jwtService.sign(payload);
-
-    return { Token };
   }
 }
