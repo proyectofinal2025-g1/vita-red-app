@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { Between, DataSource, Raw, Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -57,4 +57,26 @@ export class AppointmentsRepository extends Repository<Appointment> {
       },
     });
   }
+
+async existsSameDayWithDoctor(
+  patientId: string,
+  doctorId: string,
+  date: Date,
+): Promise<boolean> {
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return this.exists({
+    where: {
+      patient: { id: patientId },
+      doctor: { id: doctorId },
+      date: Between(startOfDay, endOfDay),
+    },
+  });
+}
+
+
 }

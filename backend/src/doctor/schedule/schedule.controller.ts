@@ -34,7 +34,7 @@ export class DoctorScheduleController {
     summary: 'Crear un schedule.',
   })
   @ApiBearerAuth()
-  @Roles(RolesEnum.Medic, RolesEnum.Secretary, RolesEnum.User)
+  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin, RolesEnum.Secretary)
   @UseGuards(AuthGuard, RolesGuard)
   @Post()
   @ApiCreatedResponse({ type: DoctorScheduleResponseDto })
@@ -46,7 +46,12 @@ export class DoctorScheduleController {
     summary: 'Ver los schedules de un médico/a.',
   })
   @ApiBearerAuth()
-  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin, RolesEnum.User)
+  @Roles(
+    RolesEnum.Medic,
+    RolesEnum.SuperAdmin,
+    RolesEnum.Secretary,
+    RolesEnum.User,
+  )
   @UseGuards(AuthGuard, RolesGuard)
   @Get(':doctorId')
   @ApiOkResponse({ type: [DoctorScheduleResponseDto] })
@@ -67,7 +72,7 @@ export class DoctorScheduleController {
     summary: 'Actualizar el schedule propio del médico/a.',
   })
   @ApiBearerAuth()
-  @Roles(RolesEnum.Medic)
+  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Patch('update')
   updateScheduleDoctor(@Req() req: any, @Body() dto: UpdateDoctorScheduleDto) {

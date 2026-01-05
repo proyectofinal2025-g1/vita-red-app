@@ -20,9 +20,6 @@ export class AppointmentResponseDto {
   })
   reason?: string;
 
-  @ApiProperty({ example: '2025-08-01T14:32:00.000Z' })
-  createdAt: Date;
-
   @ApiProperty({
     example: '2025-08-01T14:47:00.000Z',
     required: false,
