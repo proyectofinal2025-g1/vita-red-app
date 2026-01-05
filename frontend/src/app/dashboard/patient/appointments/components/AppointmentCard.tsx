@@ -2,7 +2,7 @@ import { IAppointment } from "@/interfaces/IAppointment";
 import { IAppointmentProps } from "@/interfaces/IAppointmentProps";
 
 export default function AppointmentCard({appointment}: IAppointmentProps) {
-    const isCanceled = appointment.status === "CANCELADO";
+    const isCanceled = appointment.status === "CANCELLED";
 
     return (
         <div className={`border rounded-lg p-4 flex justify-between items-center ${isCanceled ? "bg-gray-100 opacity-70" : "bg-white"}`}>
