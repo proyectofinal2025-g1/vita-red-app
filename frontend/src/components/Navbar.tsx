@@ -4,7 +4,6 @@ import { navItems } from '@/utils/navItems';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import SessionTimer from '@/components/UI/SessionTimer';
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
@@ -127,7 +126,6 @@ export const Navbar = () => {
                     <div>Bienvenid@</div>
                     <div className='text-base text-blue-900 flex items-center'>
                       {getDisplayName()}
-                      <SessionTimer />
                     </div>
                     <div className='text-xs text-blue-900 capitalize'>
                       {getRole()}
