@@ -12,6 +12,7 @@ import { Doctor } from '../doctor/entities/doctor.entity';
 import { User } from '../user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { DoctorScheduleService } from '../doctor/schedule/schedule.service';
 
 interface Seeder {
   user: {
@@ -28,6 +29,12 @@ interface Seeder {
     licence_number: string;
   };
   speciality: string;
+  schedule: {
+    dayOfWeek: number[]; 
+    startTime: string; 
+    endTime: string; 
+    slotDuration: number; 
+  };
 }
 
 @Injectable()
@@ -40,6 +47,7 @@ export class SeederService {
     private readonly userRepository: UserRepository,
     private readonly doctorService: DoctorService,
     private readonly specialityService: SpecialityService,
+    private readonly scheduleService: DoctorScheduleService,
     @InjectRepository(User) private readonly userDb: Repository<User>,
   ) {}
 
@@ -132,10 +140,17 @@ export class SeederService {
           continue;
         }
 
-        await this.doctorService.create({
+        const doctor = await this.doctorService.create({
           licence_number: seed.doctor.licence_number,
           user_id: user!.id,
           speciality_id: speciality.id,
+        });
+        await this.scheduleService.createManyForDoctor({
+          doctorId: doctor.id,
+          days: seed.schedule.dayOfWeek,
+          startTime: seed.schedule.startTime,
+          endTime: seed.schedule.endTime,
+          slotDuration: seed.schedule.slotDuration,
         });
       } catch (error) {
         this.logger.error(
