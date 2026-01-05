@@ -49,7 +49,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) { }
+  ) {}
 
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
@@ -105,6 +105,19 @@ export class AppointmentsService {
       appointmentDate,
     );
 
+    const sameDayWithDoctor =
+      await this.appointmentRepository.existsSameDayWithDoctor(
+        patient.id,
+        doctor.id,
+        appointmentDate,
+      );
+
+    if (sameDayWithDoctor) {
+      throw new BadRequestException(
+        'No podés agendar más de un turno el mismo día con el mismo médico',
+      );
+    }
+
     const doctorConflict = await this.appointmentRepository.existsConflict({
       doctorId: doctor.id,
       date: appointmentDate,
@@ -132,12 +145,10 @@ export class AppointmentsService {
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,
       status: AppointmentStatus.PENDING,
-      createdAt: now,
       expiresAt,
-      patient,
+      patient:{id: patient.id} as User,
       doctor,
       speciality: speciality ?? undefined,
-      createdBy: patient,
       priceAtBooking: doctor.consultationPrice,
     });
 
@@ -146,8 +157,8 @@ export class AppointmentsService {
     return {
       appointmentId: saved.id,
       expiresAt: saved.expiresAt!,
-      price: saved.priceAtBooking
-    }
+      price: saved.priceAtBooking,
+    };
   }
 
   private toResponseDto(appointment: Appointment): AppointmentResponseDto {
@@ -156,7 +167,6 @@ export class AppointmentsService {
       date: appointment.date,
       status: appointment.status,
       reason: appointment.reason,
-      createdAt: appointment.createdAt,
       expiresAt: appointment.expiresAt,
       price: appointment.priceAtBooking,
 
@@ -174,9 +184,9 @@ export class AppointmentsService {
 
       speciality: appointment.speciality
         ? {
-          id: appointment.speciality.id,
-          name: appointment.speciality.name,
-        }
+            id: appointment.speciality.id,
+            name: appointment.speciality.name,
+          }
         : undefined,
     };
   }
@@ -209,8 +219,14 @@ export class AppointmentsService {
     appointment.cancelledBy = { id: cancelledByUserId } as any;
 
     await this.appointmentRepository.save(appointment);
-    const notification = { email: appointment.patient.email, first_name: appointment.patient.first_name, date: appointment.date }
-    await this.notificationService.sendAppointmentCancelledNotification(notification)
+    const notification = {
+      email: appointment.patient.email,
+      first_name: appointment.patient.first_name,
+      date: appointment.date,
+    };
+    await this.notificationService.sendAppointmentCancelledNotification(
+      notification,
+    );
     return this.toResponseDto(appointment);
   }
 
@@ -256,8 +272,15 @@ export class AppointmentsService {
     appointment.paymentReference = paymentReference;
 
     await this.appointmentRepository.save(appointment);
-    const notification = { email: appointment.patient.email, first_name: appointment.patient.first_name, date: appointment.date, doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}` }
-    await this.notificationService.sendAppointmentCreatedNotification(notification)
+    const notification = {
+      email: appointment.patient.email,
+      first_name: appointment.patient.first_name,
+      date: appointment.date,
+      doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
+    };
+    await this.notificationService.sendAppointmentCreatedNotification(
+      notification,
+    );
     return this.toResponseDto(appointment);
   }
 
@@ -306,12 +329,9 @@ export class AppointmentsService {
     };
 
     if (date) {
-      where.date = Raw(
-        (alias) => `DATE(${alias}) = :date`,
-        { date },
-      );
+      where.date = Raw((alias) => `DATE(${alias}) = :date`, { date });
     }
-    console.log('appoint', date)
+    console.log('appoint', date);
 
     if (speciality) {
       where.speciality = { name: ILike(`%${speciality}%`) };
@@ -329,10 +349,8 @@ export class AppointmentsService {
       },
     });
 
-
     return appointments;
   }
-
 
   async findByFiltersDoctor(filters: {
     doctorId: string;
@@ -346,10 +364,7 @@ export class AppointmentsService {
     };
 
     if (date) {
-      where.date = Raw(
-        (alias) => `DATE(${alias}) = :date`,
-        { date },
-      );
+      where.date = Raw((alias) => `DATE(${alias}) = :date`, { date });
     }
 
     if (patientId) {
@@ -368,32 +383,26 @@ export class AppointmentsService {
       },
     });
 
-
     return appointments;
   }
 
-
   async findAllByPatientId(
-  patientId: string,
-): Promise<AppointmentResponseDto[]> {
-  const appointments = await this.appointmentRepository.find({
-    where: {
-      patient: { id: patientId },
-    },
-    relations: {
-      doctor: { user: true },
-      speciality: true,
-      patient: true,
-    },
-    order: {
-      date: 'ASC',
-    },
-  });
+    patientId: string,
+  ): Promise<AppointmentResponseDto[]> {
+    const appointments = await this.appointmentRepository.find({
+      where: {
+        patient: { id: patientId },
+      },
+      relations: {
+        doctor: { user: true },
+        speciality: true,
+        patient: true,
+      },
+      order: {
+        date: 'ASC',
+      },
+    });
 
-  return appointments.map((appointment) =>
-    this.toResponseDto(appointment),
-  );
-}
-
-
+    return appointments.map((appointment) => this.toResponseDto(appointment));
+  }
 }

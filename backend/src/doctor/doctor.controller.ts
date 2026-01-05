@@ -80,10 +80,6 @@ export class DoctorController {
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return await this.doctorService.findOne(id);
   }
-  
-  // @ApiBearerAuth()
-  // @ApiOperation({ summary: 'Buscar un médico' })
-  // @UseGuards(AuthGuard, RolesGuard)
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Actualizar un médico' })
