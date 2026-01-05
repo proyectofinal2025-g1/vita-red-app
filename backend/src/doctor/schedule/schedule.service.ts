@@ -255,4 +255,24 @@ export class DoctorScheduleService {
       slotDuration: updatedSchedule.slotDuration,
     };
   }
+
+  async createManyForDoctor(params: {
+    doctorId: string;
+    days: number[];
+    startTime: string;
+    endTime: string;
+    slotDuration: number;
+  }): Promise<void> {
+    const schedules = params.days.map((day) =>
+      this.scheduleRepo.create({
+        doctor: { id: params.doctorId } as Doctor,
+        dayOfWeek: day,
+        startTime: params.startTime,
+        endTime: params.endTime,
+        slotDuration: params.slotDuration,
+      }),
+    );
+
+    await this.scheduleRepo.save(schedules);
+  }
 }
