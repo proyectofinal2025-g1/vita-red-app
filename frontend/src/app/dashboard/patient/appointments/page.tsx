@@ -2,17 +2,18 @@ import AppointmentList from "@/app/dashboard/patient/appointments/components/App
 import Link from "next/link";
 
 export default function AppointmentsPage() {
-    return (
-        <div className="p-6 space-y-6">
-                <h1 className="text-2xl font-bold">
-                    Mis turnos
-                </h1>
+  return (
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold">Mis turnos</h1>
 
-                <Link href="/dashboard/patient/Appointments/newAppointment" className="px-4 py-2 bg-blue-600 text-white rounded">
-                    Añadir nuevo turno
-                </Link>
+      <Link
+        href="/dashboard/patient/appointments/new"
+        className="inline-block px-5 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition"
+      >
+        Agendar nuevo turno
+      </Link>
 
-            <AppointmentList />
-        </div>
-    );
+      <AppointmentList />
+    </div>
+  );
 }
