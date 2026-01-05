@@ -46,7 +46,12 @@ export class DoctorScheduleController {
     summary: 'Ver los schedules de un médico/a.',
   })
   @ApiBearerAuth()
-  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @Roles(
+    RolesEnum.Medic,
+    RolesEnum.SuperAdmin,
+    RolesEnum.Secretary,
+    RolesEnum.User,
+  )
   @UseGuards(AuthGuard, RolesGuard)
   @Get(':doctorId')
   @ApiOkResponse({ type: [DoctorScheduleResponseDto] })
