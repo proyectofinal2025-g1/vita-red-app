@@ -109,10 +109,18 @@ export class DoctorScheduleService {
     userId: string,
     userRole: RolesEnum,
   ): Promise<DoctorScheduleResponseDto[]> {
-    let doctor: Doctor | null = null;
+    // 🔎 Verificar que el doctor exista (para todos)
+    const doctor = await this.doctorRepo.findOne({
+      where: { id: doctorId, isActive: true },
+    });
 
+    if (!doctor) {
+      throw new NotFoundException('Not found doctor.');
+    }
+
+    // 👨‍⚕️ Si es médico, solo puede ver su propio schedule
     if (userRole === RolesEnum.Medic) {
-      doctor = await this.doctorRepo.findOne({
+      const ownDoctor = await this.doctorRepo.findOne({
         where: {
           user: { id: userId },
           isActive: true,
@@ -120,35 +128,16 @@ export class DoctorScheduleService {
         relations: { user: true },
       });
 
-      if (!doctor) {
-        throw new ForbiddenException(
-          'The user is not associated with a doctor',
-        );
-      }
-
-      if (doctor.id !== doctorId) {
+      if (!ownDoctor || ownDoctor.id !== doctorId) {
         throw new ForbiddenException(
           "You can't see another doctor's schedule.",
         );
       }
     }
 
-    if (userRole === RolesEnum.Secretary || userRole === RolesEnum.SuperAdmin) {
-      doctor = await this.doctorRepo.findOne({
-        where: { id: doctorId, isActive: true },
-      });
-
-      if (!doctor) {
-        throw new NotFoundException('Not found doctor.');
-      }
-    }
-
-    if (!doctor) {
-      throw new ForbiddenException('Unauthorized role.');
-    }
-
+    // 📅 Obtener schedules
     const schedulesList = await this.scheduleRepo.find({
-      where: { doctor: { id: doctor.id } },
+      where: { doctor: { id: doctorId } },
       relations: { doctor: true },
       order: { dayOfWeek: 'ASC', startTime: 'ASC' },
     });
