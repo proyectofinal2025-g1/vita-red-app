@@ -23,16 +23,14 @@ export class DoctorScheduleService {
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
-    private readonly doctorService: DoctorService
-  ) { }
-
+    private readonly doctorService: DoctorService,
+  ) {}
 
   async create(
     dto: CreateDoctorScheduleDto,
     userId: string,
     role: RolesEnum,
   ): Promise<DoctorScheduleResponseDto> {
-
     let doctor: Doctor | null = null;
 
     if (role === RolesEnum.Medic) {
@@ -49,7 +47,9 @@ export class DoctorScheduleService {
       }
 
       if (dto.doctorId && dto.doctorId !== doctor.id) {
-        throw new ForbiddenException('You cannot create schedules for another doctor.');
+        throw new ForbiddenException(
+          'You cannot create schedules for another doctor.',
+        );
       }
     }
 
@@ -63,17 +63,6 @@ export class DoctorScheduleService {
       }
     }
 
-    if (role === RolesEnum.User) {
-  doctor = await this.doctorRepo.findOne({
-    where: { id: dto.doctorId, isActive: true },
-  });
-
-  if (!doctor) {
-    throw new NotFoundException('Not found doctor.');
-  }
-}
-
-
     if (!doctor) {
       throw new ForbiddenException('Unauthorized role.');
     }
@@ -84,14 +73,16 @@ export class DoctorScheduleService {
       );
     }
 
-
     const findDay = await this.scheduleRepo.findOne({
       where: {
         doctor: { id: doctor.id },
         dayOfWeek: dto.dayOfWeek,
       },
-    })
-    if (findDay) throw new BadRequestException('There is already a schedule available for the requested day.')
+    });
+    if (findDay)
+      throw new BadRequestException(
+        'There is already a schedule available for the requested day.',
+      );
 
     const schedule = await this.scheduleRepo.create({
       doctor,
@@ -113,13 +104,11 @@ export class DoctorScheduleService {
     };
   }
 
-
   async findByDoctor(
     doctorId: string,
     userId: string,
     userRole: RolesEnum,
   ): Promise<DoctorScheduleResponseDto[]> {
-
     let doctor: Doctor | null = null;
 
     if (userRole === RolesEnum.Medic) {
@@ -138,14 +127,13 @@ export class DoctorScheduleService {
       }
 
       if (doctor.id !== doctorId) {
-        throw new ForbiddenException("You can't see another doctor's schedule.");
+        throw new ForbiddenException(
+          "You can't see another doctor's schedule.",
+        );
       }
     }
 
-    if (
-      userRole === RolesEnum.Secretary ||
-      userRole === RolesEnum.SuperAdmin || userRole === RolesEnum.User
-    ) {
+    if (userRole === RolesEnum.Secretary || userRole === RolesEnum.SuperAdmin) {
       doctor = await this.doctorRepo.findOne({
         where: { id: doctorId, isActive: true },
       });
@@ -181,8 +169,6 @@ export class DoctorScheduleService {
     }));
   }
 
-
-
   async validateScheduleForAppointment(
     doctorId: string,
     appointmentDate: Date,
@@ -213,7 +199,7 @@ export class DoctorScheduleService {
 
     if (!isValid) {
       throw new BadRequestException(
-        "The appointment is not within the doctor's office hours."
+        "The appointment is not within the doctor's office hours.",
       );
     }
   }
@@ -223,14 +209,11 @@ export class DoctorScheduleService {
     return hours * 60 + minutes;
   }
 
-
-
   async updateScheduleDoctor(
     doctorId: string,
     dto: UpdateDoctorScheduleDto,
     role: RolesEnum,
   ): Promise<DoctorScheduleResponseDto> {
-
     if (!dto || Object.keys(dto).length === 0) {
       throw new BadRequestException('You cannot pass an empty object');
     }
@@ -255,7 +238,7 @@ export class DoctorScheduleService {
 
     if (role === RolesEnum.Medic && schedule.doctor.id !== doctorId) {
       throw new ForbiddenException(
-        "You cannot modify another doctor's schedule"
+        "You cannot modify another doctor's schedule",
       );
     }
 
@@ -271,7 +254,8 @@ export class DoctorScheduleService {
       relations: { doctor: true },
     });
 
-    if (!updatedSchedule) throw new NotFoundException('No schedules were found for change.')
+    if (!updatedSchedule)
+      throw new NotFoundException('No schedules were found for change.');
 
     return {
       id: updatedSchedule.id,
@@ -282,6 +266,4 @@ export class DoctorScheduleService {
       slotDuration: updatedSchedule.slotDuration,
     };
   }
-
-
 }

@@ -72,13 +72,6 @@ export class Appointment {
   status: AppointmentStatus;
 
   @ApiProperty({
-    description: 'Fecha y hora en la que se creó el turno',
-    example: '2025-08-01T14:32:00.000Z',
-  })
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @ApiProperty({
     description:
       'Fecha y hora de expiración de la pre-reserva. Si se supera sin pago, el turno se cancela automáticamente.',
     example: '2025-08-01T14:47:00.000Z',
@@ -92,7 +85,7 @@ export class Appointment {
     type: () => User,
   })
   @ManyToOne(() => User, { nullable: false })
-  @JoinColumn({ name: 'patient_id' }) 
+  @JoinColumn({ name: 'patient_id' })
   patient: User;
 
   @ApiProperty({
@@ -139,14 +132,6 @@ export class Appointment {
   })
   paymentReference?: string;
 
-  @ApiProperty({
-    description:
-      'Usuario que creó el turno (paciente o administrador/secretaria)',
-    type: () => User,
-  })
-  @ManyToOne(() => User, { nullable: false })
-  createdBy: User;
-
-  @OneToMany(() => Notification, notification => notification.appointment)
+  @OneToMany(() => Notification, (notification) => notification.appointment)
   notifications: Notification[];
 }

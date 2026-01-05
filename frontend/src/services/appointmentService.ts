@@ -19,11 +19,14 @@ export const getDoctorSchedules = async (
   doctorId: string,
   token: string
 ): Promise<DoctorSchedule[]> => {
+  
   const res = await fetch(`${apiURL}/doctors/schedules/${doctorId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
+  console.log('TOKEN ENVIADO:', token);
+
 
   if (!res.ok) {
     throw new Error('No se pudieron cargar los horarios del médico');
