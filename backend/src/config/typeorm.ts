@@ -17,8 +17,14 @@ const config = {
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/migrations/*{.js, .ts}'],
   //dropSchema: true,
+
+  extra: {
+    max: 5,                // máximo de conexiones abiertas
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  },
 };
 
 export default registerAs('typeorm', () => config);
 
-export const connectionSource = new DataSource(config as DataSourceOptions);
+// export const connectionSource = new DataSource(config as DataSourceOptions);

@@ -140,7 +140,7 @@ export class AppointmentsService {
       );
     }
 
-    const expiresAt = AppointmentTimeHelper.addMinutesInArgentina(now, 10);
+    const expiresAt = AppointmentTimeHelper.addMinutesInArgentina(now, 3);
 
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,

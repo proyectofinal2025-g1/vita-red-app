@@ -9,7 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { SpecialityModule } from './speciality/speciality.module';
-import { SeederService } from './seed/seed.service';
+// import { SeederService } from './seed/seed.service';
 import { SeedModule } from './seed/seed.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { SuperAdminModule } from './super-admin/super-admin.module';
@@ -24,12 +24,6 @@ dotenvConfig({ path: './.env.development' });
 
 @Module({
   imports: [
-    ScheduleModule.forRoot(),
-    JwtModule.register({
-      global: true,
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '1h' },
-    }),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [typeorm],
@@ -44,13 +38,20 @@ dotenvConfig({ path: './.env.development' });
         return typeormConfig;
       },
     }),
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
+    }),
+    ...(process.env.ENABLE_CRON === 'true'
+      ?[ScheduleModule.forRoot()]
+      :[]),
     UserModule,
     secretaryModule,
     AuthModule,
     CloudinaryModule,
     SpecialityModule,
     DoctorModule,
-    SeedModule,
     SuperAdminModule,
     NotificationModule,
     MedicalRecordModule,
@@ -61,13 +62,4 @@ dotenvConfig({ path: './.env.development' });
   controllers: [],
   providers: [],
 })
-export class AppModule implements OnModuleInit {
-  constructor(private readonly seederService: SeederService) {}
-
-  async onModuleInit() {
-    if (process.env.NODE_ENV !== 'production') {
-      await this.seederService.seedSuperAdmin();
-      await this.seederService.run();
-    }
-  }
-}
+export class AppModule  {}
