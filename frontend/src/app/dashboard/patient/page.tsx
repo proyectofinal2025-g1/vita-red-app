@@ -11,7 +11,7 @@ export default function PatientDashboardHome() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     useEffect(() => {
-        const token = dataUser?.Token || dataUser?.token;
+        const token = dataUser?.token || dataUser?.token;
         console.log("Token encontrado:", token);
         console.log("DataUser completo:", dataUser);
         
