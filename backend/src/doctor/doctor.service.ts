@@ -23,6 +23,7 @@ export class DoctorService {
       user_id: doctor.user.id,
       speciality_id: doctor.speciality.id,
       isActive: doctor.isActive,
+      consultationPrice: doctor.consultationPrice as number,
     };
   }
 
