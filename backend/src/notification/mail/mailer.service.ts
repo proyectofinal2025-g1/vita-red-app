@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import * as sgMail from '@sendgrid/mail';
 import { Transporter } from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,33 +9,23 @@ export class MailerService {
     private transporter: Transporter;
 
     constructor() {
-        this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: false,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
     }
 
     async sendEmail(
-        email: string,
+        to: string,
         subject: string,
         html: string,
     ): Promise<void> {
-        try {
-            await this.transporter.sendMail({
-                from: process.env.SMTP_FROM,
-                to: email,
-                subject,
-                html
-            })
-            console.log("Correo enviado");
-        } catch (error) {
-            throw new Error(`Error sending email: ${error.message}`)
-        }
+        await sgMail.send({
+            to,
+            from: {
+                email: process.env.SENDGRID_FROM_EMAIL || 'noreply@vitared.com',
+                name: 'VitaRed',
+            },
+            subject,
+            html,
+        });
     }
 
     loadTemplate(html: string): string {
@@ -43,7 +33,7 @@ export class MailerService {
         return fs.readFileSync(templatePath, 'utf8')
     }
 
-    async sendWelcomeEmail(email: string, first_name: string ): Promise<void> {
+    async sendWelcomeEmail(email: string, first_name: string): Promise<void> {
         let html = this.loadTemplate('welcome.html')
         html = html.replace('{{name}}', first_name)
         const subject = 'Bienvenido a VitaRed';
