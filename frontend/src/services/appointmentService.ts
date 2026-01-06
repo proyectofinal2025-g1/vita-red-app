@@ -83,3 +83,26 @@ export const generateTimeSlots = (
   }
   return slots;
 };
+
+export const cancelAppointmentService = async (
+  appointmentId: string,
+  token: string
+) => {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/appointments/${appointmentId}/cancel`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.message || "Error al cancelar el turno");
+  }
+
+  return res.json();
+};
+
