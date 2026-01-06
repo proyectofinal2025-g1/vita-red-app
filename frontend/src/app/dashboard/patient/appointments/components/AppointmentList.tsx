@@ -97,6 +97,17 @@ export default function AppointmentList() {
                 Motivo: {appointment.reason}
                 </p>
             )}
+
+            {appointment.status === "CONFIRMED" && (
+                <button
+                    className="mt-4 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
+                    onClick={() => {
+                        console.log(`Cancelar turno ${appointment.id}`);
+                    }}
+                >
+                    Cancelar Turno
+                </button>
+            )}
         </div>
         ))}
     </div>
