@@ -88,8 +88,8 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
     setLoadingTimes(true);
     setErrorMessage(null);
-    const token = getAuthToken();
 
+    const token = getAuthToken();
     if (!token) {
       setErrorMessage("Sesión expirada");
       return;
@@ -122,6 +122,46 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       .finally(() => setLoadingTimes(false));
   }, [selectedDoctor, selectedDate]);
 
+  const selectedDoctorObj = doctors.find((d) => d.id === selectedDoctor);
+
+  // 🔹 Flujo real de pago (solo se ejecuta si el usuario confirma)
+  const proceedToPayment = async (
+    date: string,
+    time: string,
+    token: string
+  ) => {
+    try {
+      setIsSubmitting(true);
+
+      const preReserve = await preReserveAppointment(
+        {
+          doctorId: selectedDoctor!,
+          dateTime: `${date}T${time}:00`,
+          specialtyId: specialities.find(
+            (s) => s.name === selectedSpeciality
+          )?.id,
+        },
+        token
+      );
+
+      const { initPoint } = await createPaymentPreference(
+        preReserve.appointmentId,
+        token
+      );
+
+      window.location.href = initPoint;
+    } catch (error: any) {
+      Swal.fire(
+        "Error",
+        error.message || "No se pudo iniciar el pago",
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // 🔹 Submit con SweetAlert previo
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -150,36 +190,33 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    setIsSubmitting(true);
+    const price = selectedDoctorObj?.consultationPrice ?? 20000;
+    console.log("Doctor seleccionado:", selectedDoctorObj);
 
-    try {
-      //  Pre-reservar turno
-      const preReserve = await preReserveAppointment(
-        {
-          doctorId: selectedDoctor,
-          dateTime: `${selectedDate}T${time}:00`,
-          specialtyId: specialities.find((s) => s.name === selectedSpeciality)
-            ?.id,
-        },
-        token
-      );
+    if (!price) {
+      Swal.fire("Error", "No se pudo obtener el precio", "error");
+      return;
+    }
 
-      // Crear preference de pago
-      const { initPoint } = await createPaymentPreference(
-        preReserve.appointmentId,
-        token
-      );
+    const result = await Swal.fire({
+      title: "Confirmar pago",
+      html: `
+        <p>El precio de la consulta es:</p>
+        <h2 style="margin-top:10px;">$${price}</h2>
+        <p style="margin-top:10px;font-size:14px;">
+          Serás redirigido a Mercado Pago
+        </p>
+      `,
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Continuar con el pago",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+    });
 
-      //  Redirigir a Mercado Pago
-      window.location.href = initPoint;
-    } catch (error: any) {
-      Swal.fire(
-        "Error",
-        error.message || "No se pudo iniciar el pago",
-        "error"
-      );
-    } finally {
-      setIsSubmitting(false);
+    if (result.isConfirmed) {
+      await proceedToPayment(selectedDate, time, token);
     }
   };
 
@@ -247,23 +284,22 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       )}
 
       <div className="flex gap-3">
-  <button
-    type="button"
-    onClick={onClose}
-    className="w-1/2 border border-gray-300 text-white py-2 rounded hover:bg-red-600 bg-red-500"
-  >
-    Cancelar
-  </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-1/2 border border-gray-300 text-white py-2 rounded hover:bg-red-600 bg-red-500"
+        >
+          Cancelar
+        </button>
 
-  <button
-    type="submit"
-    disabled={isSubmitting}
-    className="w-1/2 bg-blue-500 text-white py-2 rounded disabled:opacity-50 hover:bg-blue-600"
-  >
-    {isSubmitting ? "Redirigiendo…" : "Confirmar turno"}
-  </button>
-</div>
-
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-1/2 bg-blue-500 text-white py-2 rounded disabled:opacity-50 hover:bg-blue-600"
+        >
+          {isSubmitting ? "Redirigiendo…" : "Confirmar turno"}
+        </button>
+      </div>
     </form>
   );
 }

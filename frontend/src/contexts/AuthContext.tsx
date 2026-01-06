@@ -1,4 +1,3 @@
-// src/contexts/AuthContext.tsx
 'use client';
 
 import { useState, useEffect, createContext, useContext } from 'react';
@@ -12,6 +11,7 @@ export const AuthContext = createContext<IAuthContextProps>({
   setDataUser: () => {},
   logout: () => {},
   loginWithToken: () => {},
+  loading: true,
 });
 
 const getUserFromLocalStorage = (): IUserSession | null => {
@@ -28,22 +28,30 @@ const getUserFromLocalStorage = (): IUserSession | null => {
     const payload = decodeJWT(parsed.token);
     if (!payload || typeof payload.exp !== 'number') return null;
 
-    const now = Date.now();
-    if (payload.exp * 1000 < now) {
+    if (payload.exp * 1000 < Date.now()) {
       return null;
     }
 
     return parsed;
-  } catch (e) {
+  } catch {
     return null;
   }
 };
 
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
-  const [dataUser, setDataUser] = useState<IUserSession | null>(
-    getUserFromLocalStorage()
-  );
+  const [dataUser, setDataUser] = useState<IUserSession | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  // 🔑 Inicializar sesión (CLAVE)
+  useEffect(() => {
+    const session = getUserFromLocalStorage();
+    if (session) {
+      setDataUser(session);
+    }
+    setLoading(false);
+  }, []);
+
+  // 🔁 Persistir sesión
   useEffect(() => {
     if (dataUser) {
       localStorage.setItem('userSession', JSON.stringify(dataUser));
@@ -89,7 +97,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ dataUser, setDataUser, logout, loginWithToken }}
+      value={{ dataUser, setDataUser, logout, loginWithToken, loading }}
     >
       {children}
     </AuthContext.Provider>

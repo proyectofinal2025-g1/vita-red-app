@@ -15,4 +15,7 @@ export class DoctorResponseDto {
 
   @ApiProperty({ example: true })
   isActive: boolean;
+
+  @ApiProperty({ example: 20000})
+  consultationPrice: number;
 }
