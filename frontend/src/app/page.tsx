@@ -1,18 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { useAuth } from '@/contexts/AuthContext';
-import AppointmentForm from '@/components/AppointmentForm';
+import { useRouter } from 'next/navigation';
 
 import CarrouselHome from '@/components/CarrouselHome';
 import SectionOneTwoHome from '@/components/SectionOneTwoHome';
 import Image from 'next/image';
-import { Footer } from '@/components/Footer';
 
 export default function Home() {
   const { dataUser } = useAuth();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const router = useRouter();
 
   const handleBookAppointment = () => {
     if (!dataUser) {
@@ -27,11 +25,12 @@ export default function Home() {
         cancelButtonColor: '#6c757d',
       }).then((result) => {
         if (result.isConfirmed) {
-          window.location.href = '/auth/login';
+          router.push('/auth/login');
         }
       });
     } else {
-      setIsFormOpen(true);
+      // 👉 Usuario logueado → ir al dashboard
+      router.push('/dashboard/patient');
     }
   };
 
@@ -73,14 +72,6 @@ export default function Home() {
         </h2>
         <CarrouselHome />
       </section>
-
-      {isFormOpen && (
-        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-          <div className='bg-white rounded-lg shadow-xl max-w-md w-full p-6'>
-            <AppointmentForm onClose={() => setIsFormOpen(false)} />
-          </div>
-        </div>
-      )}
     </>
   );
 }
