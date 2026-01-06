@@ -4,6 +4,7 @@ import { navItems } from '@/utils/navItems';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import Swal from 'sweetalert2';
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
@@ -65,6 +66,25 @@ export const Navbar = () => {
   const getRole = () => {
     return dataUser?.user?.role || 'usuario';
   };
+
+  const handleLogout = () => {
+  Swal.fire({
+    title: '¿Cerrar sesión?',
+    text: '¿Estás seguro de que deseas cerrar sesión?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, cerrar sesión',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+  }).then((result) => {
+    if (result.isConfirmed) {
+      logout();
+      setOpenMenu(false);
+    }
+  });
+};
+
 
   return (
     <nav
@@ -133,7 +153,7 @@ export const Navbar = () => {
                     </Link>
                   </div>
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className='text-sm ml-2 bg-blue-600 hover:bg-red-700 text-white font-bold px-4 py-1 rounded-3xl transition cursor-pointer'
                   >
                     Cerrar sesión
@@ -196,10 +216,7 @@ export const Navbar = () => {
               </div>
                 </Link>
               <button
-                onClick={() => {
-                  logout();
-                  setOpenMenu(false);
-                }}
+                onClick={handleLogout}
                 className='text-white font-bold px-4 py-2 rounded-3xl mb-3 bg-red-600 hover:bg-red-700 transition cursor-pointer'
               >
                 Cerrar sesión

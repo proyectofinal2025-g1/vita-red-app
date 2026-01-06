@@ -26,6 +26,7 @@ const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
   const session = localStorage.getItem("userSession");
   if (!session) return null;
+
   try {
     return JSON.parse(session).token ?? null;
   } catch {
@@ -47,14 +48,14 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🔹 Especialidades
+  /* ===================== ESPECIALIDADES ===================== */
   useEffect(() => {
     getAllSpecialityService()
       .then((data) => setSpecialities(data.filter((s) => s.isActive)))
       .catch(console.error);
   }, []);
 
-  // 🔹 Doctores por especialidad
+  /* ===================== DOCTORES ===================== */
   useEffect(() => {
     if (!selectedSpeciality) {
       setDoctors([]);
@@ -73,7 +74,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       .finally(() => setLoadingDoctors(false));
   }, [selectedSpeciality]);
 
-  // 🔹 Horarios disponibles
+  /* ===================== HORARIOS ===================== */
   useEffect(() => {
     if (!selectedDoctor || !selectedDate) {
       setAvailableTimes([]);
@@ -99,7 +100,10 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       .then((schedules) => {
         const date = new Date(`${selectedDate}T00:00:00`);
         const dayOfWeek = getDayOfWeekAsNumber(date);
-        const schedule = schedules.find((s) => s.dayOfWeek === dayOfWeek);
+
+        const schedule = schedules.find(
+          (s) => s.dayOfWeek === dayOfWeek
+        );
 
         if (!schedule) {
           setAvailableTimes([]);
@@ -122,46 +126,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       .finally(() => setLoadingTimes(false));
   }, [selectedDoctor, selectedDate]);
 
-  const selectedDoctorObj = doctors.find((d) => d.id === selectedDoctor);
-
-  // 🔹 Flujo real de pago (solo se ejecuta si el usuario confirma)
-  const proceedToPayment = async (
-    date: string,
-    time: string,
-    token: string
-  ) => {
-    try {
-      setIsSubmitting(true);
-
-      const preReserve = await preReserveAppointment(
-        {
-          doctorId: selectedDoctor!,
-          dateTime: `${date}T${time}:00`,
-          specialtyId: specialities.find(
-            (s) => s.name === selectedSpeciality
-          )?.id,
-        },
-        token
-      );
-
-      const { initPoint } = await createPaymentPreference(
-        preReserve.appointmentId,
-        token
-      );
-
-      window.location.href = initPoint;
-    } catch (error: any) {
-      Swal.fire(
-        "Error",
-        error.message || "No se pudo iniciar el pago",
-        "error"
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // 🔹 Submit con SweetAlert previo
+  /* ===================== SUBMIT ===================== */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -190,36 +155,62 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    const price = selectedDoctorObj?.consultationPrice ?? 20000;
-    console.log("Doctor seleccionado:", selectedDoctorObj);
+    try {
+      setIsSubmitting(true);
 
-    if (!price) {
-      Swal.fire("Error", "No se pudo obtener el precio", "error");
-      return;
-    }
+      /* ✅ 1. PRE-RESERVA (VALIDACIÓN REAL) */
+      const preReserve = await preReserveAppointment(
+        {
+          doctorId: selectedDoctor,
+          dateTime: `${selectedDate}T${time}:00`,
+          specialtyId: specialities.find(
+            (s) => s.name === selectedSpeciality
+          )?.id,
+        },
+        token
+      );
 
-    const result = await Swal.fire({
-      title: "Confirmar pago",
-      html: `
-        <p>El precio de la consulta es:</p>
-        <h2 style="margin-top:10px;">$${price}</h2>
-        <p style="margin-top:10px;font-size:14px;">
-          Serás redirigido a Mercado Pago
-        </p>
-      `,
-      icon: "info",
-      showCancelButton: true,
-      confirmButtonText: "Continuar con el pago",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-    });
+      /* ✅ 2. CONFIRMACIÓN DE PAGO */
+      const result = await Swal.fire({
+        title: "Confirmar pago",
+        html: `
+          <p>El precio de la consulta es:</p>
+          <h2 style="margin-top:10px;">$${preReserve.price}</h2>
+          <p style="margin-top:10px;font-size:14px;">
+            Serás redirigido a Mercado Pago
+          </p>
+        `,
+        icon: "info",
+        showCancelButton: true,
+        confirmButtonText: "Continuar con el pago",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+      });
 
-    if (result.isConfirmed) {
-      await proceedToPayment(selectedDate, time, token);
+      if (!result.isConfirmed) {
+        setIsSubmitting(false);
+        return;
+      }
+
+      /* ✅ 3. PREFERENCE + REDIRECCIÓN */
+      const { initPoint } = await createPaymentPreference(
+        preReserve.appointmentId,
+        token
+      );
+
+      window.location.href = initPoint;
+    } catch (error: any) {
+      Swal.fire(
+        "Error",
+        error.message || "No se pudo iniciar el pago",
+        "error"
+      );
+      setIsSubmitting(false);
     }
   };
 
+  /* ===================== UI ===================== */
   return (
     <form
       onSubmit={handleSubmit}
@@ -227,7 +218,6 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
     >
       <h2 className="text-2xl font-bold mb-4">Agenda tu cita</h2>
 
-      {/* Especialidad */}
       <select
         value={selectedSpeciality}
         onChange={(e) => setSelectedSpeciality(e.target.value)}
@@ -242,7 +232,6 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         ))}
       </select>
 
-      {/* Médico */}
       {selectedSpeciality && (
         <select
           value={selectedDoctor ?? ""}
@@ -259,7 +248,6 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         </select>
       )}
 
-      {/* Fecha */}
       {selectedDoctor && (
         <input
           type="date"
@@ -271,7 +259,6 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         />
       )}
 
-      {/* Hora */}
       {selectedDoctor && selectedDate && (
         <select name="time" className="w-full p-2 border rounded mb-4" required>
           <option value="">Selecciona hora</option>
@@ -287,7 +274,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="w-1/2 border border-gray-300 text-white py-2 rounded hover:bg-red-600 bg-red-500"
+          className="w-1/2 bg-red-500 hover:bg-red-600 text-white py-2 rounded"
         >
           Cancelar
         </button>
@@ -295,7 +282,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-1/2 bg-blue-500 text-white py-2 rounded disabled:opacity-50 hover:bg-blue-600"
+          className="w-1/2 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded disabled:opacity-50"
         >
           {isSubmitting ? "Redirigiendo…" : "Confirmar turno"}
         </button>
