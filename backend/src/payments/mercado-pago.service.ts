@@ -25,12 +25,16 @@ export class MercadoPagoService {
         },
         external_reference: data.appointmentId,
         expiration_date_to: data.expiresAt.toISOString(),
+
         notification_url: `${process.env.BACKEND_URL}/webhooks/mercadopago`,
+
         back_urls: {
-          success: `${process.env.FRONTEND_URL}/payment/success`,
+          success: `${process.env.FRONTEND_URL}/dashboard/patient`,
           failure: `${process.env.FRONTEND_URL}/payment/failure`,
           pending: `${process.env.FRONTEND_URL}/payment/pending`,
         },
+
+        auto_return: 'approved',
       },
       {
         headers: {
@@ -58,7 +62,6 @@ export class MercadoPagoService {
     return response.data;
   }
 
-  // ✅ ESTE ES EL MÉTODO QUE FALTABA
   async getMerchantOrder(merchantOrderId: string) {
     const response = await axios.get(
       `https://api.mercadopago.com/merchant_orders/${merchantOrderId}`,
