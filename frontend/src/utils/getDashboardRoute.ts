@@ -7,12 +7,12 @@ export const getDashboardRoute = (role: string): string => {
   switch (normalizedRole) {
     case 'PATIENT':
       return '/dashboard/patient';
-    case 'DOCTOR':
-      return '/dashboard/doctor';
-    case 'SECRETARY':
-      return '/dashboard/secretary';
-    case 'SUPER_ADMIN':
-      return '/dashboard/super-admin';
+    // case 'DOCTOR':
+      // return '/dashboard/doctor';
+    // case 'SECRETARY':
+      // return '/dashboard/secretary';
+    // case 'SUPER_ADMIN':
+      // return '/dashboard/super-admin';
     default:
       return '/auth/login';
   }
