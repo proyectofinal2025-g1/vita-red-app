@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import * as sgMail from '@sendgrid/mail';
+import sgMail from '@sendgrid/mail';
 import { Transporter } from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
