@@ -11,6 +11,7 @@ import { User } from '../user/entities/user.entity';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { UserRepository } from '../user/user.repository';
 import { Repository } from 'typeorm';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +19,7 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly notificationService: NotificationService
   ) {}
 
   async register({
@@ -103,6 +105,7 @@ export class AuthService {
       });
 
       user = await this.userRepository.save(user);
+      await this.notificationService.sendWelcomeNotification(user.email, user.first_name);
     }
 
     if (user.is_active === false && user.role !== RolesEnum.SuperAdmin) {
