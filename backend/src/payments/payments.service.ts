@@ -19,7 +19,7 @@ export class PaymentsService {
     private readonly appointmentsRepository: AppointmentsRepository,
     private readonly mercadoPagoService: MercadoPagoService,
     private readonly paymentsRepository: PaymentsRepository,
-  ) {}
+  ) { }
 
   async createPreference(dto: CreatePaymentDto): Promise<ResponsePaymentDto> {
     const appointment = await this.appointmentsService.findPreReservedById(
@@ -106,11 +106,7 @@ export class PaymentsService {
       id: data.appointmentId,
     });
 
-    // CONFIRMAMOS EL TURNO ACÁ (SIEMPRE)
-    if (appointment.status !== AppointmentStatus.CONFIRMED) {
-      appointment.status = AppointmentStatus.CONFIRMED;
-      await this.appointmentsRepository.save(appointment);
-    }
+    await this.appointmentsService.confirmPayment(data.appointmentId, data.externalPaymentId)
 
     const payment = this.paymentsRepository.create({
       appointment,
