@@ -232,7 +232,7 @@ export class AppointmentsService {
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: dateArgentina,
-      time:timeArgentina
+      time: timeArgentina
     };
     await this.notificationService.sendAppointmentCancelledNotification(
       notification,
