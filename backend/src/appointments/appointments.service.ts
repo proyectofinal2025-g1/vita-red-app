@@ -51,6 +51,9 @@ export class AppointmentsService {
     private readonly specialityRepository: Repository<Speciality>,
   ) {}
 
+  // ======================================================
+  // PRE-RESERVA (AJUSTE DE HORA + EXPIRACIÓN UTC)
+  // ======================================================
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
     patientId: string,
@@ -86,19 +89,20 @@ export class AppointmentsService {
       }
     }
 
-    const appointmentDate = AppointmentTimeHelper.parseArgentinaDate(
-      dto.dateTime,
-    );
+    // 📅 Fecha/hora del turno (Argentina)
+    const appointmentDate =
+      AppointmentTimeHelper.parseArgentinaDate(dto.dateTime);
 
-    const now = AppointmentTimeHelper.nowArgentina();
+    const nowArgentina = AppointmentTimeHelper.nowArgentina();
 
-    AppointmentRules.validateNotInPast(appointmentDate, now);
-
+    AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
-
     AppointmentRules.validateWorkingHours(appointmentDate, 8, 18);
-
-    AppointmentRules.validateMinimumAnticipation(appointmentDate, now, 12);
+    AppointmentRules.validateMinimumAnticipation(
+      appointmentDate,
+      nowArgentina,
+      12,
+    );
 
     await this.doctorScheduleService.validateScheduleForAppointment(
       doctor.id,
@@ -140,13 +144,15 @@ export class AppointmentsService {
       );
     }
 
-    const expiresAt = AppointmentTimeHelper.addMinutesInArgentina(now, 10);
+    // 🔑 EXPIRACIÓN CORRECTA (UTC, EMPAREJADA CON PAYMENT SERVICE)
+    const nowUtc = new Date();
+    const expiresAt = new Date(nowUtc.getTime() + 10 * 60 * 1000); // +10 min
 
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,
       status: AppointmentStatus.PENDING,
       expiresAt,
-      patient:{id: patient.id} as User,
+      patient: { id: patient.id } as User,
       doctor,
       speciality: speciality ?? undefined,
       priceAtBooking: doctor.consultationPrice,
@@ -161,6 +167,9 @@ export class AppointmentsService {
     };
   }
 
+  // ======================================================
+  // RESPUESTA
+  // ======================================================
   private toResponseDto(appointment: Appointment): AppointmentResponseDto {
     return {
       id: appointment.id,
@@ -191,6 +200,9 @@ export class AppointmentsService {
     };
   }
 
+  // ======================================================
+  // CANCELAR TURNO
+  // ======================================================
   async cancelAppointment(
     appointmentId: string,
     cancelledByUserId: string,
@@ -208,28 +220,33 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const now = AppointmentTimeHelper.nowArgentina();
+    const nowArgentina = AppointmentTimeHelper.nowArgentina();
 
     AppointmentRules.validateCancellableStatus(appointment.status);
-
-    AppointmentRules.validateCancellationWindow(appointment.date, now, 24);
+    AppointmentRules.validateCancellationWindow(
+      appointment.date,
+      nowArgentina,
+      24,
+    );
 
     appointment.status = AppointmentStatus.CANCELLED;
-    appointment.cancelledAt = now;
+    appointment.cancelledAt = nowArgentina;
     appointment.cancelledBy = { id: cancelledByUserId } as any;
 
     await this.appointmentRepository.save(appointment);
-    const notification = {
+
+    await this.notificationService.sendAppointmentCancelledNotification({
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: appointment.date,
-    };
-    await this.notificationService.sendAppointmentCancelledNotification(
-      notification,
-    );
+    });
+
     return this.toResponseDto(appointment);
   }
 
+  // ======================================================
+  // CONFIRMAR PAGO
+  // ======================================================
   async confirmPayment(
     appointmentId: string,
     paymentReference?: string,
@@ -247,15 +264,15 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const now = AppointmentTimeHelper.nowArgentina();
+    const nowUtc = new Date();
 
     if (
       appointment.status === AppointmentStatus.PENDING &&
       appointment.expiresAt &&
-      appointment.expiresAt < now
+      appointment.expiresAt < nowUtc
     ) {
       appointment.status = AppointmentStatus.CANCELLED;
-      appointment.cancelledAt = now;
+      appointment.cancelledAt = nowUtc;
       await this.appointmentRepository.save(appointment);
 
       throw new BadRequestException(
@@ -264,26 +281,27 @@ export class AppointmentsService {
     }
 
     AppointmentRules.validatePayableStatus(appointment.status);
-
-    AppointmentRules.validateNotExpired(appointment.expiresAt, now);
+    AppointmentRules.validateNotExpired(appointment.expiresAt, nowUtc);
 
     appointment.status = AppointmentStatus.CONFIRMED;
-    appointment.paidAt = now;
+    appointment.paidAt = nowUtc;
     appointment.paymentReference = paymentReference;
 
     await this.appointmentRepository.save(appointment);
-    const notification = {
+
+    await this.notificationService.sendAppointmentCreatedNotification({
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: appointment.date,
       doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
-    };
-    await this.notificationService.sendAppointmentCreatedNotification(
-      notification,
-    );
+    });
+
     return this.toResponseDto(appointment);
   }
 
+  // ======================================================
+  // PRE-RESERVA PARA PAYMENT
+  // ======================================================
   async findPreReservedById(
     appointmentId: string,
   ): Promise<PreReservedAppointmentForPayment> {
@@ -294,9 +312,8 @@ export class AppointmentsService {
       throw new NotFoundException('El turno no existe o no está pre-reservado');
     }
 
-    const now = AppointmentTimeHelper.nowArgentina();
-
-    AppointmentRules.validateNotExpired(appointment.expiresAt, now);
+    const nowUtc = new Date();
+    AppointmentRules.validateNotExpired(appointment.expiresAt, nowUtc);
 
     return {
       id: appointment.id,
@@ -311,6 +328,9 @@ export class AppointmentsService {
     };
   }
 
+  // ======================================================
+  // BÚSQUEDAS
+  // ======================================================
   async findById(id: string) {
     return this.appointmentRepository.findOne({
       where: { id },
@@ -331,13 +351,12 @@ export class AppointmentsService {
     if (date) {
       where.date = Raw((alias) => `DATE(${alias}) = :date`, { date });
     }
-    console.log('appoint', date);
 
     if (speciality) {
       where.speciality = { name: ILike(`%${speciality}%`) };
     }
 
-    const appointments = await this.appointmentRepository.find({
+    return this.appointmentRepository.find({
       where,
       relations: {
         doctor: { user: true },
@@ -348,8 +367,6 @@ export class AppointmentsService {
         date: 'ASC',
       },
     });
-
-    return appointments;
   }
 
   async findByFiltersDoctor(filters: {
@@ -368,10 +385,10 @@ export class AppointmentsService {
     }
 
     if (patientId) {
-      where.patientId = { id: { patientId } };
+      where.patient = { id: patientId };
     }
 
-    const appointments = await this.appointmentRepository.find({
+    return this.appointmentRepository.find({
       where,
       relations: {
         doctor: { user: true },
@@ -382,8 +399,6 @@ export class AppointmentsService {
         date: 'ASC',
       },
     });
-
-    return appointments;
   }
 
   async findAllByPatientId(
@@ -403,6 +418,8 @@ export class AppointmentsService {
       },
     });
 
-    return appointments.map((appointment) => this.toResponseDto(appointment));
+    return appointments.map((appointment) =>
+      this.toResponseDto(appointment),
+    );
   }
 }
