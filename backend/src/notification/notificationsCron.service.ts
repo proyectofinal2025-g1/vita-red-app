@@ -27,28 +27,18 @@ export class NotificationsCronService {
             }, relations: ["notifications", "patient", "doctor", "doctor.user"]
         });
         for (const appointment of appointments) {
-            if (appointment.notifications.some(notification => notification.type === NotificationType.APPOINTMENT_REMINDER)) {
-                continue;
+                if (appointment.notifications.some(notification => notification.type === NotificationType.APPOINTMENT_REMINDER)) {
+                    continue;
+                }
+                const params = {
+                    email: appointment.patient.email,
+                    first_name: appointment.patient.first_name,
+                    date: appointment.date,
+                    doctorName: appointment.doctor.user.first_name
+                }
+                await this.notificationService.sendAppointmentReminder(params)
+            
             }
-            const dateArgentina = appointment.date.toLocaleDateString('es-AR', {
-                timeZone: 'America/Argentina/Buenos_Aires',
-            });
-
-            const timeArgentina = appointment.date.toLocaleTimeString('es-AR', {
-                timeZone: 'America/Argentina/Buenos_Aires',
-                hour: '2-digit',
-                minute: '2-digit',
-            });
-            const params = {
-                email: appointment.patient.email,
-                first_name: appointment.patient.first_name,
-                date: dateArgentina,
-                time:timeArgentina,
-                doctorName: appointment.doctor.user.first_name
-            }
-            await this.notificationService.sendAppointmentReminder(params)
-
-        }
-        console.log(`CRON: ${appointments.length} turnos encontrados para recordatorio`);
+            console.log(`CRON: ${appointments.length} turnos encontrados para recordatorio`);
     }
 }
