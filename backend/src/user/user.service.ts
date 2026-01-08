@@ -9,7 +9,6 @@ import { User } from './entities/user.entity';
 import { UserRepository } from './user.repository';
 import bcrypt from 'bcrypt';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
-import { NotificationService } from '../notification/notification.service';
 import { UserResponse } from './dto/user-response.dto';
 
 @Injectable()
@@ -17,7 +16,6 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly cloudinaryService: CloudinaryService,
-    private readonly notificationService: NotificationService,
   ) {}
 
   async create(
@@ -45,15 +43,8 @@ export class UserService {
       }
 
       const userCreate = await this.userRepository.create(user);
-
-      await this.notificationService.sendWelcomeNotification(
-        user.email,
-        user.first_name,
-      );
-
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
       return userCreate;
+      
     } catch (error) {
       throw new InternalServerErrorException(
         'Error creating user: ' + error.message,

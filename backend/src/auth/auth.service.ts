@@ -20,7 +20,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService
-  ) {}
+  ) { }
 
   async register({
     confirmPassword,
@@ -39,7 +39,11 @@ export class AuthService {
       throw new InternalServerErrorException('Error generating password hash');
     }
 
-    await this.userService.create({ ...user, password: hashedPassword });
+    const userCreate = await this.userService.create({ ...user, password: hashedPassword });
+    await this.notificationService.sendWelcomeNotification(
+      userCreate.email,
+      userCreate.first_name,
+    );
 
     return {
       success: 'User successfully registered',
@@ -96,12 +100,12 @@ export class AuthService {
 
     if (!user) {
       user = await this.userRepository.create({
-    email: googleUser.email,
-    first_name: googleUser.firstName,
-    last_name: googleUser.lastName,
-    password: null,
-    dni: null,
-    profileImageUrl: googleUser.picture,
+        email: googleUser.email,
+        first_name: googleUser.firstName,
+        last_name: googleUser.lastName,
+        password: null,
+        dni: null,
+        profileImageUrl: googleUser.picture,
       });
 
       user = await this.userRepository.save(user);
