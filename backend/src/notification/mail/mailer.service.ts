@@ -1,13 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import sgMail from '@sendgrid/mail';
-import { Transporter } from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
 
 @Injectable()
 export class MailerService {
-    private transporter: Transporter;
-
     constructor() {
         sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
     }
