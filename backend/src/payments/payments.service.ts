@@ -26,21 +26,22 @@ export class PaymentsService {
       dto.appointmentId,
     );
 
-    const now = new Date();
-    const diffSeconds =
-      (appointment.expiresAt.getTime() - now.getTime()) / 1000;
+    const nowMs = Date.now();
+    const expiresAtMs = new Date(appointment.expiresAt).getTime();
+
+    const diffSeconds = (expiresAtMs - nowMs) / 1000;
 
     const BLOCK_SECONDS = Number(
       process.env.PAYMENT_BLOCK_BEFORE_EXPIRATION_SECONDS ?? 60,
     );
 
+    
     if (diffSeconds <= BLOCK_SECONDS) {
       throw new BadRequestException(
         'El turno está por expirar. No se puede iniciar el pago.',
       );
     }
 
-    // IDMPOTENCIA
     const existingPayment =
       await this.paymentsRepository.findPendingByAppointmentId(appointment.id);
 
@@ -82,7 +83,6 @@ export class PaymentsService {
   }): Promise<void> {
     console.log('🔥 processApprovedPayment CALLED', data);
 
-    // 🔑 Idempotencia fuerte
     const existingPayment =
       await this.paymentsRepository.findByExternalPaymentId(
         data.externalPaymentId,
