@@ -294,9 +294,7 @@ export class AppointmentsService {
       first_name: appointment.patient.first_name,
       date: appointment.date,
       doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
-    };
-
-    await this.notificationService.sendAppointmentCreatedNotification(notification)
+    });
 
     return this.toResponseDto(appointment);
   }
