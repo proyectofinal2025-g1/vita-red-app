@@ -49,7 +49,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) {}
+  ) { }
 
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
@@ -146,7 +146,7 @@ export class AppointmentsService {
       date: appointmentDate,
       status: AppointmentStatus.PENDING,
       expiresAt,
-      patient:{id: patient.id} as User,
+      patient: { id: patient.id } as User,
       doctor,
       speciality: speciality ?? undefined,
       priceAtBooking: doctor.consultationPrice,
@@ -184,9 +184,9 @@ export class AppointmentsService {
 
       speciality: appointment.speciality
         ? {
-            id: appointment.speciality.id,
-            name: appointment.speciality.name,
-          }
+          id: appointment.speciality.id,
+          name: appointment.speciality.name,
+        }
         : undefined,
     };
   }
@@ -219,10 +219,20 @@ export class AppointmentsService {
     appointment.cancelledBy = { id: cancelledByUserId } as any;
 
     await this.appointmentRepository.save(appointment);
+    const dateArgentina = appointment.date.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+    });
+
+    const timeArgentina = appointment.date.toLocaleTimeString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
     const notification = {
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
-      date: appointment.date,
+      date: dateArgentina,
+      time:timeArgentina
     };
     await this.notificationService.sendAppointmentCancelledNotification(
       notification,
@@ -272,10 +282,20 @@ export class AppointmentsService {
     appointment.paymentReference = paymentReference;
 
     await this.appointmentRepository.save(appointment);
+    const dateArgentina = appointment.date.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+    });
+
+    const timeArgentina = appointment.date.toLocaleTimeString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
     const notification = {
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
-      date: appointment.date,
+      date: dateArgentina,
+      time: timeArgentina,
       doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
     };
     await this.notificationService.sendAppointmentCreatedNotification(
