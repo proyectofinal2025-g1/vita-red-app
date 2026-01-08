@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { Between, DataSource, Raw, Repository } from 'typeorm';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -77,6 +77,32 @@ async existsSameDayWithDoctor(
     },
   });
 }
+
+
+  async findByDoctorId(doctorId: string) {
+    const listAppointments = await this.AppointmentRepo.find({
+      where: {
+        doctor: { id: doctorId },
+      },
+      relations: ['doctor'],
+    });
+
+    if (!listAppointments) throw new NotFoundException('Not Found for this doctor appointments.')
+    return listAppointments
+  }
+
+
+  async findByFullName(fullName: string) {
+    const listAppointments = await this.AppointmentRepo
+      .createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.doctor', 'doctor')
+      .leftJoinAndSelect('doctor.user', 'user')
+      .where("user.firstName || ' ' || user.lastName ILIKE :fullName", { fullName: `%${fullName}%` })
+      .getMany();
+
+    if (!listAppointments) throw new NotFoundException('Not Found for this doctor appointments.')
+    return listAppointments
+  }
 
 
 }

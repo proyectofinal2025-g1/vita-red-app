@@ -6,13 +6,15 @@ import { UserModule } from '../user/user.module';
 import { DoctorModule } from '../doctor/doctor.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
 import { SpecialityModule } from '../speciality/speciality.module';
+import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
   imports: [ChatIAModule,
      UserModule,
      DoctorModule, 
      AppointmentsModule, 
-     SpecialityModule
+     SpecialityModule,
+     PaymentsModule
     ],
   controllers: [ChatController],
   providers: [ChatService],

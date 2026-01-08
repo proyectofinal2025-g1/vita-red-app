@@ -5,6 +5,7 @@ import { UserService } from '../user/user.service';
 import { DoctorService } from '../doctor/doctor.service';
 import { AppointmentsService } from '../appointments/appointments.service';
 import { SpecialityService } from '../speciality/speciality.service';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class ChatService {
@@ -12,8 +13,9 @@ export class ChatService {
     private readonly chatIAservice: ChatIAService,
     private readonly userService: UserService,
     private readonly doctorService: DoctorService,
-    private readonly appointmentService: AppointmentsService,
-    private readonly specialityService: SpecialityService
+    private readonly appointmentsService: AppointmentsService,
+    private readonly specialityService: SpecialityService,
+    private readonly paymentsService: PaymentsService
   ){}
 
 
@@ -49,14 +51,16 @@ async chatMessage(
 
 
 private handleRecommendSpeciality(payload?: any): string {
-  const symptoms = payload?.symptoms;
+  const message = payload?.message;
 
-  if (!symptoms) {
+  if (!message || message.trim() === '') {
     return '¿Podrías indicarme qué síntomas estás teniendo?';
   }
 
   return 'Por los síntomas que mencionás, te recomiendo consultar con un clínico. ¿Querés que te muestre médicos disponibles?';
 }
+
+
 
 
 private async handleListDoctors(payload?: any): Promise<string> {
@@ -76,13 +80,70 @@ private async handleListDoctors(payload?: any): Promise<string> {
 }
 
 
-private handleListAvailableSlots(payload?: any): string {
-  return 'Voy a buscar los primeros turnos disponibles.';
+private async handleListAvailableSlots(payload?: any): Promise<string> {
+  const doctorId = payload?.doctorId;
+
+  if (!doctorId) {
+    return '¿De qué médico querés ver los turnos disponibles?';
+  }
+
+  const appointments = await this.doctorService.getAppointments(doctorId);
+
+  if (!appointments.length) {
+    return 'Ese médico no tiene turnos disponibles en este momento.';
+  }
+
+  const list = appointments
+    .slice(0, 5)
+    .map(s => {
+      const fechaObj = new Date(s.date);
+      
+      const fecha = fechaObj.toLocaleDateString('es-AR', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long' 
+      });
+
+      const hora = fechaObj.toLocaleTimeString('es-AR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+
+      return `- ${fecha} a las ${hora} hs`;
+    })
+    .join('\n');
+
+  return `Estos son los primeros turnos disponibles:\n${list}\n\n¿Querés reservar alguno?`;
 }
 
-private handleBookAppointment(userId: string, payload?: any): string {
-  return 'Perfecto, voy a ayudarte a reservar el turno.';
+private async handleBookAppointment(
+  userId: string,
+  payload?: any,
+): Promise<string> {
+  const { doctorId, dateTime, specialtyId } = payload || {};
+
+  if (!doctorId || !dateTime) {
+    return 'Necesito que elijas un médico y un horario para continuar.';
+  }
+
+  try {
+    const preReserve = await this.appointmentsService.preReserveAppointment(
+      { doctorId, dateTime, specialtyId },
+      userId,
+    );
+
+    const payment = await this.paymentsService.createPreference({
+      appointmentId: preReserve.appointmentId,
+    });
+
+    return `Tu turno fue pre-reservado exitosamente. 
+Por favor, completá el pago para confirmarlo: ${payment.initPoint}
+El turno expirará el ${preReserve.expiresAt.toLocaleTimeString()} si no se completa el pago.`;
+  } catch (err: any) {
+    return `No se pudo reservar el turno: ${err.message}`;
+  }
 }
+
 
 private handleListUserAppointments(userId: string): string {
   return 'Estos son tus turnos asignados.';
