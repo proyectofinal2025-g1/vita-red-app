@@ -49,7 +49,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) {}
+  ) { }
 
   // ======================================================
   // PRE-RESERVA (AJUSTE DE HORA + EXPIRACIÓN UTC)
@@ -193,9 +193,9 @@ export class AppointmentsService {
 
       speciality: appointment.speciality
         ? {
-            id: appointment.speciality.id,
-            name: appointment.speciality.name,
-          }
+          id: appointment.speciality.id,
+          name: appointment.speciality.name,
+        }
         : undefined,
     };
   }
@@ -234,13 +234,24 @@ export class AppointmentsService {
     appointment.cancelledBy = { id: cancelledByUserId } as any;
 
     await this.appointmentRepository.save(appointment);
-
-    await this.notificationService.sendAppointmentCancelledNotification({
-      email: appointment.patient.email,
-      first_name: appointment.patient.first_name,
-      date: appointment.date,
+    const dateArgentina = appointment.date.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
     });
 
+    const timeArgentina = appointment.date.toLocaleTimeString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const notification = {
+      email: appointment.patient.email,
+      first_name: appointment.patient.first_name,
+      date: dateArgentina,
+      time: timeArgentina
+    };
+    await this.notificationService.sendAppointmentCancelledNotification(
+      notification,
+    );
     return this.toResponseDto(appointment);
   }
 
@@ -288,11 +299,20 @@ export class AppointmentsService {
     appointment.paymentReference = paymentReference;
 
     await this.appointmentRepository.save(appointment);
+    const dateArgentina = appointment.date.toLocaleDateString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+    });
 
-    await this.notificationService.sendAppointmentCreatedNotification({
+    const timeArgentina = appointment.date.toLocaleTimeString('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const notification = {
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
-      date: appointment.date,
+      date: dateArgentina,
+      time: timeArgentina,
       doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
     });
 
