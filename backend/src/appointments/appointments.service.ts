@@ -314,7 +314,9 @@ export class AppointmentsService {
       date: dateArgentina,
       time: timeArgentina,
       doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
-    });
+    };
+
+    await this.notificationService.sendAppointmentCreatedNotification(notification)
 
     return this.toResponseDto(appointment);
   }
