@@ -1,8 +1,7 @@
-// src/components/UI/SessionTimer.tsx
 'use client';
 
-import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { useCallback } from 'react';
 import Swal from 'sweetalert2';
 
@@ -10,11 +9,9 @@ const SessionTimer = () => {
   const { dataUser, logout } = useAuth();
   const token = dataUser?.token || null;
 
-  // ✅ Memoizamos la función de expiración
   const handleSessionExpire = useCallback(() => {
-    logout(); // Limpia el contexto y localStorage
+    logout(); 
 
-    // Solo mostramos el modal si estamos en el navegador
     if (typeof window !== 'undefined') {
       Swal.fire({
         title: 'Sesión expirada',
@@ -27,9 +24,8 @@ const SessionTimer = () => {
         window.location.href = '/auth/login';
       });
     }
-  }, [logout]); // logout es estable (proviene del contexto)
+  }, [logout]); 
 
-  // ✅ Pasamos la función memoizada
   const { timeLeft } = useSessionTimer(token, handleSessionExpire);
 
   if (!token || timeLeft <= 0) {
