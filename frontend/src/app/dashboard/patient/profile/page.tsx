@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 
 interface UserData {
   sub: string;
@@ -45,7 +43,6 @@ export default function ProfilePage() {
       if (!token) {
         throw new Error("No se encontró el token de autenticación");
       }
-      
       const response = await fetch(`${API_URL}/user/me`, {
         method: "GET",
         headers: {

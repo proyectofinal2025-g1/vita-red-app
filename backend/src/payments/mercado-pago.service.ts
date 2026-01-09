@@ -34,7 +34,7 @@ export class MercadoPagoService {
           pending: `${process.env.FRONTEND_URL}/payment/pending`,
         },
 
-        // auto_return: 'approved',
+       // auto_return: 'approved',
       },
       {
         headers: {
