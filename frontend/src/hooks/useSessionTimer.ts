@@ -1,4 +1,3 @@
-// src/hooks/useSessionTimer.ts
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
