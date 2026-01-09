@@ -442,17 +442,4 @@ export class AppointmentsService {
       this.toResponseDto(appointment),
     );
   }
-
-   async findAppointmentsByMedic(params: { doctorId?: string; fullName?: string }) {
-  if (params.doctorId) {
-    return this.appointmentRepository.findByDoctorId(params.doctorId);
-  }
-
-  if (params.fullName) {
-    return this.appointmentRepository.findByFullName(params.fullName);
-  }
-
-  throw new BadRequestException('Debe indicar un médico por id o por nombre');
-}
-
 }

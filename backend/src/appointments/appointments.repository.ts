@@ -1,5 +1,5 @@
-import { Between, DataSource, Raw, Repository } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { Between, DataSource, Raw, Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -58,6 +58,7 @@ export class AppointmentsRepository extends Repository<Appointment> {
     });
   }
 
+
 async existsSameDayWithDoctor(
   patientId: string,
   doctorId: string,
@@ -77,6 +78,7 @@ async existsSameDayWithDoctor(
     },
   });
 }
+
 
 
   async findByDoctorId(doctorId: string) {

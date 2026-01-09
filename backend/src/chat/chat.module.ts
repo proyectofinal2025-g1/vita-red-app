@@ -7,6 +7,8 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { AppointmentsModule } from '../appointments/appointments.module';
 import { SpecialityModule } from '../speciality/speciality.module';
 import { PaymentsModule } from '../payments/payments.module';
+import { ChatSessionService } from './chatIA/chatIA-memory.service';
+import { ChatIAService } from './chatIA/chatIA.service';
 
 @Module({
   imports: [ChatIAModule,
@@ -17,6 +19,10 @@ import { PaymentsModule } from '../payments/payments.module';
      PaymentsModule
     ],
   controllers: [ChatController],
-  providers: [ChatService],
+  providers: [
+    ChatService, 
+    ChatSessionService,
+    ChatIAService
+  ],
 })
 export class ChatModule {}

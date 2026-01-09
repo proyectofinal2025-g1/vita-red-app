@@ -5,47 +5,47 @@ import { ChatResponse } from '../dto/response-chat.dto';
 
 @Injectable()
 export class ChatIAService {
-    private openai: OpenAI;
+  private openai: OpenAI;
 
-    constructor() {
-        this.openai = new OpenAI({
-            apiKey: process.env.OPENAI_API_KEY,
-        });
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+
+  async detectIntent(message: string): Promise<ChatResponse> {
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      temperature: 0.2,
+      max_tokens: 150,
+      messages: [
+        { role: 'system', content: this.systemPrompt() },
+        { role: 'user', content: message },
+      ],
+    });
+
+    const content = response.choices[0]?.message?.content;
+
+    if (!content) return { intent: ChatIntent.FALLBACK };
+
+    try {
+      return JSON.parse(content);
+    } catch {
+      return { intent: ChatIntent.FALLBACK };
     }
+  }
 
-    async detectIntent(message: string): Promise<ChatResponse> {
-        const iaResponse = await this.openai.chat.completions.create({
-            model: 'gpt-3.5-turbo',
-            messages: [
-                {
-                    role: 'system',
-                    content: this.systemPrompt(),
-                },
-                {
-                    role: 'user',
-                    content: message,
-                },
-            ],
-            temperature: 0.2,
-            max_completion_tokens: 50
-        });
+  private systemPrompt(): string {
+    return `
+You are a medical administrative chatbot.
 
-        const content = iaResponse?.choices[0]?.message?.content?.trim();
+You DO NOT diagnose.
+You ONLY help users schedule medical appointments.
 
-        if (!content) {
-            return { intent: ChatIntent.FALLBACK };
-        }
-
-        try {
-            return JSON.parse(content);
-        } catch {
-            return { intent: ChatIntent.FALLBACK };
-        }
-    }
-
-    private systemPrompt(): string {
-        return `
-You are a medical administrative assistant.
+Tasks:
+- Detect intent
+- Extract symptoms if mentioned
+- Suggest ONE medical speciality (administrative)
 
 Allowed intents:
 - greeting
@@ -57,18 +57,21 @@ Allowed intents:
 - fallback
 
 Rules:
-- You do NOT provide medical diagnosis or advice.
-- You ONLY return JSON.
-- You MUST return one of the allowed intents.
-- If unsure, return fallback.
-
-The user speaks Spanish.
+- Always return valid JSON
+- Never add explanations
+- If symptoms exist, extract them as array of strings
+- Suggested speciality must be generic (clinico, pediatra, ginecologo, etc.)
 
 Response format:
 {
-  "intent": "<one of the allowed intents>",
-  "payload": { ...optional }
+  "intent": "<intent>",
+  "payload": {
+    "symptoms"?: string[],
+    "suggestedSpeciality"?: string
+  }
 }
+
+Language: Spanish.
 `;
-    }
+  }
 }
