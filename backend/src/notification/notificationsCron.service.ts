@@ -17,7 +17,7 @@ export class NotificationsCronService {
 
     @Cron(CronExpression.EVERY_MINUTE)
     async cronService() {
-        const now = new Date()
+        const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }))
         const nextDay = AppointmentTimeHelper.addMinutes(now, 1440);
         const limitDate = AppointmentTimeHelper.addMinutes(now, 1441);
         const appointments = await this.appointmentRepo.find({
@@ -43,7 +43,7 @@ export class NotificationsCronService {
                 email: appointment.patient.email,
                 first_name: appointment.patient.first_name,
                 date: dateArgentina,
-                time:timeArgentina,
+                time: timeArgentina,
                 doctorName: appointment.doctor.user.first_name
             }
             await this.notificationService.sendAppointmentReminder(params)
