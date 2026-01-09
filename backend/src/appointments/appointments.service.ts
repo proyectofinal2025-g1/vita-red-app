@@ -51,9 +51,6 @@ export class AppointmentsService {
     private readonly specialityRepository: Repository<Speciality>,
   ) { }
 
-  // ======================================================
-  // PRE-RESERVA (AJUSTE DE HORA + EXPIRACIÓN UTC)
-  // ======================================================
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
     patientId: string,
@@ -89,7 +86,6 @@ export class AppointmentsService {
       }
     }
 
-    // 📅 Fecha/hora del turno (Argentina)
     const appointmentDate =
       AppointmentTimeHelper.parseArgentinaDate(dto.dateTime);
 
@@ -144,7 +140,6 @@ export class AppointmentsService {
       );
     }
 
-    // 🔑 EXPIRACIÓN CORRECTA (UTC, EMPAREJADA CON PAYMENT SERVICE)
     const nowUtc = new Date();
     const expiresAt = new Date(nowUtc.getTime() + 10 * 60 * 1000); // +10 min
 
