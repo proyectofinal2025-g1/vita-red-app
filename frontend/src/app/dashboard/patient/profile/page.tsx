@@ -43,7 +43,6 @@ export default function ProfilePage() {
       if (!token) {
         throw new Error("No se encontró el token de autenticación");
       }
-
       const response = await fetch(`${API_URL}/user/me`, {
         method: "GET",
         headers: {
@@ -116,7 +115,7 @@ export default function ProfilePage() {
         throw new Error("No se encontró el token de autenticación");
       }
       console.log("Enviando al backend:", formData);
-      const response = await fetch(`http://localhost:3000/user/${userData?.sub}`, {
+      const response = await fetch(`${API_URL}/user/${userData?.sub}`, {
         method: "PATCH",
         headers: {
           "Authorization": `Bearer ${token}`,

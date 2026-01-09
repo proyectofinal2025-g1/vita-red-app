@@ -79,7 +79,7 @@ export default function PatientDashboardHome() {
                     </Link>
                     
                     <Link href="/dashboard/patient/profile" className="flex-1 text-center px-6 py-3 bg-gray-700 text-white rounded-xl font-medium hover:bg-gray-800 transition shadow-md">
-                    Mis datos
+                    Mi perfil
                     </Link>
                 </div>
             </div>
