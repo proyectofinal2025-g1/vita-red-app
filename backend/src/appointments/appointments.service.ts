@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, ILike, Raw, Repository } from 'typeorm';
+import { ILike, Raw, Repository } from 'typeorm';
 
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
@@ -93,11 +93,8 @@ export class AppointmentsService {
     const now = AppointmentTimeHelper.nowArgentina();
 
     AppointmentRules.validateNotInPast(appointmentDate, now);
-
     AppointmentRules.validateWorkingDay(appointmentDate);
-
     AppointmentRules.validateWorkingHours(appointmentDate, 8, 18);
-
     AppointmentRules.validateMinimumAnticipation(appointmentDate, now, 12);
 
     await this.doctorScheduleService.validateScheduleForAppointment(
@@ -140,13 +137,13 @@ export class AppointmentsService {
       );
     }
 
-    const expiresAt = AppointmentTimeHelper.addMinutesInArgentina(now, 10);
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,
       status: AppointmentStatus.PENDING,
       expiresAt,
-      patient:{id: patient.id} as User,
+      patient: { id: patient.id } as User,
       doctor,
       speciality: speciality ?? undefined,
       priceAtBooking: doctor.consultationPrice,
@@ -169,19 +166,16 @@ export class AppointmentsService {
       reason: appointment.reason,
       expiresAt: appointment.expiresAt,
       price: appointment.priceAtBooking,
-
       patient: {
         id: appointment.patient.id,
         fullName: `${appointment.patient.first_name} ${appointment.patient.last_name}`,
         email: appointment.patient.email,
       },
-
       doctor: {
         id: appointment.doctor.id,
         fullName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
         consultationFee: appointment.priceAtBooking,
       },
-
       speciality: appointment.speciality
         ? {
             id: appointment.speciality.id,
@@ -211,7 +205,6 @@ export class AppointmentsService {
     const now = AppointmentTimeHelper.nowArgentina();
 
     AppointmentRules.validateCancellableStatus(appointment.status);
-
     AppointmentRules.validateCancellationWindow(appointment.date, now, 24);
 
     appointment.status = AppointmentStatus.CANCELLED;
@@ -219,14 +212,13 @@ export class AppointmentsService {
     appointment.cancelledBy = { id: cancelledByUserId } as any;
 
     await this.appointmentRepository.save(appointment);
-    const notification = {
+
+    await this.notificationService.sendAppointmentCancelledNotification({
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: appointment.date,
-    };
-    await this.notificationService.sendAppointmentCancelledNotification(
-      notification,
-    );
+    });
+
     return this.toResponseDto(appointment);
   }
 
@@ -264,7 +256,6 @@ export class AppointmentsService {
     }
 
     AppointmentRules.validatePayableStatus(appointment.status);
-
     AppointmentRules.validateNotExpired(appointment.expiresAt, now);
 
     appointment.status = AppointmentStatus.CONFIRMED;
@@ -272,15 +263,14 @@ export class AppointmentsService {
     appointment.paymentReference = paymentReference;
 
     await this.appointmentRepository.save(appointment);
-    const notification = {
+
+    await this.notificationService.sendAppointmentCreatedNotification({
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: appointment.date,
       doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
-    };
-    await this.notificationService.sendAppointmentCreatedNotification(
-      notification,
-    );
+    });
+
     return this.toResponseDto(appointment);
   }
 
@@ -331,13 +321,12 @@ export class AppointmentsService {
     if (date) {
       where.date = Raw((alias) => `DATE(${alias}) = :date`, { date });
     }
-    console.log('appoint', date);
 
     if (speciality) {
       where.speciality = { name: ILike(`%${speciality}%`) };
     }
 
-    const appointments = await this.appointmentRepository.find({
+    return this.appointmentRepository.find({
       where,
       relations: {
         doctor: { user: true },
@@ -348,8 +337,6 @@ export class AppointmentsService {
         date: 'ASC',
       },
     });
-
-    return appointments;
   }
 
   async findByFiltersDoctor(filters: {
@@ -368,10 +355,10 @@ export class AppointmentsService {
     }
 
     if (patientId) {
-      where.patientId = { id: { patientId } };
+      where.patient = { id: patientId };
     }
 
-    const appointments = await this.appointmentRepository.find({
+    return this.appointmentRepository.find({
       where,
       relations: {
         doctor: { user: true },
@@ -382,8 +369,6 @@ export class AppointmentsService {
         date: 'ASC',
       },
     });
-
-    return appointments;
   }
 
   async findAllByPatientId(

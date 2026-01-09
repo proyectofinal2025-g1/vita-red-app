@@ -24,7 +24,7 @@ export default function AppointmentList() {
           return;
         }
 
-        const response = await fetch(`${API_URL}/appointments/my`, {
+        const response = await fetch(`${API_URL}/appointments/my`, { 
           headers: {
             Authorization: `Bearer ${token}`,
           },
