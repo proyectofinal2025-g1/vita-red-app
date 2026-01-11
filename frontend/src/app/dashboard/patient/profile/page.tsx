@@ -59,11 +59,65 @@ export default function ProfilePage() {
     fetchUser();
   }, []);
 
+<<<<<<< HEAD
   const fetchUser = async () => {
   try {
     const session = localStorage.getItem("userSession");
 
     if (!session) {
+=======
+<<<<<<< HEAD
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const userSession = localStorage.getItem("userSession");
+      
+      if (!userSession) {
+        throw new Error("No se encontró la sesión de usuario");
+      }
+      
+      const session = JSON.parse(userSession);
+      const token = session.token;
+      
+      if (!token) {
+        throw new Error("No se encontró el token de autenticación");
+      }
+      const response = await fetch(`${API_URL}/user/me`, {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error("Sesión expirada. Por favor, inicia sesión nuevamente.");
+        }
+        throw new Error("Error al cargar los datos del usuario");
+      }
+
+      const data = await response.json();
+      setUserData(data);
+      console.log("Datos del usuario:", data);
+      setFormData({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error desconocido");
+    } finally {
+=======
+  const fetchUser = async () => {
+  try {
+    const session = localStorage.getItem("userSession");
+
+    if (!session) {
+>>>>>>> 0c1f641 (Se implemento la opcion de cambio de contraseña en el perfil del usuario y se implemento pequeñas mejoras UX)
+>>>>>>> 0277fe3 (Se implemento la opcion de cambio de contraseña en el perfil del usuario y se implemento pequeñas mejoras UX)
       setLoading(false);
       return;
     }
@@ -211,8 +265,25 @@ export default function ProfilePage() {
           return;
         }
       }
+<<<<<<< HEAD
 
       const res = await fetch(`${API_URL}/user/me`, {
+=======
+<<<<<<< HEAD
+      
+      const session = JSON.parse(userSession);
+      const token = session.token;
+      
+      if (!token) {
+        throw new Error("No se encontró el token de autenticación");
+      }
+      console.log("Enviando al backend:", formData);
+      const response = await fetch(`${API_URL}/user/${userData?.sub}`, {
+=======
+
+      const res = await fetch(`${API_URL}/user/me`, {
+>>>>>>> 0c1f641 (Se implemento la opcion de cambio de contraseña en el perfil del usuario y se implemento pequeñas mejoras UX)
+>>>>>>> 0277fe3 (Se implemento la opcion de cambio de contraseña en el perfil del usuario y se implemento pequeñas mejoras UX)
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,

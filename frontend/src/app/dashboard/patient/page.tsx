@@ -43,6 +43,10 @@ export default function PatientDashboardHome() {
     fetchUser();
   }, []);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0277fe3 (Se implemento la opcion de cambio de contraseña en el perfil del usuario y se implemento pequeñas mejoras UX)
   return (
     <>
       <div className="min-h-[70vh] flex items-center justify-center px-4">
