@@ -419,4 +419,10 @@ export class AppointmentsService {
       this.toResponseDto(appointment),
     );
   }
+
+
+   async findAppointmentsByMedic( doctorId: string){
+    return this.appointmentRepository.findByDoctorId(doctorId);
+}
+
 }

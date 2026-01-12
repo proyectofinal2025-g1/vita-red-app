@@ -94,17 +94,4 @@ async existsSameDayWithDoctor(
   }
 
 
-  async findByFullName(fullName: string) {
-    const listAppointments = await this.AppointmentRepo
-      .createQueryBuilder('appointment')
-      .leftJoinAndSelect('appointment.doctor', 'doctor')
-      .leftJoinAndSelect('doctor.user', 'user')
-      .where("user.firstName || ' ' || user.lastName ILIKE :fullName", { fullName: `%${fullName}%` })
-      .getMany();
-
-    if (!listAppointments) throw new NotFoundException('Not Found for this doctor appointments.')
-    return listAppointments
-  }
-
-
 }

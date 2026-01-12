@@ -195,6 +195,8 @@ export class DoctorService {
     const doctor = await this.doctorRepo.findOne({
     where: { user: { id: id } },
     relations: ['user'] });
-    return await this.appointmentService.findAppointmentsByMedic({ doctorId: doctor?.id })
+    const doctorId = doctor?.id
+    if(!doctorId) throw new NotFoundException('Not found doctor')
+    return await this.appointmentService.findAppointmentsByMedic(doctorId)
   }
 }

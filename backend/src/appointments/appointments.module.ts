@@ -19,7 +19,7 @@ import { NotificationModule } from '../notification/notification.module';
     TypeOrmModule.forFeature([Appointment, User, Speciality, Doctor]),
     forwardRef(() => DoctorModule),
     NotificationModule,
-    ScheduleModule,
+    forwardRef(() => ScheduleModule),
   ],
   controllers: [AppointmentsController],
   providers: [

@@ -112,7 +112,8 @@ export class DoctorController {
   @UseGuards(AuthGuard, RolesGuard)
   @Get('appointments/list')
   async getAppointments(@Req() req: any){
-   const id = req.user.id
+   const id = req.user.sub
+console.log('id:',id);
    return await this.doctorService.getAppointments(id)
 }
 

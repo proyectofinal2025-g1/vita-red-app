@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -23,6 +25,7 @@ export class DoctorScheduleService {
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
+    @Inject(forwardRef(() => DoctorService))
     private readonly doctorService: DoctorService,
   ) { }
 
