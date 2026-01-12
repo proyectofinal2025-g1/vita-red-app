@@ -24,7 +24,7 @@ export class DoctorScheduleService {
     private readonly doctorRepo: Repository<Doctor>,
 
     private readonly doctorService: DoctorService,
-  ) {}
+  ) { }
 
   async create(
     dto: CreateDoctorScheduleDto,
@@ -170,10 +170,15 @@ export class DoctorScheduleService {
       throw new BadRequestException('The doctor does not have set hours.');
     }
 
-    const appointmentDay = appointmentDate.getDay();
+    const localeDate = new Date(
+      appointmentDate.toLocaleString('en-US', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+      }),
+    );
 
+    const appointmentDay = localeDate.getDay();
     const appointmentMinutes =
-      appointmentDate.getHours() * 60 + appointmentDate.getMinutes();
+      localeDate.getHours() * 60 + localeDate.getMinutes();
 
     const isValid = schedules.some((s) => {
       if (s.dayOfWeek !== appointmentDay) return false;

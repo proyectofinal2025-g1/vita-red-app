@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, ILike, Raw, Repository } from 'typeorm';
+import { ILike, Raw, Repository } from 'typeorm';
 
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
@@ -51,9 +51,6 @@ export class AppointmentsService {
     private readonly specialityRepository: Repository<Speciality>,
   ) { }
 
-  // ======================================================
-  // PRE-RESERVA (AJUSTE DE HORA + EXPIRACIÓN UTC)
-  // ======================================================
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
     patientId: string,
@@ -89,7 +86,6 @@ export class AppointmentsService {
       }
     }
 
-    // 📅 Fecha/hora del turno (Argentina)
     const appointmentDate =
       AppointmentTimeHelper.parseArgentinaDate(dto.dateTime);
 
@@ -144,7 +140,6 @@ export class AppointmentsService {
       );
     }
 
-    // 🔑 EXPIRACIÓN CORRECTA (UTC, EMPAREJADA CON PAYMENT SERVICE)
     const nowUtc = new Date();
     const expiresAt = new Date(nowUtc.getTime() + 10 * 60 * 1000); // +10 min
 
@@ -167,9 +162,6 @@ export class AppointmentsService {
     };
   }
 
-  // ======================================================
-  // RESPUESTA
-  // ======================================================
   private toResponseDto(appointment: Appointment): AppointmentResponseDto {
     return {
       id: appointment.id,
@@ -178,19 +170,16 @@ export class AppointmentsService {
       reason: appointment.reason,
       expiresAt: appointment.expiresAt,
       price: appointment.priceAtBooking,
-
       patient: {
         id: appointment.patient.id,
         fullName: `${appointment.patient.first_name} ${appointment.patient.last_name}`,
         email: appointment.patient.email,
       },
-
       doctor: {
         id: appointment.doctor.id,
         fullName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
         consultationFee: appointment.priceAtBooking,
       },
-
       speciality: appointment.speciality
         ? {
           id: appointment.speciality.id,
@@ -200,9 +189,6 @@ export class AppointmentsService {
     };
   }
 
-  // ======================================================
-  // CANCELAR TURNO
-  // ======================================================
   async cancelAppointment(
     appointmentId: string,
     cancelledByUserId: string,
@@ -255,9 +241,6 @@ export class AppointmentsService {
     return this.toResponseDto(appointment);
   }
 
-  // ======================================================
-  // CONFIRMAR PAGO
-  // ======================================================
   async confirmPayment(
     appointmentId: string,
     paymentReference?: string,
@@ -319,9 +302,6 @@ export class AppointmentsService {
     return this.toResponseDto(appointment);
   }
 
-  // ======================================================
-  // PRE-RESERVA PARA PAYMENT
-  // ======================================================
   async findPreReservedById(
     appointmentId: string,
   ): Promise<PreReservedAppointmentForPayment> {
@@ -348,9 +328,6 @@ export class AppointmentsService {
     };
   }
 
-  // ======================================================
-  // BÚSQUEDAS
-  // ======================================================
   async findById(id: string) {
     return this.appointmentRepository.findOne({
       where: { id },
