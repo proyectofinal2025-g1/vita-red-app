@@ -11,10 +11,18 @@ import { DoctorResponseDto } from './dto/doctor-response.dto';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { Speciality } from '../speciality/entities/speciality.entity';
 import { DoctorFindResponseDto } from './dto/doctor-find-response.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { AppointmentsService } from '../appointments/appointments.service';
 
 @Injectable()
 export class DoctorService {
-  constructor(private readonly doctorRepository: DoctorRepository) {}
+  constructor(
+    private readonly doctorRepository: DoctorRepository,
+    @InjectRepository(Doctor)
+    private readonly doctorRepo: Repository<Doctor>,
+    private readonly appointmentService: AppointmentsService
+  ) { }
 
   private toResponseDto(doctor: Doctor): DoctorResponseDto {
     return {
@@ -75,15 +83,15 @@ export class DoctorService {
     return this.toResponseDto(created);
   }
 
-  async findAll():Promise<DoctorFindResponseDto[]> {
+  async findAll(): Promise<DoctorFindResponseDto[]> {
     const listDoctors = await this.doctorRepository.findAll();
-    
+
     return listDoctors.map((doctor) => ({
-    id: doctor.id,
-    fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
-    speciality: doctor.speciality.name,
-    licence_number: doctor.licence_number,
-  }));
+      id: doctor.id,
+      fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
+      speciality: doctor.speciality.name,
+      licence_number: doctor.licence_number,
+    }));
   }
 
   async findOne(id: string) {
@@ -97,24 +105,24 @@ export class DoctorService {
 
   /* necesito q devuelva la entidad para la relaciones en medical-records*/
   async findyById(id: string): Promise<Doctor> {
-  const doctor = await this.doctorRepository.findOne(id);
-  if (!doctor) {
-    throw new NotFoundException(`Doctor with id ${id} not found`);
+    const doctor = await this.doctorRepository.findOne(id);
+    if (!doctor) {
+      throw new NotFoundException(`Doctor with id ${id} not found`);
+    }
+    return doctor;
   }
-  return doctor;
-}
 
 
   async findByDoctorName(name: string): Promise<DoctorFindResponseDto[]> {
-  const doctors = await this.doctorRepository.findByDoctorName(name);
+    const doctors = await this.doctorRepository.findByDoctorName(name);
 
-  return doctors.map((doctor) => ({
-    id: doctor.id,
-    fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
-    speciality: doctor.speciality.name,
-    licence_number: doctor.licence_number,
-  }));
-}
+    return doctors.map((doctor) => ({
+      id: doctor.id,
+      fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
+      speciality: doctor.speciality.name,
+      licence_number: doctor.licence_number,
+    }));
+  }
 
   async update(
     id: string,
@@ -180,5 +188,15 @@ export class DoctorService {
       throw new NotFoundException(`Doctor with id ${id} not found`);
     }
     return this.doctorRepository.remove(id);
+  }
+
+
+  async getAppointments(id: string) {
+    const doctor = await this.doctorRepo.findOne({
+    where: { user: { id: id } },
+    relations: ['user'] });
+    const doctorId = doctor?.id
+    if(!doctorId) throw new NotFoundException('Not found doctor')
+    return await this.appointmentService.findAppointmentsByMedic(doctorId)
   }
 }
