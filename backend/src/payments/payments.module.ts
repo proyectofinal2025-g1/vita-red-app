@@ -18,5 +18,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     PaymentsRepository,
     MercadoPagoWebhookService,
   ],
+  exports:[PaymentsService]
 })
 export class PaymentsModule {}

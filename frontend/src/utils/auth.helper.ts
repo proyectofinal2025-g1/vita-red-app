@@ -1,3 +1,4 @@
+import { IRegisterDoctorValues } from '@/interfaces/IRegisterDoctorValues';
 import { ILoginFormValues } from '../interfaces/ILoginFormValues';
 import { IRegisterFormValues } from '../interfaces/IRegisterFormValues';
 
@@ -45,5 +46,33 @@ export const loginUserService = async (userData: ILoginFormValues) => {
     throw new Error(errorMsg);
   }
 
+  return data;
+};
+
+export const registerDoctorService = async (userData: IRegisterDoctorValues) => {
+  const response = await fetch(`${apiURL}/auth/register/doctor`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      first_name: userData.first_name,
+      last_name: userData.last_name,
+      dni: userData.dni,
+      email: userData.email,
+      licence_number: userData.licence_number,
+      specialty: userData.specialty,
+      password: userData.password,
+      confirmPassword: userData.confirmPassword,
+    }),
+  });
+
+  const data = await response.json();
+  console.log('Respuesta del backend:', data);
+
+  if (!response.ok) {
+    const errorMsg = data.message || data.error || 'Error en el registro';
+    throw new Error(errorMsg);
+  }
   return data;
 };
