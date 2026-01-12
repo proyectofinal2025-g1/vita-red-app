@@ -1,35 +1,29 @@
+'use client'
+
 import { useFormik } from 'formik';
-import {
-  registerFormInitialValues,
-  registerformValidatorSchema,
-} from '@/validators/registerSchema';
+import { initialValuesRegisterDoctor, registerDoctorSchema } from '@/validators/registerDoctorSchema';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
-import {
-  getPasswordStrength,
-  getPasswordStrengthLabel,
-} from '@/utils/passwordStrength';
-
-import { registerUserService } from '@/utils/auth.helper';
+import { getPasswordStrength, getPasswordStrengthLabel } from '@/utils/passwordStrength';
+import { registerDoctorService } from '@/utils/auth.helper';
 import Swal from 'sweetalert2';
 import Link from 'next/link';
 
-export default function RegisterPage() {
+export default function RegisterDoctorView() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const formik = useFormik({
-    initialValues: registerFormInitialValues,
-    validationSchema: registerformValidatorSchema,
+    initialValues: initialValuesRegisterDoctor,
+    validationSchema: registerDoctorSchema,
     onSubmit: async (values, { setSubmitting, setFieldError }) => {
       setError('');
       setSubmitting(true);
 
       try {
-        await registerUserService(values);
+        await registerDoctorService(values);
 
         Swal.fire({
           title: '¡Registro exitoso!',
@@ -44,7 +38,6 @@ export default function RegisterPage() {
         if (err instanceof Error) {
           const errorMsg = err.message;
 
-          // Mapeo de errores a campos específicos
           if (
             errorMsg.toLowerCase().includes('email') ||
             errorMsg.toLowerCase().includes('correo')
@@ -66,7 +59,6 @@ export default function RegisterPage() {
     },
   });
 
-  // Color de fuerza de la contraseña()
   const getPasswordColor = (strength: string) => {
     switch (strength) {
       case 'weak':
@@ -87,7 +79,7 @@ export default function RegisterPage() {
           <div className='text-center mb-8'>
             <h1 className='text-3xl font-bold text-gray-800'>Crear cuenta</h1>
             <p className='text-gray-600 mt-2'>
-              Regístrate para comenzar a usar VitaRed
+              Completa tus datos profesionales
             </p>
           </div>
 
@@ -98,31 +90,6 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <button
-              onClick={() =>
-                (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
-              }
-              className="
-    flex items-center justify-center gap-3
-    w-full max-w-sm
-    px-5 py-3
-    border border-gray-300
-    rounded-lg
-    bg-white
-    text-gray-700 font-medium
-    shadow-sm
-    hover:bg-gray-50
-    hover:shadow-md
-    transition
-    focus:outline-none
-    focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-  "
-            >
-              <img src="https://res.cloudinary.com/ds6anafmo/image/upload/v1767363345/pngtree-google-internet-icon-vector-png-image_9183287_zv82g1.png" alt="Google" className="w-5 h-5" />
-              <span>Registrarse con Google</span>
-            </button>
-
-            {/* Primer nombre */}
             <div>
               <label
                 htmlFor='first_name'
@@ -151,7 +118,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Apellido */}
             <div>
               <label
                 htmlFor='last_name'
@@ -180,7 +146,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* DNI */}
             <div>
               <label
                 htmlFor='dni'
@@ -207,7 +172,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Email */}
             <div>
               <label
                 htmlFor='email'
@@ -236,7 +200,80 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Password */}
+            <div>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>
+                N° de Matrícula
+                </label>
+
+                <input
+                id='licence_number'
+                name='licence_number'
+                type='text'
+                inputMode='numeric'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.licence_number && formik.errors.licence_number
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300'
+                }`}
+                value={`MP - ${formik.values.licence_number}`}
+                onChange={(e) => {
+                const onlyNumbers = e.target.value.replace(/\D/g, '');
+                formik.setFieldValue('licence_number', onlyNumbers);
+            }}
+            onBlur={formik.handleBlur}
+            />
+
+            {formik.touched.licence_number && formik.errors.licence_number && (
+                <p className='mt-1 text-sm text-red-600'>
+                    {formik.errors.licence_number}
+                </p>
+                )}
+            </div>
+
+            <div>
+                <label htmlFor='specialty' className='block text-sm font-medium text-gray-700 mb-1'>
+                    Especialidad
+                </label>
+                <select
+                id='specialty'
+                name='specialty'
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white ${
+                formik.touched.specialty && formik.errors.specialty
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300'
+                }`}
+                value={formik.values.specialty}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                >
+                    <option value="">Seleccionar especialidad</option>
+                    <option value="cardiologia">Cardiología</option>
+                    <option value="pasiquiatria">Psiquiatría</option>
+                    <option value="psicologia">Psicología</option>
+                    <option value="clinica medica">Clínica médica</option>
+                    <option value="pediatria">Pediatría</option>
+                    <option value="oftalmologia">Oftalmología</option>
+                    <option value="nutricion">Nutrición</option>
+                    <option value="urologia">Urología</option>
+                    <option value="nefrologia">Nefrología</option>
+                    <option value="endocrinologia">Endocrinología</option>
+                    <option value="traumatologia">Traumatología</option>
+                    <option value="kinesiologia">Kinesiología</option>
+                    <option value="odontologia">Odontología</option>
+                    <option value="otorrinolaringologia">Otorrinolaringología</option>
+                    <option value="reumatologia">Reumatología</option>
+                    <option value="diagnostico por imagenes">Diagnóstico por imágenes</option>
+                    <option value="ginecologia">Ginecología</option>
+                    <option value="gastroenterologia">Gastroenterología</option>
+                </select>
+                {formik.touched.specialty && formik.errors.specialty && (
+                    <p className='mt-1 text-sm text-red-600'>
+                        {formik.errors.specialty}
+                    </p>
+                )}
+</div>
+
+
             <div className='relative'>
               <label
                 htmlFor='password'
@@ -312,7 +349,6 @@ export default function RegisterPage() {
               )}
             </div>
 
-            {/* Fortaleza de la contraseña */}
             {formik.values.password &&
               (() => {
                 const strength = getPasswordStrength(formik.values.password);
@@ -340,7 +376,6 @@ export default function RegisterPage() {
                 );
               })()}
 
-            {/* Confirm Password */}
             <div className='relative'>
               <label
                 htmlFor='confirmPassword'
@@ -420,21 +455,14 @@ export default function RegisterPage() {
                 )}
             </div>
 
-            {/* Botón de Registro */}
             <button
               type='submit'
               disabled={formik.isSubmitting}
               className='w-full bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold py-3 px-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:opacity-50 disabled:cursor-not-allowed'
             >
-              {formik.isSubmitting ? 'Registrando...' : 'Registrar'}
+              {formik.isSubmitting ? 'Registrando...' : 'Registrarme como médico'}
             </button>
 
-            <div className='flex justify-center text-center'>
-              <p className='text-gray-600 px-1 text-sm'>Si eres médico, </p>
-              <Link href='/auth/register/doctor' className='text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200 underline'> registrate aquí</Link>
-            </div>
-
-            {/* Enlace a Login */}
             <div className='text-center'>
               <p className='text-gray-600 text-sm'>
                 ¿Ya tienes cuenta?
