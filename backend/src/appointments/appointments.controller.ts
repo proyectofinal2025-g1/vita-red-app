@@ -54,4 +54,15 @@ export class AppointmentsController {
   async getMyAppointments(@Req() req): Promise<AppointmentResponseDto[]> {
     return this.appointmentsService.findAllByPatientId(req.user.sub);
   }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Disponibilidad de horarios por médico y fecha' })
+  @UseGuards(AuthGuard)
+  @Get('availability')
+  async getAvailability(
+    @Query('doctorId') doctorId: string,
+    @Query('date') date: string,
+  ) {
+    return this.appointmentsService.getAvailability(doctorId, date);
+  }
 }
