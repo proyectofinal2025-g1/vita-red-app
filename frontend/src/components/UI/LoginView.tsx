@@ -2,6 +2,7 @@
 'use client';
 
 import { useFormik } from 'formik';
+import Image from 'next/image';
 import {
   initialValuesLogin,
   loginValidationSchema,
@@ -33,6 +34,7 @@ const LoginForm = () => {
 
         const token = data.Token;
         const payload = decodeJWT(token);
+        console.log('decodeJWT(token):Payload:', payload);
 
         if (!payload) {
           throw new Error('Token inválido');
@@ -107,10 +109,14 @@ const LoginForm = () => {
     focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
   '
             >
-              <img
+              <Image
                 src='https://res.cloudinary.com/ds6anafmo/image/upload/v1767363345/pngtree-google-internet-icon-vector-png-image_9183287_zv82g1.png'
                 alt='Google'
+                width={32}
+                height={32}
                 className='w-5 h-5'
+                quality={90}
+                loading='lazy'
               />
               <span>Iniciar Sesión con Google</span>
             </button>
