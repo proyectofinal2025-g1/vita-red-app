@@ -14,14 +14,19 @@ import {
   generateTimeSlots,
 } from "@/services/appointmentService";
 import { createPaymentPreference } from "@/services/paymentService";
+import { getDoctorAvailability } from "@/services/doctorAppointmentsService";
 
 import {
-  isWeekend,
   getDayOfWeekAsNumber,
   getMinDateForAppointment,
   isWithin24Hours,
 } from "@/utils/dateUtils";
 
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { es } from "date-fns/locale";
+
+/* ===================== AUTH ===================== */
 const getAuthToken = (): string | null => {
   if (typeof window === "undefined") return null;
   const session = localStorage.getItem("userSession");
@@ -40,13 +45,13 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
   const [selectedSpeciality, setSelectedSpeciality] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  const [loadingDoctors, setLoadingDoctors] = useState(false);
-  const [loadingTimes, setLoadingTimes] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [doctorAvailableDays, setDoctorAvailableDays] = useState<number[]>([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshAvailability, setRefreshAvailability] = useState(0);
 
   /* ===================== ESPECIALIDADES ===================== */
   useEffect(() => {
@@ -63,68 +68,80 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    setLoadingDoctors(true);
-
-    getAllDoctorsService()
-      .then((allDoctors) => {
-        setDoctors(
-          allDoctors.filter((d) => d.speciality === selectedSpeciality)
-        );
-      })
-      .finally(() => setLoadingDoctors(false));
+    getAllDoctorsService().then((allDoctors) => {
+      setDoctors(allDoctors.filter((d) => d.speciality === selectedSpeciality));
+    });
   }, [selectedSpeciality]);
 
-  /* ===================== HORARIOS ===================== */
+  /* ===================== DÍAS QUE ATIENDE EL MÉDICO ===================== */
   useEffect(() => {
-    if (!selectedDoctor || !selectedDate) {
-      setAvailableTimes([]);
+    if (!selectedDoctor) {
+      setDoctorAvailableDays([]);
+      setSelectedDate(null);
       return;
     }
-
-    if (isWeekend(selectedDate)) {
-      setAvailableTimes([]);
-      setErrorMessage("No se atiende los fines de semana");
-      return;
-    }
-
-    setLoadingTimes(true);
-    setErrorMessage(null);
 
     const token = getAuthToken();
-    if (!token) {
-      setErrorMessage("Sesión expirada");
-      return;
-    }
+    if (!token) return;
 
-    getDoctorSchedules(selectedDoctor, token)
-      .then((schedules) => {
-        const date = new Date(`${selectedDate}T00:00:00`);
-        const dayOfWeek = getDayOfWeekAsNumber(date);
+    getDoctorSchedules(selectedDoctor, token).then((schedules) => {
+      setDoctorAvailableDays(schedules.map((s) => s.dayOfWeek));
+      setSelectedDate(null);
+    });
+  }, [selectedDoctor]);
 
-        const schedule = schedules.find(
-          (s) => s.dayOfWeek === dayOfWeek
-        );
-
-        if (!schedule) {
-          setAvailableTimes([]);
-          setErrorMessage("No hay horarios disponibles");
-          return;
-        }
-
-        setAvailableTimes(
-          generateTimeSlots(
-            schedule.startTime,
-            schedule.endTime,
-            schedule.slotDuration
-          )
-        );
-      })
-      .catch(() => {
+  /* ===================== HORARIOS DISPONIBLES ===================== */
+  useEffect(() => {
+    const loadTimes = async () => {
+      if (!selectedDoctor || !selectedDate) {
         setAvailableTimes([]);
-        setErrorMessage("Error al cargar horarios");
-      })
-      .finally(() => setLoadingTimes(false));
-  }, [selectedDoctor, selectedDate]);
+        return;
+      }
+
+      const token = getAuthToken();
+      if (!token) return;
+
+      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const dayOfWeek = getDayOfWeekAsNumber(selectedDate);
+
+      /* 1️⃣ Horario laboral del médico */
+      const schedules = await getDoctorSchedules(selectedDoctor, token);
+      const schedule = schedules.find((s) => s.dayOfWeek === dayOfWeek);
+
+      if (!schedule) {
+        setAvailableTimes([]);
+        return;
+      }
+
+      /* 2️⃣ Slots teóricos */
+      const allSlots = generateTimeSlots(
+        schedule.startTime,
+        schedule.endTime,
+        schedule.slotDuration
+      );
+
+      /* 3️⃣ Horarios ocupados (ENDPOINT NUEVO) */
+      const { occupiedTimes } = await getDoctorAvailability(
+        selectedDoctor,
+        formattedDate,
+        token
+      );
+
+      /* 4️⃣ Filtrado final */
+      const availableSlots = allSlots.filter(
+        (slot) => !occupiedTimes.includes(slot)
+      );
+
+      setAvailableTimes(availableSlots);
+    };
+
+    loadTimes();
+  }, [selectedDoctor, selectedDate, refreshAvailability]);
+
+  /* ===================== FILTRO CALENDARIO ===================== */
+  const isDoctorAvailableDay = (date: Date) => {
+    return doctorAvailableDays.includes(date.getDay());
+  };
 
   /* ===================== SUBMIT ===================== */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -149,43 +166,39 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
     const token = getAuthToken();
     if (!token) {
-      Swal.fire("Sesión expirada", "Inicia sesión nuevamente", "warning").then(
-        () => (window.location.href = "/auth/login")
-      );
+      Swal.fire("Sesión expirada", "Inicia sesión nuevamente", "warning");
       return;
     }
 
     try {
       setIsSubmitting(true);
 
-      /* ✅ 1. PRE-RESERVA (VALIDACIÓN REAL) */
+      const formattedDate = selectedDate.toISOString().split("T")[0];
+
       const preReserve = await preReserveAppointment(
         {
           doctorId: selectedDoctor,
-          dateTime: `${selectedDate}T${time}:00`,
-          specialtyId: specialities.find(
-            (s) => s.name === selectedSpeciality
-          )?.id,
+          dateTime: `${formattedDate}T${time}:00`,
+          specialtyId: specialities.find((s) => s.name === selectedSpeciality)
+            ?.id,
         },
         token
       );
 
-      /* ✅ 2. CONFIRMACIÓN DE PAGO */
+      setAvailableTimes((prev) => prev.filter((t) => t !== time));
+      setRefreshAvailability((prev) => prev + 1);
+      
       const result = await Swal.fire({
         title: "Confirmar pago",
         html: `
           <p>El precio de la consulta es:</p>
-          <h2 style="margin-top:10px;">$${preReserve.price}</h2>
-          <p style="margin-top:10px;font-size:14px;">
-            Serás redirigido a Mercado Pago
-          </p>
+          <h2>$${preReserve.price}</h2>
+          <p>Serás redirigido a Mercado Pago</p>
         `,
         icon: "info",
         showCancelButton: true,
         confirmButtonText: "Continuar con el pago",
         cancelButtonText: "Cancelar",
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
       });
 
       if (!result.isConfirmed) {
@@ -193,7 +206,6 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         return;
       }
 
-      /* ✅ 3. PREFERENCE + REDIRECCIÓN */
       const { initPoint } = await createPaymentPreference(
         preReserve.appointmentId,
         token
@@ -201,11 +213,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
       window.location.href = initPoint;
     } catch (error: any) {
-      Swal.fire(
-        "Error",
-        error.message || "No se pudo iniciar el pago",
-        "error"
-      );
+      Swal.fire("Error", error.message || "Error al iniciar pago", "error");
       setIsSubmitting(false);
     }
   };
@@ -249,11 +257,14 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       )}
 
       {selectedDoctor && (
-        <input
-          type="date"
-          min={getMinDateForAppointment()}
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
+        <DatePicker
+          selected={selectedDate}
+          onChange={(date: Date | null) => setSelectedDate(date)}
+          minDate={new Date(getMinDateForAppointment())}
+          filterDate={isDoctorAvailableDay}
+          locale={es}
+          dateFormat="dd/MM/yyyy"
+          placeholderText="Selecciona una fecha"
           className="w-full p-2 border rounded mb-3"
           required
         />
@@ -274,7 +285,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          className="w-1/2 bg-red-500 hover:bg-red-600 text-white py-2 rounded"
+          className="w-1/2 bg-red-500 text-white py-2 rounded"
         >
           Cancelar
         </button>
@@ -282,7 +293,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-1/2 bg-blue-500 hover:bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+          className="w-1/2 bg-blue-500 text-white py-2 rounded disabled:opacity-50"
         >
           {isSubmitting ? "Redirigiendo…" : "Confirmar turno"}
         </button>
