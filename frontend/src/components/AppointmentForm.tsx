@@ -101,7 +101,12 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       const token = getAuthToken();
       if (!token) return;
 
-      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const formattedDate = [
+        selectedDate.getFullYear(),
+        String(selectedDate.getMonth() + 1).padStart(2, "0"),
+        String(selectedDate.getDate()).padStart(2, "0"),
+      ].join("-");
+
       const dayOfWeek = getDayOfWeekAsNumber(selectedDate);
 
       /* 1️⃣ Horario laboral del médico */
@@ -187,7 +192,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
       setAvailableTimes((prev) => prev.filter((t) => t !== time));
       setRefreshAvailability((prev) => prev + 1);
-      
+
       const result = await Swal.fire({
         title: "Confirmar pago",
         html: `
