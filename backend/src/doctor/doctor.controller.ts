@@ -109,6 +109,16 @@ export class DoctorController {
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.doctorService.remove(id);
   }
+
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Ver turnos asignados' })
+  @Roles(RolesEnum.Medic, RolesEnum.User)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('appointments/list')
+  async getAppointments(@Req() req: any){
+   const id = req.user.sub
+console.log('id:',id);
+   return await this.doctorService.getAppointments(id)
 }
 
-
+}

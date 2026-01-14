@@ -62,11 +62,10 @@ export class SpecialityService {
       await this.specialityRepository.findByNameWithDoctors(name);
 
     if (!speciality) {
-      throw new NotFoundException(`Speciality with name ${name} not found`);
+      throw new NotFoundException(`Speciality ${name} not found`);
     }
 
     return {
-      id: speciality.id,
       name: speciality.name,
       description: speciality.description,
       isActive: speciality.isActive,

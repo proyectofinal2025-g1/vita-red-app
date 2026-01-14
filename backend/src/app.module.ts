@@ -19,6 +19,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { NotificationModule } from './notification/notification.module';
 import { MedicalRecordModule } from './medical-record/medical-record.module';
 import { AuthGoogleModule } from './auth/google/auth.google.module'
+import { ChatModule } from './chat/chat.module';
 
 dotenvConfig({ path: './.env.development' });
 
@@ -56,7 +57,8 @@ dotenvConfig({ path: './.env.development' });
     MedicalRecordModule,
     AppointmentsModule,
     PaymentsModule,
-    AuthGoogleModule
+    AuthGoogleModule,
+    ChatModule
   ],
   controllers: [],
   providers: [],

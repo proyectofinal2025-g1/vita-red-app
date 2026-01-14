@@ -15,12 +15,17 @@ import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { User } from '../user/entities/user.entity';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUser_DoctorDto } from './dto/createUser-doctor.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { AppointmentsService } from '../appointments/appointments.service';
 
 @Injectable()
 export class DoctorService {
   constructor(
     private readonly doctorRepository: DoctorRepository,
-    private readonly dataSource: DataSource
+    private readonly dataSource: DataSource,
+    @InjectRepository(Doctor)
+    private readonly doctorRepo: Repository<Doctor>,
+    private readonly appointmentService: AppointmentsService
   ) { }
 
   private toResponseDto(doctor: Doctor): DoctorResponseDto {
@@ -219,5 +224,15 @@ export class DoctorService {
       throw new NotFoundException(`Doctor with id ${id} not found`);
     }
     return this.doctorRepository.remove(id);
+  }
+
+
+  async getAppointments(id: string) {
+    const doctor = await this.doctorRepo.findOne({
+    where: { user: { id: id } },
+    relations: ['user'] });
+    const doctorId = doctor?.id
+    if(!doctorId) throw new NotFoundException('Not found doctor')
+    return await this.appointmentService.findAppointmentsByMedic(doctorId)
   }
 }

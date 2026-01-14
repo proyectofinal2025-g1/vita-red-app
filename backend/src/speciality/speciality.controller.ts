@@ -57,7 +57,7 @@ export class SpecialityController {
   }
 
   @ApiOperation({
-    summary: 'Obtener una especialidad por nombre con sus médicos',
+    summary: 'Obtener médicos/as buscando por especialidad',
   })
   @ApiOkResponse({ type: SpecialityResponseDto })
   @Get('by-name/:name')
