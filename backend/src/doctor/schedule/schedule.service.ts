@@ -56,7 +56,7 @@ export class DoctorScheduleService {
       }
     }
 
-    if (role === RolesEnum.Secretary) {
+    if (role === RolesEnum.SuperAdmin) {
       doctor = await this.doctorRepo.findOne({
         where: { id: dto.doctorId, isActive: true },
       });
