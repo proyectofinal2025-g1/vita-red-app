@@ -4,7 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, ILike, Raw, Repository } from 'typeorm';
+import { Between, ILike, In, Raw, Repository } from 'typeorm';
+
 
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
@@ -49,11 +50,8 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) { }
+  ) {}
 
-  // ======================================================
-  // PRE-RESERVA (AJUSTE DE HORA + EXPIRACIÓN UTC)
-  // ======================================================
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
     patientId: string,
@@ -89,9 +87,9 @@ export class AppointmentsService {
       }
     }
 
-    // 📅 Fecha/hora del turno (Argentina)
-    const appointmentDate =
-      AppointmentTimeHelper.parseArgentinaDate(dto.dateTime);
+    const appointmentDate = AppointmentTimeHelper.parseArgentinaDate(
+      dto.dateTime,
+    );
 
     const nowArgentina = AppointmentTimeHelper.nowArgentina();
 
@@ -144,7 +142,6 @@ export class AppointmentsService {
       );
     }
 
-    // 🔑 EXPIRACIÓN CORRECTA (UTC, EMPAREJADA CON PAYMENT SERVICE)
     const nowUtc = new Date();
     const expiresAt = new Date(nowUtc.getTime() + 10 * 60 * 1000); // +10 min
 
@@ -167,9 +164,6 @@ export class AppointmentsService {
     };
   }
 
-  // ======================================================
-  // RESPUESTA
-  // ======================================================
   private toResponseDto(appointment: Appointment): AppointmentResponseDto {
     return {
       id: appointment.id,
@@ -178,31 +172,25 @@ export class AppointmentsService {
       reason: appointment.reason,
       expiresAt: appointment.expiresAt,
       price: appointment.priceAtBooking,
-
       patient: {
         id: appointment.patient.id,
         fullName: `${appointment.patient.first_name} ${appointment.patient.last_name}`,
         email: appointment.patient.email,
       },
-
       doctor: {
         id: appointment.doctor.id,
         fullName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
         consultationFee: appointment.priceAtBooking,
       },
-
       speciality: appointment.speciality
         ? {
-          id: appointment.speciality.id,
-          name: appointment.speciality.name,
-        }
+            id: appointment.speciality.id,
+            name: appointment.speciality.name,
+          }
         : undefined,
     };
   }
 
-  // ======================================================
-  // CANCELAR TURNO
-  // ======================================================
   async cancelAppointment(
     appointmentId: string,
     cancelledByUserId: string,
@@ -249,15 +237,12 @@ export class AppointmentsService {
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: dateArgentina,
-      time:timeArgentina
+      time: timeArgentina,
     });
 
     return this.toResponseDto(appointment);
   }
 
-  // ======================================================
-  // CONFIRMAR PAGO
-  // ======================================================
   async confirmPayment(
     appointmentId: string,
     paymentReference?: string,
@@ -319,9 +304,6 @@ export class AppointmentsService {
     return this.toResponseDto(appointment);
   }
 
-  // ======================================================
-  // PRE-RESERVA PARA PAYMENT
-  // ======================================================
   async findPreReservedById(
     appointmentId: string,
   ): Promise<PreReservedAppointmentForPayment> {
@@ -348,9 +330,6 @@ export class AppointmentsService {
     };
   }
 
-  // ======================================================
-  // BÚSQUEDAS
-  // ======================================================
   async findById(id: string) {
     return this.appointmentRepository.findOne({
       where: { id },
@@ -438,8 +417,36 @@ export class AppointmentsService {
       },
     });
 
-    return appointments.map((appointment) =>
-      this.toResponseDto(appointment),
-    );
+    return appointments.map((appointment) => this.toResponseDto(appointment));
   }
+
+  async findAppointmentsByMedic(doctorId: string) {
+    return this.appointmentRepository.findByDoctorId(doctorId);
+  }
+
+  async getAvailability(doctorId: string, date: string) {
+  const startOfDay = new Date(`${date}T00:00:00`);
+  const endOfDay = new Date(`${date}T23:59:59`);
+
+  const appointments = await this.appointmentRepository.find({
+    where: {
+      doctor: { id: doctorId },
+      status: In([
+        AppointmentStatus.CONFIRMED,
+        AppointmentStatus.PENDING,
+      ]),
+      date: Between(startOfDay, endOfDay),
+    },
+  });
+
+  const occupiedTimes = appointments.map((appointment) => {
+
+    const hours = appointment.date.getHours().toString().padStart(2, "0");
+    const minutes = appointment.date.getMinutes().toString().padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  });
+
+  return { occupiedTimes };
+}
 }

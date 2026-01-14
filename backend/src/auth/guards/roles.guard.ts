@@ -12,6 +12,9 @@ export class RolesGuard implements CanActivate {
         const user = request.user;
         const hasRole = () => requiredRoles.some(role => user?.role?.includes(role))
         const valid = user && user.role && hasRole()
+        console.log('requiredRoles:', requiredRoles);
+console.log('user.role:', user.role);
+
         if (!valid)
             throw new ForbiddenException(
                 'Usted no tiene permisos para ingresar a esta ruta',

@@ -13,6 +13,7 @@ import {
 
 import { registerUserService } from '@/utils/auth.helper';
 import Swal from 'sweetalert2';
+import Link from 'next/link';
 
 export default function RegisterPage() {
   const [error, setError] = useState('');
@@ -98,6 +99,7 @@ export default function RegisterPage() {
             )}
 
             <button
+            type='button'
               onClick={() =>
                 (window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`)
               }
@@ -428,16 +430,21 @@ export default function RegisterPage() {
               {formik.isSubmitting ? 'Registrando...' : 'Registrar'}
             </button>
 
+            <div className='flex justify-center text-center'>
+              <p className='text-gray-600 px-1 text-sm'>Si eres médico, </p>
+              <Link href='/auth/register/doctor' className='text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200 underline'> registrate aquí</Link>
+            </div>
+
             {/* Enlace a Login */}
-            <div className='text-center mt-6'>
+            <div className='text-center'>
               <p className='text-gray-600 text-sm'>
-                ¿Ya tienes cuenta?{' '}
-                <a
+                ¿Ya tienes cuenta?
+                <Link
                   href='/auth/login'
-                  className='font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200'
+                  className='px-1 font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200 underline'
                 >
                   Inicia sesión
-                </a>
+                </Link>
               </p>
             </div>
           </form>

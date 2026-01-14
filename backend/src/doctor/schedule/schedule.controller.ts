@@ -34,7 +34,7 @@ export class DoctorScheduleController {
     summary: 'Crear un schedule.',
   })
   @ApiBearerAuth()
-  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Post()
   @ApiCreatedResponse({ type: DoctorScheduleResponseDto })
@@ -49,7 +49,6 @@ export class DoctorScheduleController {
   @Roles(
     RolesEnum.Medic,
     RolesEnum.SuperAdmin,
-    RolesEnum.Secretary,
     RolesEnum.User,
   )
   @UseGuards(AuthGuard, RolesGuard)

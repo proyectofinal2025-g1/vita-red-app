@@ -123,23 +123,28 @@ export class UserService {
     return { message: 'Password successfully updated' };
   }
 
-  async updateAvatar(userId: string, file: Express.Multer.File) {
-    const userFound = await this.userRepository.findById(userId);
-    if (!userFound) throw new NotFoundException('User not found');
-    try {
-      if (userFound.profileImagePublicId) {
-        await this.cloudinaryService.deleteImage(
-          userFound.profileImagePublicId,
-        );
-      }
-      const image = await this.cloudinaryService.uploadImage(file);
-      userFound.profileImageUrl = image.secure_url;
-      userFound.profileImagePublicId = image.public_id;
-      await this.userRepository.update(userId, userFound);
-      return userFound;
-    } catch (error) {
-      console.log(error.message);
-      throw new InternalServerErrorException('Error updating avatar');
+ async updateAvatar(userId: string, file: Express.Multer.File) {
+  const userFound = await this.userRepository.findById(userId);
+  if (!userFound) throw new NotFoundException('User not found');
+
+  try {
+    if (userFound.profileImagePublicId) {
+      await this.cloudinaryService.deleteImage(
+        userFound.profileImagePublicId,
+      );
     }
+
+    const image = await this.cloudinaryService.uploadImage(file);
+    console.log('CLOUDINARY RESULT 👉', image);
+
+    userFound.profileImageUrl = image.secure_url;
+    userFound.profileImagePublicId = image.public_id;
+
+    return await this.userRepository.save(userFound);
+  } catch (error) {
+    console.log(error);
+    throw new InternalServerErrorException('Error updating avatar');
   }
+}
+
 }

@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -23,8 +25,9 @@ export class DoctorScheduleService {
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
 
+    @Inject(forwardRef(() => DoctorService))
     private readonly doctorService: DoctorService,
-  ) {}
+  ) { }
 
   async create(
     dto: CreateDoctorScheduleDto,
@@ -53,7 +56,7 @@ export class DoctorScheduleService {
       }
     }
 
-    if (role === RolesEnum.Secretary) {
+    if (role === RolesEnum.SuperAdmin) {
       doctor = await this.doctorRepo.findOne({
         where: { id: dto.doctorId, isActive: true },
       });
@@ -170,10 +173,15 @@ export class DoctorScheduleService {
       throw new BadRequestException('The doctor does not have set hours.');
     }
 
-    const appointmentDay = appointmentDate.getDay();
+    const localeDate = new Date(
+      appointmentDate.toLocaleString('en-US', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+      }),
+    );
 
+    const appointmentDay = localeDate.getDay();
     const appointmentMinutes =
-      appointmentDate.getHours() * 60 + appointmentDate.getMinutes();
+      localeDate.getHours() * 60 + localeDate.getMinutes();
 
     const isValid = schedules.some((s) => {
       if (s.dayOfWeek !== appointmentDay) return false;
@@ -276,3 +284,5 @@ export class DoctorScheduleService {
     await this.scheduleRepo.save(schedules);
   }
 }
+
+
