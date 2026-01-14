@@ -1,5 +1,4 @@
 import { forwardRef, Module } from "@nestjs/common";
-import { SecretaryController } from "./secretary.controller";
 import { SecretaryService } from "./secretary.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { CloudinaryModule } from "../cloudinary/cloudinary.module";
@@ -23,7 +22,8 @@ import { ScheduleModule } from "../doctor/schedule/schedule.module";
         AppointmentsModule,
         CloudinaryModule
     ],
-    controllers: [SecretaryController],
-    providers: [SecretaryService]
+    controllers: [],
+    providers: [SecretaryService],
+    exports: [SecretaryService]
 })
 export class secretaryModule {}

@@ -7,11 +7,12 @@ import { DoctorRepository } from './doctor.repository';
 import { Doctor } from './entities/doctor.entity';
 import { User } from '../user/entities/user.entity';
 import { ScheduleModule } from './schedule/schedule.module';
+import { UserModule } from '../user/user.module';
 
 
 @Module({
   imports: [TypeOrmModule.forFeature([Doctor, User, Speciality]),
-forwardRef(() => ScheduleModule)],
+forwardRef(() => ScheduleModule), UserModule],
   controllers: [DoctorController],
   providers: [DoctorService, DoctorRepository ],
   exports: [DoctorRepository, DoctorService ],

@@ -19,12 +19,36 @@ export class SuperAdminRepository {
     return usersFound;
   }
 
-  async findAllDoctors(specialty?: SpecialityEnum) {
-    const roleDoctor = await this.doctorRepository.find({ relations: { speciality: true } });
-    if(!specialty) return roleDoctor;
-    const specialityForDb = specialty.toLocaleLowerCase().split('_').join(' ')
-    return roleDoctor.filter(doctor => doctor.speciality.name === specialityForDb)
+async findAllDoctors(specialty?: SpecialityEnum) {
+  const roleDoctor = await this.doctorRepository.find({
+    relations: { speciality: true, user: true },
+  });
+  let doctors = roleDoctor;
+  if (specialty) {
+    const specialityForDb = specialty.toLowerCase().split('_').join(' ');
+    doctors = roleDoctor.filter(doctor =>
+      doctor.speciality.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') ===
+      specialityForDb
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+    );
   }
+  return doctors.map(doctor => {
+    const { password, ...safeUser } = doctor.user;
+
+    return {
+      ...doctor,
+      user: safeUser,
+      speciality: {
+        name: doctor.speciality.name,
+      },
+    };
+  });
+}
+
 
   async update(user: User) {
     return await this.userRepository.save(user)
