@@ -30,7 +30,7 @@ export class Appointment {
     description: 'Fecha del turno (YYYY-MM-DD)',
     example: '2025-08-15',
   })
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamptz' })
   date: Date;
 
   @ApiProperty({
