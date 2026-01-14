@@ -29,7 +29,7 @@ import { RolesEnum } from '../user/enums/roles.enum';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 
-@ApiTags('Doctors')
+@ApiTags('Doctor')
 @Controller('doctor')
 export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
@@ -108,7 +108,7 @@ export class DoctorController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Ver turnos asignados' })
-  @Roles(RolesEnum.Secretary, RolesEnum.Medic)
+  @Roles(RolesEnum.Secretary, RolesEnum.Medic, RolesEnum.User)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('appointments/list')
   async getAppointments(@Req() req: any){
