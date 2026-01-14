@@ -220,4 +220,14 @@ export class DoctorService {
     }
     return this.doctorRepository.remove(id);
   }
+
+
+  async getAppointments(id: string) {
+    const doctor = await this.doctorRepo.findOne({
+    where: { user: { id: id } },
+    relations: ['user'] });
+    const doctorId = doctor?.id
+    if(!doctorId) throw new NotFoundException('Not found doctor')
+    return await this.appointmentService.findAppointmentsByMedic(doctorId)
+  }
 }

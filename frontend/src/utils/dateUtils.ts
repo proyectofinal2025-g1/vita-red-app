@@ -15,8 +15,13 @@ export const getMinDateForAppointment = (): string => {
     .split('T')[0];
 };
 
-export const isWithin24Hours = (dateStr: string, timeStr: string): boolean => {
-  const selected = new Date(`${dateStr}T${timeStr}`);
-  const min = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  return selected < min;
+export const isWithin24Hours = (date: Date, time: string): boolean => {
+  const appointmentDateTime = new Date(date);
+  const [hours, minutes] = time.split(":").map(Number);
+
+  appointmentDateTime.setHours(hours, minutes, 0, 0);
+
+  const now = new Date();
+
+  return appointmentDateTime.getTime() - now.getTime() < 24 * 60 * 60 * 1000;
 };

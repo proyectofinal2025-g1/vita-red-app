@@ -4,7 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ILike, Raw, Repository } from 'typeorm';
+import { Between, ILike, In, Raw, Repository } from 'typeorm';
+
 
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
@@ -49,7 +50,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) { }
+  ) {}
 
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
@@ -86,8 +87,9 @@ export class AppointmentsService {
       }
     }
 
-    const appointmentDate =
-      AppointmentTimeHelper.parseArgentinaDate(dto.dateTime);
+    const appointmentDate = AppointmentTimeHelper.parseArgentinaDate(
+      dto.dateTime,
+    );
 
     const nowArgentina = AppointmentTimeHelper.nowArgentina();
 
@@ -182,9 +184,9 @@ export class AppointmentsService {
       },
       speciality: appointment.speciality
         ? {
-          id: appointment.speciality.id,
-          name: appointment.speciality.name,
-        }
+            id: appointment.speciality.id,
+            name: appointment.speciality.name,
+          }
         : undefined,
     };
   }
@@ -235,7 +237,7 @@ export class AppointmentsService {
       email: appointment.patient.email,
       first_name: appointment.patient.first_name,
       date: dateArgentina,
-      time:timeArgentina
+      time: timeArgentina,
     });
 
     return this.toResponseDto(appointment);
@@ -415,8 +417,36 @@ export class AppointmentsService {
       },
     });
 
-    return appointments.map((appointment) =>
-      this.toResponseDto(appointment),
-    );
+    return appointments.map((appointment) => this.toResponseDto(appointment));
   }
+
+  async findAppointmentsByMedic(doctorId: string) {
+    return this.appointmentRepository.findByDoctorId(doctorId);
+  }
+
+  async getAvailability(doctorId: string, date: string) {
+  const startOfDay = new Date(`${date}T00:00:00`);
+  const endOfDay = new Date(`${date}T23:59:59`);
+
+  const appointments = await this.appointmentRepository.find({
+    where: {
+      doctor: { id: doctorId },
+      status: In([
+        AppointmentStatus.CONFIRMED,
+        AppointmentStatus.PENDING,
+      ]),
+      date: Between(startOfDay, endOfDay),
+    },
+  });
+
+  const occupiedTimes = appointments.map((appointment) => {
+
+    const hours = appointment.date.getHours().toString().padStart(2, "0");
+    const minutes = appointment.date.getMinutes().toString().padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  });
+
+  return { occupiedTimes };
+}
 }
