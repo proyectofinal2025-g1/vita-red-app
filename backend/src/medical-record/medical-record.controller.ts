@@ -32,10 +32,10 @@ export class MedicalRecordController {
     name: 'patient_id',
     required: true
   })
-  @Roles(RolesEnum.Medic, RolesEnum.Secretary, RolesEnum.User, RolesEnum.SuperAdmin)
+  @Roles(RolesEnum.Medic, RolesEnum.User, RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('patient/medical-history')
-  async findMedicalHistory(@Query('patient_id', ParseUUIDPipe) patientId : string) {
+  async findMedicalHistory(@Query('patient_id', ParseUUIDPipe) patientId: string) {
     return await this.medicalRecordService.findMedicalHistory(patientId);
   }
 
@@ -46,7 +46,7 @@ export class MedicalRecordController {
     name: 'doctor_id',
     required: true
   })
-  @Roles(RolesEnum.Secretary, RolesEnum.SuperAdmin)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('doctor/medical-records')
   async findMedicalRecords(@Query('doctor_id', ParseUUIDPipe) doctorId: string) {
@@ -56,7 +56,7 @@ export class MedicalRecordController {
   @ApiOperation({
     summary: 'Buscar un registro médico por ID',
   })
-  @Roles(RolesEnum.Medic, RolesEnum.User, RolesEnum.Secretary, RolesEnum.SuperAdmin)
+  @Roles(RolesEnum.Medic, RolesEnum.User, RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get(':id')
   async findById(@Param('id', ParseUUIDPipe) id: string) {

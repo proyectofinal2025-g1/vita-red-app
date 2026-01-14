@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 5173",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -12,6 +12,7 @@
     "formik": "^2.4.9",
     "next": "^16.0.8",
     "react": "19.2.1",
+    "react-datepicker": "^9.1.0",
     "react-dom": "19.2.1",
     "sweetalert2": "^11.26.17",
     "sweetalert2-react-content": "^5.1.1",

@@ -17,7 +17,7 @@ export class UserController {
 
   @ApiOkResponse({ description: 'Listado de usuarios', type: UserResponse, isArray: true })
   @Get()
-  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   async findAll(): Promise<UserResponse[]> {
     const userArray = await this.userService.findAll();
@@ -33,7 +33,7 @@ export class UserController {
 
   @ApiOkResponse({ description: 'Obtener un usuario', type: UserResponse, })
   @Get(':id')
-  @Roles(RolesEnum.SuperAdmin, RolesEnum.Secretary)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   async findById(@Param('id', ParseUUIDPipe) id: string): Promise<UserResponse> {
     const user = await this.userService.findById(id);
