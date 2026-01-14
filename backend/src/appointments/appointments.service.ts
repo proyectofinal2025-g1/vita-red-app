@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, ILike, In, Raw, Repository } from 'typeorm';
 
-
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
 import { AppointmentResponseDto } from './dto/appointment-response.dto';
@@ -425,28 +424,27 @@ export class AppointmentsService {
   }
 
   async getAvailability(doctorId: string, date: string) {
-  const startOfDay = new Date(`${date}T00:00:00`);
-  const endOfDay = new Date(`${date}T23:59:59`);
+    const startOfDay = new Date(`${date}T00:00:00-03:00`);
+    const endOfDay = new Date(`${date}T23:59:59-03:00`);
 
-  const appointments = await this.appointmentRepository.find({
-    where: {
-      doctor: { id: doctorId },
-      status: In([
-        AppointmentStatus.CONFIRMED,
-        AppointmentStatus.PENDING,
-      ]),
-      date: Between(startOfDay, endOfDay),
-    },
-  });
+    const appointments = await this.appointmentRepository.find({
+      where: {
+        doctor: { id: doctorId },
+        status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING]),
+        date: Between(startOfDay, endOfDay),
+      },
+    });
 
-  const occupiedTimes = appointments.map((appointment) => {
+    const occupiedTimes = appointments.map((appointment) => {
+      const hours = appointment.date.toLocaleTimeString('es-AR', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
 
-    const hours = appointment.date.getHours().toString().padStart(2, "0");
-    const minutes = appointment.date.getMinutes().toString().padStart(2, "0");
+      return hours;
+    });
 
-    return `${hours}:${minutes}`;
-  });
-
-  return { occupiedTimes };
-}
+    return { occupiedTimes };
+  }
 }
