@@ -42,29 +42,38 @@ export class ChatService {
       this.sessionService.clear(userId);
     }
 
+    if (session.awaitingReserveConfirmation) {
+      return this.handleReserveConfirmation(userId, message);
+    }
+
     if (session.lastDoctorsList && session.lastDoctorsList.length > 0) {
-  return this.handleDoctorSelection(userId, message);
-}
+      return this.handleDoctorSelection(userId, message);
+    }
 
-if (session.awaitingSlotsConfirmation) {
-  return this.handleSlotsConfirmation(userId, message);
-}
+    if (session.awaitingSlotsConfirmation) {
+      return this.handleSlotsConfirmation(userId, message);
+    }
 
-if (session.awaitingMonth) {
-  return this.handleMonthSelection(userId, message);
-}
+    if (session.awaitingMonth) {
+      return this.handleMonthSelection(userId, message);
+    }
 
-if (session.awaitingDay) {
-  return this.handleDaySelection(userId, message);
-}
+    if (session.awaitingDay) {
+      return this.handleDaySelection(userId, message);
+    }
 
-if (session.awaitingHourSelection) {
-  return this.handleHourSelection(userId, message);
-}
+    if (session.awaitingHourSelection) {
+      return this.handleHourSelection(userId, message);
+    }
 
-if (session.awaitingFinalConfirmation) {
-  return this.handleFinalConfirmation(userId, message);
-}
+    if (session.awaitingFinalConfirmation) {
+      return this.handleFinalConfirmation(userId, message);
+    }
+
+    if (session.awaitingRecommendConfirmation) {
+      return this.handleRecommendConfirmation(userId, message);
+    }
+
 
     const ai = await this.chatIA.detectIntent(message);
 
@@ -87,9 +96,6 @@ if (session.awaitingFinalConfirmation) {
         return this.handleBookAppointment(userId, ai.payload);
 
       case ChatIntent.LIST_USER_APPOINTMENTS:
-        return 'Estos son tus turnos asignados.';
-
-      case ChatIntent.LIST_USER_APPOINTMENTS:
         return await this.handleListUserAppointments(userId);
 
       default:
@@ -108,59 +114,83 @@ if (session.awaitingFinalConfirmation) {
 
     session.symptoms = symptoms;
     session.recommendedSpeciality = speciality || 'clinico';
+    session.awaitingRecommendConfirmation = true;
     this.sessionService.set(userId, session);
 
     return `Por los síntomas que mencionás (${symptoms.join(', ')}), lo más adecuado es un médico ${session.recommendedSpeciality}. ¿Querés que te muestre médicos disponibles?`;
   }
 
+  private async handleRecommendConfirmation(
+    userId: string,
+    message: string
+  ): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const normalized = normalizeText(message);
+
+    if (['si', 'sí', 's', 'dale', 'ok', 'claro'].includes(normalized)) {
+      session.awaitingRecommendConfirmation = false;
+      this.sessionService.set(userId, session);
+
+      return await this.handleListDoctors(userId);
+    }
+
+    if (['no', 'n', 'cancelar'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien. Si querés, puedo ayudarte con otra consulta.';
+    }
+
+    return 'Respondé con "sí" o "no", por favor.';
+  }
+
+
   private async handleListDoctors(
-  userId: string,
-  payload?: any
-): Promise<string> {
-  const session = this.sessionService.get(userId);
-  const rawSpeciality = payload?.speciality ?? session.recommendedSpeciality;
+    userId: string,
+    payload?: any
+  ): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const rawSpeciality = payload?.speciality ?? session.recommendedSpeciality;
 
-  if (!rawSpeciality) {
-    return '¿Qué especialidad estás buscando? Por ejemplo: pediatría, clínica, cardiología.';
+    if (!rawSpeciality) {
+      return '¿Qué especialidad estás buscando? Por ejemplo: pediatría, clínica, cardiología.';
+    }
+
+    const normalizedSpeciality = normalizeText(rawSpeciality);
+    const dbSpecialityName = resolveSpecialityName(normalizedSpeciality);
+
+    const speciality =
+      await this.specialityService.findByNameWithDoctorsChat(dbSpecialityName);
+
+    if (!speciality) {
+      return `No encontré la especialidad "${rawSpeciality}".`;
+    }
+
+    if (!speciality.doctors || !speciality.doctors.length) {
+      return `No encontré médicos disponibles para "${speciality.name}".`;
+    }
+
+    session.recommendedSpeciality = rawSpeciality;
+    session.specialtyId = speciality.id
+
+    const doctorsToShow = speciality.doctors.slice(0, 5);
+
+    session.lastDoctorsList = doctorsToShow.map((d, index) => ({
+      option: index + 1,
+      doctorId: d.id,
+      name: `${d.first_name} ${d.last_name}`,
+    }));
+
+    this.sessionService.set(userId, session);
+
+    const list = doctorsToShow
+      .map((d, i) => `${i + 1}) ${d.first_name} ${d.last_name}`)
+      .join('\n');
+
+    return (
+      `Médicos disponibles para ${speciality.name}:\n` +
+      `${list}\n\n` +
+      `Elegí un profesional para seguir.`
+    );
   }
-
-  const normalizedSpeciality = normalizeText(rawSpeciality);
-  const dbSpecialityName = resolveSpecialityName(normalizedSpeciality);
-
-  const speciality =
-    await this.specialityService.findByNameWithDoctorsChat(dbSpecialityName);
-
-  if (!speciality) {
-    return `No encontré la especialidad "${rawSpeciality}".`;
-  }
-
-  if (!speciality.doctors || !speciality.doctors.length) {
-    return `No encontré médicos disponibles para "${speciality.name}".`;
-  }
-
-  session.recommendedSpeciality = rawSpeciality;
-  session.specialtyId = speciality.id
-
-  const doctorsToShow = speciality.doctors.slice(0, 5);
-
-  session.lastDoctorsList = doctorsToShow.map((d, index) => ({
-    option: index + 1,
-    doctorId: d.id,
-    name: `${d.first_name} ${d.last_name}`,
-  }));
-
-  this.sessionService.set(userId, session);
-
-  const list = doctorsToShow
-    .map((d, i) => `${i + 1}) ${d.first_name} ${d.last_name}`)
-    .join('\n');
-
-  return (
-    `Médicos disponibles para ${speciality.name}:\n` +
-    `${list}\n\n` +
-    `Elegí un profesional para seguir.`
-  );
-}
 
 
 
@@ -193,29 +223,29 @@ if (session.awaitingFinalConfirmation) {
   }
 
 
- private handleSlotsConfirmation(
-  userId: string,
-  message: string
-): string {
-  const session = this.sessionService.get(userId);
-  const normalized = normalizeText(message);
+  private handleSlotsConfirmation(
+    userId: string,
+    message: string
+  ): string {
+    const session = this.sessionService.get(userId);
+    const normalized = normalizeText(message);
 
-  if (['si', 'sí', 's', 'ok', 'dale'].includes(normalized)) {
-    session.awaitingSlotsConfirmation = false;
-    session.awaitingMonth = true;
+    if (['si', 'sí', 's', 'ok', 'dale'].includes(normalized)) {
+      session.awaitingSlotsConfirmation = false;
+      session.awaitingMonth = true;
 
-    this.sessionService.set(userId, session);
+      this.sessionService.set(userId, session);
 
-    return 'Perfecto. ¿Para qué mes querés el turno? (1 a 12)';
+      return 'Perfecto. ¿Para qué mes querés el turno? (1 a 12)';
+    }
+
+    if (['no', 'n', 'cancelar'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
+    }
+
+    return 'Respondé con "sí" o "no", por favor.';
   }
-
-  if (['no', 'n', 'cancelar'].includes(normalized)) {
-    this.sessionService.clear(userId);
-    return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
-  }
-
-  return 'Respondé con "sí" o "no", por favor.';
-}
 
 
   private async handleListAvailableSlots(userId: string): Promise<string> {
@@ -235,6 +265,12 @@ if (session.awaitingFinalConfirmation) {
       const d = new Date(s.date);
       return `- ${d.toLocaleDateString('es-AR')} ${d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
     }).join('\n');
+
+    session.awaitingReserveConfirmation = true;
+    this.sessionService.set(userId, session);
+
+    return `Turnos disponibles:\n${list}\n¿Querés reservar alguno?`;
+
 
     return `Turnos disponibles:\n${list}\n¿Querés reservar alguno?`;
   }
@@ -298,139 +334,162 @@ if (session.awaitingFinalConfirmation) {
   }
 
 
-private async handleDaySelection(
+  private async handleDaySelection(
+    userId: string,
+    message: string
+  ): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const day = parseInt(message, 10);
+
+    if (isNaN(day) || day < 1 || day > 31) {
+      return 'Ingresá un día válido.';
+    }
+
+    const year = new Date().getFullYear();
+    const monthIndex = session.selectedMonth! - 1;
+
+    const selectedDate = new Date(year, monthIndex, day);
+    const dayOfWeek = selectedDate.getDay();
+
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return 'Ese día es fin de semana. Por favor, elegí un día de lunes a viernes.';
+    }
+
+    session.selectedDay = day;
+    session.awaitingDay = false;
+
+    this.sessionService.set(userId, session);
+
+    return this.handleAvailableHours(userId);
+  }
+
+
+
+  private async handleAvailableHours(userId: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+
+    const mockHours = ['09:00', '10:30', '14:00', '16:30'];
+
+    session.availableHours = mockHours;
+    session.awaitingHourSelection = true;
+
+    this.sessionService.set(userId, session);
+
+    const list = mockHours
+      .map((h, i) => `${i + 1}) ${h}`)
+      .join('\n');
+
+    return (
+      `Horarios disponibles el ${session.selectedDay}/${session.selectedMonth}:\n` +
+      `${list}\n\n` +
+      `Elegí un número para reservar.`
+    );
+  }
+
+
+  private handleHourSelection(userId: string, message: string): string {
+    const session = this.sessionService.get(userId);
+    const option = parseInt(message, 10);
+
+    if (
+      isNaN(option) ||
+      !session.availableHours ||
+      option < 1 ||
+      option > session.availableHours.length
+    ) {
+      return 'Por favor, elegí un número válido del listado.';
+    }
+
+    const selectedHour = session.availableHours[option - 1];
+
+    const year = new Date().getFullYear();
+    const month = String(session.selectedMonth).padStart(2, '0');
+    const day = String(session.selectedDay).padStart(2, '0');
+
+    session.selectedHour = selectedHour;
+    session.selectedDateTime = `${year}-${month}-${day}T${selectedHour}`;
+    session.awaitingHourSelection = false;
+    session.awaitingFinalConfirmation = true;
+
+    this.sessionService.set(userId, session);
+
+    return (
+      `Perfecto. Confirmo:\n` +
+      `${day}/${month}/${year}\n` +
+      `${selectedHour}\n\n` +
+      `¿Querés confirmar el turno?`
+    );
+  }
+
+
+  private async confirmAppointment(userId: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+
+    const preReserve = await this.appointmentsService.preReserveAppointment(
+      {
+        doctorId: session.doctorId!,
+        specialtyId: session.specialtyId,
+        dateTime: session.selectedDateTime!,
+        reason: session.reason,
+      },
+      userId,
+    );
+    console.log(preReserve)
+    this.sessionService.clear(userId);
+
+    return (
+      `✅ Turno pre-reservado con éxito.\n\n` +
+      `📅 Vence el: ${preReserve.expiresAt.toLocaleString('es-AR')}\n` +
+      `💰 Precio: $${preReserve.price}\n\n` +
+      `Para confirmarlo, continuamos con el pago en el próximo paso.`
+    );
+  }
+
+
+  private async handleFinalConfirmation(
+    userId: string,
+    message: string
+  ): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const normalized = normalizeText(message);
+
+    if (['si', 'sí', 's', 'ok', 'dale'].includes(normalized)) {
+      session.awaitingFinalConfirmation = false;
+      this.sessionService.set(userId, session);
+      return this.confirmAppointment(userId);
+    }
+
+    if (['no', 'n', 'cancelar'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Turno cancelado. Si querés, puedo ayudarte a buscar otro horario o médico.';
+    }
+
+    return 'Respondé con "sí" o "no", por favor.';
+  }
+
+
+  private handleReserveConfirmation(
   userId: string,
   message: string
-): Promise<string> {
-  const session = this.sessionService.get(userId);
-  const day = parseInt(message, 10);
-
-  if (isNaN(day) || day < 1 || day > 31) {
-    return 'Ingresá un día válido.';
-  }
-
-  const year = new Date().getFullYear();
-  const monthIndex = session.selectedMonth! - 1;
-
-  const selectedDate = new Date(year, monthIndex, day);
-  const dayOfWeek = selectedDate.getDay(); // 0 = domingo, 6 = sábado
-
-  // 🚫 BLOQUEO FIN DE SEMANA
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return 'Ese día es fin de semana. Por favor, elegí un día de lunes a viernes.';
-  }
-
-  session.selectedDay = day;
-  session.awaitingDay = false;
-
-  this.sessionService.set(userId, session);
-
-  return this.handleAvailableHours(userId);
-}
-
-
-
-private async handleAvailableHours(userId: string): Promise<string> {
-  const session = this.sessionService.get(userId);
-
-  const mockHours = ['09:00', '10:30', '14:00', '16:30'];
-
-  session.availableHours = mockHours;
-  session.awaitingHourSelection = true;
-
-  this.sessionService.set(userId, session);
-
-  const list = mockHours
-    .map((h, i) => `${i + 1}) ${h}`)
-    .join('\n');
-
-  return (
-    `Horarios disponibles el ${session.selectedDay}/${session.selectedMonth}:\n` +
-    `${list}\n\n` +
-    `Elegí un número para reservar.`
-  );
-}
-
-
-private handleHourSelection(userId: string, message: string): string {
-  const session = this.sessionService.get(userId);
-  const option = parseInt(message, 10);
-
-  if (
-    isNaN(option) ||
-    !session.availableHours ||
-    option < 1 ||
-    option > session.availableHours.length
-  ) {
-    return 'Por favor, elegí un número válido del listado.';
-  }
-
-  const selectedHour = session.availableHours[option - 1];
-
-  const year = new Date().getFullYear();
-  const month = String(session.selectedMonth).padStart(2, '0');
-  const day = String(session.selectedDay).padStart(2, '0');
-
-  session.selectedHour = selectedHour;
-  session.selectedDateTime = `${year}-${month}-${day}T${selectedHour}`;
-  session.awaitingHourSelection = false;
-  session.awaitingFinalConfirmation = true;
-
-  this.sessionService.set(userId, session);
-
-  return (
-    `Perfecto. Confirmo:\n` +
-    `📅 ${day}/${month}/${year}\n` +
-    `⏰ ${selectedHour}\n\n` +
-    `¿Querés confirmar el turno?`
-  );
-}
-
-
-private async confirmAppointment(userId: string): Promise<string> {
-  const session = this.sessionService.get(userId);
-
-  const preReserve = await this.appointmentsService.preReserveAppointment(
-    {
-      doctorId: session.doctorId!,
-      specialtyId: session.specialtyId,
-      dateTime: session.selectedDateTime!,
-      reason: session.reason,
-    },
-    userId, 
-  );
-
-  this.sessionService.clear(userId);
-
-  return (
-    `✅ Turno pre-reservado con éxito.\n\n` +
-    `📅 Vence el: ${preReserve.expiresAt.toLocaleString('es-AR')}\n` +
-    `💰 Precio: $${preReserve.price}\n\n` +
-    `Para confirmarlo, continuamos con el pago en el próximo paso.`
-  );
-}
-
-
-private async handleFinalConfirmation(
-  userId: string,
-  message: string
-): Promise<string> {
+): string {
   const session = this.sessionService.get(userId);
   const normalized = normalizeText(message);
 
-  if (['si', 'sí', 's', 'ok', 'dale'].includes(normalized)) {
-    session.awaitingFinalConfirmation = false;
+  if (['si', 'sí', 's', 'dale', 'ok'].includes(normalized)) {
+    session.awaitingReserveConfirmation = false;
+    session.awaitingMonth = true;
     this.sessionService.set(userId, session);
-    return this.confirmAppointment(userId);
+
+    return 'Perfecto. ¿Para qué mes querés el turno? (1 a 12)';
   }
 
   if (['no', 'n', 'cancelar'].includes(normalized)) {
     this.sessionService.clear(userId);
-    return 'Turno cancelado. Si querés, puedo ayudarte a buscar otro horario o médico.';
+    return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
   }
 
   return 'Respondé con "sí" o "no", por favor.';
 }
-
 
 }
