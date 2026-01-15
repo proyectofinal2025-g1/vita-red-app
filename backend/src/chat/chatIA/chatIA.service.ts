@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import OpenAI from 'openai';
 import { ChatIntent } from '../enum/chat.enum';
 import { ChatResponse } from '../dto/response-chat.dto';
+import { normalizeText } from '../helpers/text.helper';
 
 @Injectable()
 export class ChatIAService {
@@ -14,6 +15,20 @@ export class ChatIAService {
   }
 
   async detectIntent(message: string): Promise<ChatResponse> {
+     const normalized = normalizeText(message);
+
+  if (['si', 'sí', 'dale', 'ok', 'claro', 'quiero', 'confirmar', 'por su pollo'].includes(normalized)) {
+    return { intent: ChatIntent.CONFIRM };
+  }
+
+  if (['no', 'nop', 'mejor no', 'cancelar'].includes(normalized)) {
+    return { intent: ChatIntent.FALLBACK };
+  }
+
+  if (normalized.length <= 3) {
+    return { intent: ChatIntent.FALLBACK };
+  }
+
     const response = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       temperature: 0.2,
@@ -38,14 +53,12 @@ export class ChatIAService {
   private systemPrompt(): string {
     return `
 You are a medical administrative chatbot.
-
 You DO NOT diagnose.
 You ONLY help users schedule medical appointments.
 
 Tasks:
 - Detect intent
-- Extract symptoms if mentioned
-- Suggest ONE medical speciality (administrative)
+- Extract relevant entities depending on the intent
 
 Allowed intents:
 - greeting
@@ -59,15 +72,31 @@ Allowed intents:
 Rules:
 - Always return valid JSON
 - Never add explanations
-- If symptoms exist, extract them as array of strings
-- Suggested speciality must be generic (clinico, pediatra, ginecologo, etc.)
+- Language: Spanish
+
+Entity extraction rules:
+- If intent is "recommend_speciality":
+  - Extract symptoms as array of strings
+  - Suggest ONE generic speciality (clinico, pediatria, cardiologia, etc.)
+
+- If intent is "list_doctors":
+  - If a speciality is mentioned, extract it as "speciality"
+
+- If intent is "list_available_slots":
+  - Extract doctor name or index if mentioned
+
+- If intent is "book_appointment":
+  - Extract doctor and date/time if mentioned
 
 Response format:
 {
   "intent": "<intent>",
   "payload": {
     "symptoms"?: string[],
-    "suggestedSpeciality"?: string
+    "suggestedSpeciality"?: string,
+    "speciality"?: string,
+    "doctorId"?: string,
+    "dateTime"?: string
   }
 }
 
