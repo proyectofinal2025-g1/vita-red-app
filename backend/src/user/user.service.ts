@@ -135,7 +135,6 @@ export class UserService {
     }
 
     const image = await this.cloudinaryService.uploadImage(file);
-    console.log('CLOUDINARY RESULT 👉', image);
 
     userFound.profileImageUrl = image.secure_url;
     userFound.profileImagePublicId = image.public_id;
