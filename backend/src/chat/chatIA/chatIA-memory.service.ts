@@ -13,6 +13,8 @@ export interface ChatSession {
 
   symptoms?: string[];
   recommendedSpeciality?: string;
+  awaitingRecommendConfirmation?: boolean;
+  awaitingReserveConfirmation?: boolean;
 
   doctorId?: string;
   specialtyId?: string;
