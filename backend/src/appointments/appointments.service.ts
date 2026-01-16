@@ -21,6 +21,9 @@ import { AppointmentTimeHelper } from './utils/appointment-time.helper';
 import { AppointmentsRepository } from './appointments.repository';
 import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
 import { NotificationService } from '../notification/notification.service';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+
+const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
 
 type PreReservedAppointmentForPayment = {
   id: string;
@@ -90,7 +93,7 @@ export class AppointmentsService {
       dto.dateTime,
     );
 
-    const nowArgentina = AppointmentTimeHelper.nowArgentina();
+    const nowArgentina = AppointmentTimeHelper.now();
 
     AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
@@ -141,8 +144,8 @@ export class AppointmentsService {
       );
     }
 
-    const nowUtc = new Date();
-    const expiresAt = new Date(nowUtc.getTime() + 10 * 60 * 1000); // +10 min
+    const now = AppointmentTimeHelper.now();
+    const expiresAt = AppointmentTimeHelper.addMinutes(now, 10);
 
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,
@@ -207,7 +210,7 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const nowArgentina = AppointmentTimeHelper.nowArgentina();
+    const nowArgentina = AppointmentTimeHelper.now();
 
     AppointmentRules.validateCancellableStatus(appointment.status);
     AppointmentRules.validateCancellationWindow(
@@ -424,8 +427,9 @@ export class AppointmentsService {
   }
 
   async getAvailability(doctorId: string, date: string) {
-    const startOfDay = new Date(`${date}T00:00:00-03:00`);
-    const endOfDay = new Date(`${date}T23:59:59-03:00`);
+    const startOfDay = fromZonedTime(`${date}T00:00:00`, ARG_TIMEZONE);
+
+    const endOfDay = fromZonedTime(`${date}T23:59:59`, ARG_TIMEZONE);
 
     const appointments = await this.appointmentRepository.find({
       where: {
@@ -436,13 +440,13 @@ export class AppointmentsService {
     });
 
     const occupiedTimes = appointments.map((appointment) => {
-      const hours = appointment.date.toLocaleTimeString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
+      const argentinaDate = toZonedTime(appointment.date, ARG_TIMEZONE);
 
-      return hours;
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
+
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+
+      return `${hours}:${minutes}`;
     });
 
     return { occupiedTimes };

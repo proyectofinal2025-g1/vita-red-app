@@ -18,7 +18,7 @@ export class AppointmentsExpirationService {
 
   @Cron('*/1 * * * *')
   async expirePendingAppointments() {
-    const now = AppointmentTimeHelper.nowArgentina();
+    const now = AppointmentTimeHelper.now();
 
     const expired = await this.appointmentRepo.find({
       where: {

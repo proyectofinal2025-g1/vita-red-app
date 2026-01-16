@@ -1,51 +1,56 @@
-import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Injectable } from "@nestjs/common";
+import { Cron, CronExpression } from "@nestjs/schedule";
+import { AppointmentTimeHelper } from "../appointments/utils/appointment-time.helper";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Appointment } from "../appointments/entities/appointment.entity";
+import { Between, Repository } from "typeorm";
+import { AppointmentStatus } from "../appointments/enums/appointment-status.enum";
+import { NotificationService } from "./notification.service";
+import { NotificationType } from "./enums/notification-type.enum";
+import { toZonedTime } from "date-fns-tz";
 
-import { Appointment } from '../appointments/entities/appointment.entity';
-import { AppointmentStatus } from '../appointments/enums/appointment-status.enum';
-import { NotificationService } from './notification.service';
-import { NotificationType } from './enums/notification-type.enum';
+const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
 
 @Injectable()
 export class NotificationsCronService {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentRepo: Repository<Appointment>,
-    private readonly notificationService: NotificationService,
+    private readonly notificationService: NotificationService
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE, {
-    timeZone: 'America/Argentina/Buenos_Aires',
-  })
+  @Cron(CronExpression.EVERY_MINUTE)
   async cronService() {
-    const now = new Date();
+    const now = AppointmentTimeHelper.now();
 
-    const start = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-    const end = new Date(now.getTime() + 24 * 60 * 60 * 1000 + 60 * 1000);
+    const nextDay = AppointmentTimeHelper.addMinutes(now, 1440);
+    const limitDate = AppointmentTimeHelper.addMinutes(now, 1441);
 
     const appointments = await this.appointmentRepo.find({
       where: {
-        date: Between(start, end),
-        status: AppointmentStatus.CONFIRMED,
+        date: Between(nextDay, limitDate),
+        status: AppointmentStatus.CONFIRMED
       },
-      relations: ['notifications', 'patient', 'doctor', 'doctor.user'],
+      relations: ["notifications", "patient", "doctor", "doctor.user"]
     });
 
     for (const appointment of appointments) {
-      const alreadyNotified = appointment.notifications.some(
-        (n) => n.type === NotificationType.APPOINTMENT_REMINDER,
+      if (
+        appointment.notifications.some(
+          notification =>
+            notification.type === NotificationType.APPOINTMENT_REMINDER
+        )
+      ) {
+        continue;
+      }
+
+      const argentinaDate = toZonedTime(
+        appointment.date,
+        ARG_TIMEZONE
       );
 
-      if (alreadyNotified) continue;
-
-      const dateArgentina = appointment.date.toLocaleDateString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-      });
-
-      const timeArgentina = appointment.date.toLocaleTimeString('es-AR', {
-        timeZone: 'America/Argentina/Buenos_Aires',
+      const dateArgentina = argentinaDate.toLocaleDateString('es-AR');
+      const timeArgentina = argentinaDate.toLocaleTimeString('es-AR', {
         hour: '2-digit',
         minute: '2-digit',
       });
@@ -55,12 +60,12 @@ export class NotificationsCronService {
         first_name: appointment.patient.first_name,
         date: dateArgentina,
         time: timeArgentina,
-        doctorName: appointment.doctor.user.first_name,
+        doctorName: appointment.doctor.user.first_name
       });
     }
 
     console.log(
-      `CRON: ${appointments.length} turnos encontrados para recordatorio`,
+      `CRON: ${appointments.length} turnos encontrados para recordatorio`
     );
   }
 }

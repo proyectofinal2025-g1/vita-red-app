@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 
@@ -16,6 +17,8 @@ interface UserData {
 export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const avatarFileRef = useRef<File | null>(null);
+
+  const { dataUser, setDataUser } = useAuth();
 
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,69 +63,69 @@ export default function ProfilePage() {
   }, []);
 
   const fetchUser = async () => {
-  try {
-    const session = localStorage.getItem("userSession");
+    try {
+      const session = localStorage.getItem("userSession");
 
-    if (!session) {
-      setLoading(false);
-      return;
-    }
+      if (!session) {
+        setLoading(false);
+        return;
+      }
 
-    const parsedSession = JSON.parse(session);
-    const token = parsedSession?.token;
+      const parsedSession = JSON.parse(session);
+      const token = parsedSession?.token;
 
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
-    const res = await fetch(`${API_URL}/user/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (res.status === 401 || res.status === 403) {
-      throw new Error("SESSION_EXPIRED");
-    }
-
-    if (!res.ok) {
-      throw new Error("API_ERROR");
-    }
-
-    const data = await res.json();
-
-    setUserData(data);
-    setAvatarPreview(data.profileImageUrl || null);
-    setFormData({
-      first_name: data.first_name,
-      last_name: data.last_name,
-      email: data.email,
-    });
-  } catch (err: any) {
-    console.error("fetchUser error:", err);
-
-    if (err.message === "SESSION_EXPIRED") {
-      Swal.fire({
-        title: "Sesión expirada",
-        text: "Por favor iniciá sesión nuevamente",
-        icon: "warning",
-        confirmButtonText: "Ir a login",
-      }).then(() => {
-        localStorage.removeItem("userSession");
-        window.location.href = "/auth/login";
+      const res = await fetch(`${API_URL}/user/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-    } else {
-      Swal.fire({
-        title: "Error",
-        text: "No se pudo cargar el perfil. Intente nuevamente.",
-        icon: "error",
+
+      if (res.status === 401 || res.status === 403) {
+        throw new Error("SESSION_EXPIRED");
+      }
+
+      if (!res.ok) {
+        throw new Error("API_ERROR");
+      }
+
+      const data = await res.json();
+
+      setUserData(data);
+      setAvatarPreview(data.profileImageUrl || null);
+      setFormData({
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email,
       });
+    } catch (err: any) {
+      console.error("fetchUser error:", err);
+
+      if (err.message === "SESSION_EXPIRED") {
+        Swal.fire({
+          title: "Sesión expirada",
+          text: "Por favor iniciá sesión nuevamente",
+          icon: "warning",
+          confirmButtonText: "Ir a login",
+        }).then(() => {
+          localStorage.removeItem("userSession");
+          window.location.href = "/auth/login";
+        });
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo cargar el perfil. Intente nuevamente.",
+          icon: "error",
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleAvatarClick = async () => {
     const result = await Swal.fire({
@@ -154,17 +157,36 @@ export default function ProfilePage() {
     const form = new FormData();
     form.append("file", avatarFileRef.current);
 
-    await fetch(`${API_URL}/user/me/avatar`, {
+    const res = await fetch(`${API_URL}/user/me/avatar`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
       body: form,
     });
+    if (!res.ok) {
+      throw new Error("Error al subir imagen");
+    }
+    const data = await res.json();
+
+    setUserData((prev) =>
+      prev ? { ...prev, profileImageUrl: data.profileImageUrl } : prev
+    );
+
+    setAvatarPreview(data.profileImageUrl);
+
+    setDataUser({
+  ...dataUser!,
+  user: {
+    ...dataUser!.user,
+    profileImageUrl: data.profileImageUrl,
+  },
+});
+
 
     avatarFileRef.current = null;
-    await fetchUser();
   };
 
   const handleSaveAll = async () => {
+
     const result = await Swal.fire({
       title: "¿Guardar cambios?",
       text: "Se actualizarán tus datos de perfil",
@@ -212,13 +234,32 @@ export default function ProfilePage() {
         }
       }
 
+      const payload: any = {};
+
+      if (formData.first_name.trim()) {
+        payload.first_name = formData.first_name;
+      }
+
+      if (formData.last_name.trim()) {
+        payload.last_name = formData.last_name;
+      }
+
+      if (formData.email.trim()) {
+        payload.email = formData.email;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        // no hay nada para actualizar
+        return;
+      }
+
       const res = await fetch(`${API_URL}/user/me`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -711,7 +752,7 @@ export default function ProfilePage() {
             <>
               <button
                 onClick={handleSaveAll}
-                disabled={saving}
+                disabled={!canSave || saving}
                 className={`px-6 py-2 text-white rounded ${
                   !canSave || saving
                     ? "bg-gray-400 cursor-not-allowed"
@@ -733,7 +774,7 @@ export default function ProfilePage() {
                   setShowPassword(false);
                   setShowConfirmPassword(false);
                 }}
-                className="px-6 py-2 bg-gray-600 text-white rounded"
+                className="px-6 py-2 bg-red-600 text-white rounded"
               >
                 Cancelar
               </button>
