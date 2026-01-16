@@ -81,7 +81,7 @@ export class UserController {
     },
   })
   @UseGuards(AuthGuard)
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file') ) 
   async uploadAvatar(
     @Request() req: any,
     @UploadedFile(
@@ -98,7 +98,7 @@ export class UserController {
     file: Express.Multer.File,
   ) {
     const userId = req.user.sub;
-    const user = await this.userService.updateAvatar(userId, file);
+    const user = await this.userService.updateAvatar(userId, file) ;
     return new UserResponse(user);
   }
 
@@ -131,7 +131,7 @@ export class UserController {
   @UseGuards(AuthGuard)
   async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() updateUserDto: UpdateUserDto, 
   ) {
     return this.userService.update(id, updateUserDto);
   }
@@ -151,7 +151,7 @@ export class UserController {
   @UseGuards(AuthGuard)
   updatePassword(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdatePasswordDto,
+    @Body() dto: UpdatePasswordDto, 
   ) {
     return this.userService.updatePassword(id, dto);
   }

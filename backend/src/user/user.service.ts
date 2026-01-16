@@ -137,7 +137,7 @@ export class UserService {
     const image = await this.cloudinaryService.uploadImage(file);
 
     userFound.profileImageUrl = image.secure_url;
-    userFound.profileImagePublicId = image.public_id;
+    userFound.profileImagePublicId = image.public_id; 
 
     return await this.userRepository.save(userFound);
   } catch (error) {
