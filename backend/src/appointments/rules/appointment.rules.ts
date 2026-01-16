@@ -3,7 +3,7 @@ import { AppointmentStatus } from '../enums/appointment-status.enum';
 
 export class AppointmentRules {
   static validateWorkingDay(date: Date): void {
-    const day = date.getUTCDay();
+    const day = date.getDay(); // local
 
     if (day === 0 || day === 6) {
       throw new BadRequestException(
@@ -17,14 +17,8 @@ export class AppointmentRules {
     startHour: number,
     endHour: number,
   ): void {
-    const argentinaTime = new Date(
-      date.toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-      }),
-    );
-
-    const hour = argentinaTime.getHours();
-    const minutes = argentinaTime.getMinutes();
+    const hour = date.getHours();
+    const minutes = date.getMinutes();
 
     if (hour < startHour) {
       throw new BadRequestException(

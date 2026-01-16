@@ -427,47 +427,28 @@ export class AppointmentsService {
   }
 
   async getAvailability(doctorId: string, date: string) {
+    const startOfDay = fromZonedTime(`${date}T00:00:00`, ARG_TIMEZONE);
 
-  const startOfDay = fromZonedTime(
-    `${date}T00:00:00`,
-    ARG_TIMEZONE,
-  );
+    const endOfDay = fromZonedTime(`${date}T23:59:59`, ARG_TIMEZONE);
 
-  const endOfDay = fromZonedTime(
-    `${date}T23:59:59`,
-    ARG_TIMEZONE,
-  );
+    const appointments = await this.appointmentRepository.find({
+      where: {
+        doctor: { id: doctorId },
+        status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING]),
+        date: Between(startOfDay, endOfDay),
+      },
+    });
 
-  const appointments = await this.appointmentRepository.find({
-    where: {
-      doctor: { id: doctorId },
-      status: In([
-        AppointmentStatus.CONFIRMED,
-        AppointmentStatus.PENDING,
-      ]),
-      date: Between(startOfDay, endOfDay),
-    },
-  });
+    const occupiedTimes = appointments.map((appointment) => {
+      const argentinaDate = toZonedTime(appointment.date, ARG_TIMEZONE);
 
-  const occupiedTimes = appointments.map((appointment) => {
-    const argentinaDate = toZonedTime(
-      appointment.date,
-      ARG_TIMEZONE,
-    );
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
 
-    const hours = argentinaDate
-      .getHours()
-      .toString()
-      .padStart(2, '0');
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
 
-    const minutes = argentinaDate
-      .getMinutes()
-      .toString()
-      .padStart(2, '0');
+      return `${hours}:${minutes}`;
+    });
 
-    return `${hours}:${minutes}`;
-  });
-
-  return { occupiedTimes };
-}
+    return { occupiedTimes };
+  }
 }

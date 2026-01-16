@@ -6,7 +6,7 @@ export class UpdateUserRoleDto {
   @ApiProperty({
     enum: RolesEnum,
     description: 'Nuevo rol del usuario (no puede ser SUPER_ADMIN)',
-    example: RolesEnum.Secretary,
+    example: RolesEnum.Medic,
   })
   @IsEnum(RolesEnum)
   role: RolesEnum;

@@ -62,6 +62,7 @@ export class SpecialityController {
   @ApiOkResponse({ type: SpecialityResponseDto })
   @Get('by-name/:name')
   async findByName(@Param('name') name: string) {
+    
     return this.specialityService.findByNameWithDoctors(name);
   }
 

@@ -68,23 +68,22 @@ export const Navbar = () => {
   };
 
   const handleLogout = () => {
-  Swal.fire({
-    title: '¿Cerrar sesión?',
-    text: '¿Estás seguro de que deseas cerrar sesión?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, cerrar sesión',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#6c757d',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      logout();
-      setOpenMenu(false);
-    }
-  });
-};
-
+    Swal.fire({
+      title: '¿Cerrar sesión?',
+      text: '¿Estás seguro de que deseas cerrar sesión?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cerrar sesión',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6c757d',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        logout();
+        setOpenMenu(false);
+      }
+    });
+  };
 
   return (
     <nav
@@ -117,11 +116,35 @@ export const Navbar = () => {
                 {navigationItem.name}
               </Link>
             ))}
-              {dataUser && (
-                  <Link href="/dashboard/patient" className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'>
-                    Mis turnos
-                  </Link>
-                )}
+            {dataUser?.user.role.includes('patient') ? (
+              <Link
+                href='/dashboard/patient'
+                className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+              >
+                Mis turnos
+              </Link>
+            ) : dataUser?.user.role.includes('medico') ? (
+              <Link
+                href='/dashboard/doctor'
+                className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+              >
+                Mi Panel Doctor
+              </Link>
+            ) : dataUser?.user.role.includes('superadmin') ? (
+              <Link
+                href='/dashboard/super-admin'
+                className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+              >
+                Mi Panel Admin
+              </Link>
+            ) : dataUser?.user.role.includes('secretary') ? (
+              <Link
+                href='/dashboard/secretary'
+                className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+              >
+                Mi Panel Secretaría
+              </Link>
+            ) : null}
 
             <div>
               {!dataUser ? (
@@ -142,7 +165,6 @@ export const Navbar = () => {
               ) : (
                 <div className='flex flex-col md:flex-row md:items-center gap-1'>
                   <div className='text-xs text-blue-900 font-bold space-y-0.5 md:space-y-0 md:mr-4 text-center cursor-pointer'>
-                    <Link href="/dashboard/patient" onClick={() => setOpenMenu(false)}>
                     <div>Bienvenid@</div>
                     <div className='text-base text-blue-900 flex items-center'>
                       {getDisplayName()}
@@ -150,7 +172,6 @@ export const Navbar = () => {
                     <div className='text-xs text-blue-900 capitalize'>
                       {getRole()}
                     </div>
-                    </Link>
                   </div>
                   <button
                     onClick={handleLogout}
@@ -179,11 +200,35 @@ export const Navbar = () => {
             </Link>
           ))}
 
-          {dataUser && (
-            <Link href='/dashboard/patient' className='text-white font-bold hover:text-cyan-800 transition mt-2' onClick={() => setOpenMenu(false)}>
+          {dataUser?.user.role.includes('patient') ? (
+            <Link
+              href='/dashboard/patient'
+              className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+            >
               Mis turnos
             </Link>
-          )}
+          ) : dataUser?.user.role.includes('medico') ? (
+            <Link
+              href='/dashboard/doctor'
+              className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+            >
+              Mi Panel Doctor
+            </Link>
+          ) : dataUser?.user.role.includes('superadmin') ? (
+            <Link
+              href='/dashboard/super-admin'
+              className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+            >
+              Mi Panel Admin
+            </Link>
+          ) : dataUser?.user.role.includes('secretary') ? (
+            <Link
+              href='/dashboard/secretary'
+              className='text-white hover:bg-cyan-800 px-3 py-2 rounded-3xl transition cursor-pointer'
+            >
+              Mi Panel Secretaría
+            </Link>
+          ) : null}
 
           {!dataUser ? (
             <div className='flex flex-col items-center gap-2 mt-4'>
@@ -204,9 +249,8 @@ export const Navbar = () => {
             </div>
           ) : (
             <div className='flex flex-col items-center gap-2 mt-4'>
-                <Link href='/dashboard/patient' onClick={() => setOpenMenu(false)}>
               <div className='text-center text-white font-bold text-lg hover:text-cyan-800 transition mb-2'>
-                Hola, bienvenid@
+                Bienvenid@
                 <br />
                 {getDisplayName()}
                 <br />
@@ -214,7 +258,7 @@ export const Navbar = () => {
                   ({getRole()})
                 </span>
               </div>
-                </Link>
+
               <button
                 onClick={handleLogout}
                 className='text-white font-bold px-4 py-2 rounded-3xl mb-3 bg-red-600 hover:bg-red-700 transition cursor-pointer'

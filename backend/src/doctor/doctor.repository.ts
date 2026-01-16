@@ -95,4 +95,23 @@ export class DoctorRepository {
   });
 }
 
+/*
+
+async findByDoctorAndDayOfWeek(
+  doctorId: string,
+  dayOfWeek: number,
+) {
+  return this.doctorScheduleRepository.find({
+    where: {
+      doctor: { id: doctorId },
+      dayOfWeek,
+      isActive: true,
+    },
+    order: {
+      hour: 'ASC',
+    },
+  });
+}
+
+*/
 }

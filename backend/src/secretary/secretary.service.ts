@@ -148,7 +148,7 @@ export class SecretaryService {
     return this.doctorScheduleService.updateScheduleDoctor(
       doctorId,
       dto,
-      RolesEnum.Secretary,
+      RolesEnum.SuperAdmin,
     );
   }
 
