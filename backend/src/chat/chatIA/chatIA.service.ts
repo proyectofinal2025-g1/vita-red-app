@@ -17,7 +17,7 @@ export class ChatIAService {
   async detectIntent(message: string): Promise<ChatResponse> {
      const normalized = normalizeText(message);
 
-  if (['si', 'sí', 'dale', 'ok', 'claro', 'quiero', 'confirmar', 'por su pollo'].includes(normalized)) {
+  if (['si', 'sí', 'dale', 'ok', 'okey', 'claro', 'confirmar', 'por su pollo'].includes(normalized)) {
     return { intent: ChatIntent.CONFIRM };
   }
 
@@ -62,6 +62,8 @@ Tasks:
 
 Allowed intents:
 - greeting
+- register
+- update
 - recommend_speciality
 - list_doctors
 - list_available_slots
@@ -75,6 +77,8 @@ Rules:
 - Language: Spanish
 
 Entity extraction rules:
+- "register": when the user wants to create an account or register as a new user
+
 - If intent is "recommend_speciality":
   - Extract symptoms as array of strings
   - Suggest ONE generic speciality (clinico, pediatria, cardiologia, etc.)

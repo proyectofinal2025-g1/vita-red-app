@@ -37,6 +37,32 @@ export interface ChatSession {
   reason?: string;
 
   awaitingFinalConfirmation?: boolean;
+
+
+
+  awaitingAuthConfirmation?: boolean;
+  awaitingRegisterEmail?: boolean;
+  awaitingRegisterPassword?: boolean;
+  awaitingRegisterConfirmPassword?: boolean;
+  awaitingRegisterFirstName?: boolean;
+  awaitingRegisterLastName?: boolean;
+  awaitingRegisterDni?: boolean;
+
+  registerEmail?: string;
+  registerPassword?: string;
+  registerConfirmPassword?: string;
+  registerFirstName?: string;
+  registerLastName?: string;
+  registerDni?: string;
+
+  userAuthenticated?: boolean;
+  realUserId?: string
+
+  awaitingUpdateField?: boolean;
+  awaitingUpdateValue?: boolean;
+  pendingUpdateField?: 'first_name' | 'last_name' | 'email' | 'password';
+  pendingUpdateValue?: string;
+  awaitingUserIdentification?: boolean
 }
 
 
