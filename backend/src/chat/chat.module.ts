@@ -9,9 +9,13 @@ import { SpecialityModule } from '../speciality/speciality.module';
 import { PaymentsModule } from '../payments/payments.module';
 import { ChatSessionService } from './chatIA/chatIA-memory.service';
 import { ChatIAService } from './chatIA/chatIA.service';
+import { User } from '../user/entities/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [ChatIAModule,
+  imports: [
+     TypeOrmModule.forFeature([User]),
+     ChatIAModule,
      UserModule,
      DoctorModule, 
      AppointmentsModule, 

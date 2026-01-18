@@ -7,7 +7,14 @@ import { DoctorService } from "../doctor/doctor.service";
 import { AppointmentsService } from "../appointments/appointments.service";
 import { PaymentsService } from "../payments/payments.service";
 import { normalizeText } from "./helpers/text.helper";
-import { resolveSpecialityName } from "./helpers/specialitiesWithoutAccent.helper";
+import { isGeneral, isStrongPassword, resolveSpecialityName } from "./helpers/specialitiesWithoutAccent.helper";
+import { UserService } from "../user/user.service";
+import * as bcrypt from 'bcrypt';
+import { UserRepository } from "../user/user.repository";
+import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "../user/entities/user.entity";
+import { Repository } from "typeorm";
+
 
 @Injectable()
 export class ChatService {
@@ -18,6 +25,9 @@ export class ChatService {
     private readonly doctorService: DoctorService,
     private readonly appointmentsService: AppointmentsService,
     private readonly paymentsService: PaymentsService,
+    private readonly userService: UserService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>
   ) { }
 
   async chatMessage(userId: string, message: string): Promise<string> {
@@ -32,6 +42,32 @@ export class ChatService {
       normalized.includes('pediatr') ||
       normalized.includes('clinic') ||
       normalized.includes('cardio');
+
+
+    if (session.awaitingRegisterEmail) {
+      return this.handleRegisterEmail(userId, message);
+    }
+
+    if (session.awaitingRegisterPassword) {
+      return this.handleRegisterPassword(userId, message);
+    }
+
+    if (session.awaitingRegisterConfirmPassword) {
+      return this.handleRegisterConfirmPassword(userId, message);
+    }
+
+    if (session.awaitingRegisterFirstName) {
+      return this.handleRegisterFirstName(userId, message);
+    }
+
+    if (session.awaitingRegisterLastName) {
+      return this.handleRegisterLastName(userId, message);
+    }
+
+    if (session.awaitingRegisterDni) {
+      return this.handleCreateUser(userId, message);
+    }
+
 
     if (
       session.lastDoctorsList &&
@@ -74,6 +110,20 @@ export class ChatService {
       return this.handleRecommendConfirmation(userId, message);
     }
 
+    if (session.awaitingUserIdentification) {
+      return this.handleIdentifyUser(userId, message);
+    }
+
+
+    if (session.awaitingUpdateField) {
+      return this.handleUpdateFieldSelection(userId, message);
+    }
+
+    if (session.awaitingUpdateValue) {
+      return this.handleUpdateValue(userId, message);
+    }
+
+
 
     const ai = await this.chatIA.detectIntent(message);
 
@@ -81,7 +131,24 @@ export class ChatService {
 
     switch (ai.intent) {
       case ChatIntent.GREETING:
+        if (
+          normalized.includes('turno') ||
+          normalized.includes('sacar') ||
+          normalized.includes('reserv')
+        ) {
+          return this.handleRecommendSpeciality(userId, { symptoms: [] });
+        }
+
         return 'Hola, ¿en qué puedo ayudarte?';
+
+
+
+      case ChatIntent.REGISTER:
+        session.awaitingRegisterEmail = true;
+        this.sessionService.set(userId, session);
+
+        return 'Perfecto. Empecemos con el registro. Ingresá tu email por favor.';
+
 
       case ChatIntent.RECOMMEND_SPECIALITY:
         return this.handleRecommendSpeciality(userId, ai.payload);
@@ -98,27 +165,197 @@ export class ChatService {
       case ChatIntent.LIST_USER_APPOINTMENTS:
         return await this.handleListUserAppointments(userId);
 
+      case ChatIntent.UPDATE:
+        return this.handleUpdateStart(userId);
+
+
       default:
         return 'No terminé de entenderte. ¿Podés reformular?';
     }
   }
 
-  private handleRecommendSpeciality(userId: string, payload?: any): string {
+  private async handleRegisterEmail(userId: string, message: string): Promise<string> {
     const session = this.sessionService.get(userId);
-    const symptoms = payload?.symptoms;
-    const speciality = payload?.suggestedSpeciality;
+    const email = message.trim().toLowerCase();
+
+    if (!email.includes('@')) {
+      return 'Ese email no parece válido. ¿Podés escribirlo de nuevo?';
+    }
+
+    const existingEmail = await this.userService.findByEmail(email)
+    if (existingEmail) {
+      return 'Ese email ya está registrado. ¿Querés intentar con otro?';
+    }
+
+    session.registerEmail = message;
+    session.awaitingRegisterEmail = false;
+    session.awaitingRegisterPassword = true;
+
+    this.sessionService.set(userId, session);
+    return 'Perfecto. Ahora ingresá una contraseña.';
+  }
+
+
+
+
+  private handleRegisterPassword(
+    userId: string,
+    message: string
+  ): string {
+    const session = this.sessionService.get(userId);
+
+    if (!isStrongPassword(message)) {
+      return 'La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.';
+    }
+
+    session.registerPassword = message;
+    session.awaitingRegisterPassword = false;
+    session.awaitingRegisterConfirmPassword = true;
+
+    this.sessionService.set(userId, session);
+
+    return 'Confirmá la contraseña.';
+  }
+
+
+
+
+
+  private handleRegisterConfirmPassword(userId: string, message: string): string {
+    const session = this.sessionService.get(userId);
+
+    if (message !== session.registerPassword) {
+      return 'Las contraseñas no coinciden. Intentá nuevamente.';
+    }
+
+    session.awaitingRegisterConfirmPassword = false;
+    session.awaitingRegisterFirstName = true;
+
+    this.sessionService.set(userId, session);
+
+    return 'Bien. ¿Cuál es tu nombre?';
+  }
+
+
+
+
+  private handleRegisterFirstName(userId: string, message: string): string {
+    const session = this.sessionService.get(userId);
+
+    session.registerFirstName = message;
+    session.awaitingRegisterFirstName = false;
+    session.awaitingRegisterLastName = true;
+
+    this.sessionService.set(userId, session);
+    return '¿Cuál es tu apellido?';
+  }
+
+
+
+
+  private handleRegisterLastName(userId: string, message: string): string {
+    const session = this.sessionService.get(userId);
+
+    session.registerLastName = message;
+    session.awaitingRegisterLastName = false;
+    session.awaitingRegisterDni = true;
+
+    this.sessionService.set(userId, session);
+    return 'Por último, ingresá tu DNI.';
+  }
+
+
+
+  private async handleCreateUser(userId: string, message: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const dni = message.trim();
+
+
+    let dniExisting
+    try {
+      dniExisting = await this.userService.findByDni(dni);
+    } catch (error) {
+      dniExisting = null;
+    }
+
+    if (dniExisting) {
+      return `El DNI ${dni} ya existe. ¿Seguro que es tuyo? Ingresalo nuevamente.`;
+    }
+
+    session.registerDni = dni;
+
+    if (
+      !session.registerEmail ||
+      !session.registerPassword ||
+      !session.registerFirstName ||
+      !session.registerLastName ||
+      !session.registerDni
+    ) {
+      throw new Error('Estado de registro inconsistente');
+    }
+
+    const passwordHash = await bcrypt.hash(session.registerPassword, 10);
+
+    const user = await this.userService.create({
+      email: session.registerEmail,
+      password: passwordHash,
+      first_name: session.registerFirstName,
+      last_name: session.registerLastName,
+      dni: session.registerDni,
+    });
+
+    delete session.awaitingRegisterEmail;
+    delete session.awaitingRegisterPassword;
+    delete session.awaitingRegisterConfirmPassword;
+    delete session.awaitingRegisterFirstName;
+    delete session.awaitingRegisterLastName;
+    delete session.awaitingRegisterDni;
+
+    session.userAuthenticated = true;
+    session.realUserId = user.id;
+
+    return `Registro exitoso, ${session.registerFirstName}. ¿Cómo te ayudo ahora?`;
+  }
+
+
+  private async handleRecommendSpeciality(userId: string, payload?: any): Promise<string> {
+    const session = this.sessionService.get(userId);
+
+    if (session.recommendedSpeciality) {
+      session.awaitingRecommendConfirmation = true;
+      this.sessionService.set(userId, session);
+
+      return `Perfecto, entonces vemos médicos de ${session.recommendedSpeciality}. ¿Querés que te los muestre?`;
+    }
+
+    const symptoms: string[] | undefined = payload?.symptoms;
 
     if (!symptoms || symptoms.length === 0) {
       return '¿Qué síntomas estás teniendo?';
     }
 
     session.symptoms = symptoms;
-    session.recommendedSpeciality = speciality || 'clinico';
+
+    if (isGeneral(symptoms)) {
+      session.recommendedSpeciality = 'clinico';
+      session.awaitingRecommendConfirmation = true;
+
+      this.sessionService.set(userId, session);
+
+      return 'Perfecto, para un control te recomiendo Clínica Médica. ¿Querés que te muestre los médicos disponibles?';
+    }
+
+    const normalized = normalizeText(payload?.suggestedSpeciality ?? '');
+    const resolved = resolveSpecialityName(normalized) ?? 'clinico';
+
+    session.recommendedSpeciality = resolved;
     session.awaitingRecommendConfirmation = true;
+
     this.sessionService.set(userId, session);
 
-    return `Por los síntomas que mencionás (${symptoms.join(', ')}), lo más adecuado es un médico ${session.recommendedSpeciality}. ¿Querés que te muestre médicos disponibles?`;
+    return `Te recomiendo ${resolved}. ¿Querés que te muestre médicos disponibles?`;
   }
+
 
   private async handleRecommendConfirmation(
     userId: string,
@@ -143,19 +380,22 @@ export class ChatService {
   }
 
 
+
+
   private async handleListDoctors(
     userId: string,
     payload?: any
   ): Promise<string> {
     const session = this.sessionService.get(userId);
-    const rawSpeciality = payload?.speciality ?? session.recommendedSpeciality;
+    const rawSpeciality = session.recommendedSpeciality ?? payload?.speciality;
 
     if (!rawSpeciality) {
       return '¿Qué especialidad estás buscando? Por ejemplo: pediatría, clínica, cardiología.';
     }
 
-    const normalizedSpeciality = normalizeText(rawSpeciality);
-    const dbSpecialityName = resolveSpecialityName(normalizedSpeciality);
+    // const normalizedSpeciality = normalizeText(rawSpeciality);
+    const dbSpecialityName = resolveSpecialityName(rawSpeciality);
+    console.log(dbSpecialityName)
 
     const speciality =
       await this.specialityService.findByNameWithDoctorsChat(dbSpecialityName);
@@ -223,6 +463,9 @@ export class ChatService {
   }
 
 
+
+
+
   private handleSlotsConfirmation(
     userId: string,
     message: string
@@ -246,6 +489,9 @@ export class ChatService {
 
     return 'Respondé con "sí" o "no", por favor.';
   }
+
+
+
 
 
   private async handleListAvailableSlots(userId: string): Promise<string> {
@@ -275,6 +521,10 @@ export class ChatService {
     return `Turnos disponibles:\n${list}\n¿Querés reservar alguno?`;
   }
 
+
+
+
+
   private async handleBookAppointment(userId: string, payload?: any): Promise<string> {
     const { doctorId, dateTime } = payload || {};
 
@@ -293,6 +543,10 @@ export class ChatService {
 
     return `Tu turno fue pre-reservado. Completá el pago para confirmarlo:\n${payment.initPoint}`;
   }
+
+
+
+
 
   private async handleListUserAppointments(userId: string): Promise<string> {
     const appointments = await this.appointmentsService.findAllByPatientId(userId);
@@ -316,6 +570,9 @@ export class ChatService {
   }
 
 
+
+
+
   private handleMonthSelection(userId: string, message: string): string {
     const session = this.sessionService.get(userId);
     const month = parseInt(message, 10);
@@ -332,6 +589,9 @@ export class ChatService {
 
     return `Perfecto. ¿Qué día del mes ${month} querés?`;
   }
+
+
+
 
 
   private async handleDaySelection(
@@ -366,6 +626,8 @@ export class ChatService {
 
 
 
+
+
   private async handleAvailableHours(userId: string): Promise<string> {
     const session = this.sessionService.get(userId);
 
@@ -386,6 +648,9 @@ export class ChatService {
       `Elegí un número para reservar.`
     );
   }
+
+
+
 
 
   private handleHourSelection(userId: string, message: string): string {
@@ -423,8 +688,23 @@ export class ChatService {
   }
 
 
+
+
+
   private async confirmAppointment(userId: string): Promise<string> {
     const session = this.sessionService.get(userId);
+
+    if (!session.userAuthenticated || !session.realUserId) {
+      // 👇 INICIAMOS FLUJO DE REGISTRO
+      session.awaitingRegisterEmail = true;
+
+      this.sessionService.set(userId, session);
+
+      return (
+        'Para confirmar el turno necesitás registrarte.\n\n' +
+        'Comencemos. Ingresá tu email por favor.'
+      );
+    }
 
     const preReserve = await this.appointmentsService.preReserveAppointment(
       {
@@ -433,18 +713,36 @@ export class ChatService {
         dateTime: session.selectedDateTime!,
         reason: session.reason,
       },
-      userId,
+      session.realUserId,
     );
+
     console.log(preReserve)
-    this.sessionService.clear(userId);
+    delete session.doctorId;
+    delete session.specialtyId;
+    delete session.selectedMonth;
+    delete session.selectedDay;
+    delete session.selectedHour;
+    delete session.selectedDateTime;
+    delete session.availableHours;
+    delete session.awaitingFinalConfirmation;
+    delete session.awaitingHourSelection;
+    delete session.awaitingDay;
+    delete session.awaitingMonth;
+    delete session.awaitingSlotsConfirmation;
+    delete session.awaitingReserveConfirmation;
+
+    this.sessionService.set(userId, session);
 
     return (
-      `✅ Turno pre-reservado con éxito.\n\n` +
-      `📅 Vence el: ${preReserve.expiresAt.toLocaleString('es-AR')}\n` +
-      `💰 Precio: $${preReserve.price}\n\n` +
+      `Turno pre-reservado con éxito.\n\n` +
+      `Vence el: ${preReserve.expiresAt.toLocaleString('es-AR')}\n` +
+      `Precio: $${preReserve.price}\n\n` +
       `Para confirmarlo, continuamos con el pago en el próximo paso.`
     );
   }
+
+
+
 
 
   private async handleFinalConfirmation(
@@ -470,26 +768,165 @@ export class ChatService {
 
 
   private handleReserveConfirmation(
-  userId: string,
-  message: string
-): string {
-  const session = this.sessionService.get(userId);
-  const normalized = normalizeText(message);
+    userId: string,
+    message: string
+  ): string {
+    const session = this.sessionService.get(userId);
+    const normalized = normalizeText(message);
 
-  if (['si', 'sí', 's', 'dale', 'ok'].includes(normalized)) {
-    session.awaitingReserveConfirmation = false;
-    session.awaitingMonth = true;
+    if (['si', 'sí', 's', 'dale', 'ok'].includes(normalized)) {
+      session.awaitingReserveConfirmation = false;
+      session.awaitingMonth = true;
+      this.sessionService.set(userId, session);
+
+      return 'Perfecto. ¿Para qué mes querés el turno? (1 a 12)';
+    }
+
+    if (['no', 'n', 'cancelar'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
+    }
+
+    return 'Respondé con "sí" o "no", por favor.';
+  }
+
+
+
+
+private async handleUpdateStart(userId: string): Promise<string> {
+  const session = this.sessionService.get(userId);
+
+  if (!session.realUserId) {
+    session.awaitingUserIdentification = true;
+    this.sessionService.set(userId, session);
+    return 'Para modificar tus datos necesito identificarte. Ingresá tu email o DNI.';
+  }
+
+  session.awaitingUpdateField = true;
+  this.sessionService.set(userId, session);
+
+  return (
+    '¿Qué dato querés actualizar?\n' +
+    '1) Nombre\n' +
+    '2) Apellido\n' +
+    '3) Email\n' +
+    '4) Contraseña'
+  );
+}
+
+
+
+
+  private async handleUpdateFieldSelection(userId: string, message: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+
+    const option = parseInt(message, 10);
+
+    const fieldMap = {
+      1: 'first_name',
+      2: 'last_name',
+      3: 'email',
+      4: 'password',
+    } as const;
+
+    const selectedField = fieldMap[option];
+
+    if (!selectedField) {
+      return 'Elegí una opción válida (1 a 4).';
+    }
+
+    session.pendingUpdateField = selectedField;
+    session.awaitingUpdateField = false;
+    session.awaitingUpdateValue = true;
+
     this.sessionService.set(userId, session);
 
-    return 'Perfecto. ¿Para qué mes querés el turno? (1 a 12)';
+    return selectedField === 'password'
+      ? 'Ingresá la nueva contraseña.'
+      : `Ingresá el nuevo ${selectedField.replace('_', ' ')}.`;
   }
 
-  if (['no', 'n', 'cancelar'].includes(normalized)) {
-    this.sessionService.clear(userId);
-    return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
+
+
+  private async handleUpdateValue(userId: string, message: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const field = session.pendingUpdateField;
+
+    if (!field) {
+      this.sessionService.clear(userId);
+      return 'Ocurrió un error. Volvamos a empezar.';
+    }
+
+    let value = message;
+
+    if (field === 'email' && !message.includes('@')) {
+      return 'Ese email no parece válido. Ingresalo nuevamente.';
+    }
+
+    if (field === 'password') {
+      if (!isStrongPassword(message)) {
+        return 'La contraseña no cumple los requisitos de seguridad.';
+      }
+      value = await bcrypt.hash(message, 10);
+    }
+
+    if (!session.realUserId) {
+      this.sessionService.clear(userId);
+      return 'No pude identificar tu usuario. Volvamos a empezar.';
+    }
+
+    console.log('use', {
+      realUserId: session.realUserId,
+      field,
+      value,
+    });
+
+    await this.userService.update(session.realUserId!, {
+      [field]: value,
+    });
+
+    delete session.awaitingUpdateValue;
+    delete session.pendingUpdateField;
+
+    this.sessionService.set(userId, session);
+
+    return 'Dato actualizado correctamente. ¿Querés modificar algo más?';
   }
 
-  return 'Respondé con "sí" o "no", por favor.';
+
+
+  private async handleIdentifyUser(userId: string, message: string): Promise<string> {
+  const session = this.sessionService.get(userId);
+  const value = message.trim();
+
+  let user;
+
+  if (value.includes('@')) {
+    user = await this.userService.findByEmail(value);
+  } else {
+    user = await this.userService.findByDni(value);
+  }
+
+  if (!user) {
+    return 'No encontré un usuario con esos datos. Intentá nuevamente.';
+  }
+
+  session.realUserId = user.id;
+  session.userAuthenticated = true;
+  session.awaitingUserIdentification = false;
+  session.awaitingUpdateField = true;
+
+  this.sessionService.set(userId, session);
+
+  return (
+    'Perfecto, ya te identifiqué.\n' +
+    '¿Qué dato querés actualizar?\n' +
+    '1) Nombre\n' +
+    '2) Apellido\n' +
+    '3) Email\n' +
+    '4) Contraseña'
+  );
 }
+
 
 }
