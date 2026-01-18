@@ -47,7 +47,9 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
   const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
+  const [availableTimes, setAvailableTimes] = useState<
+    { time: string; occupied: boolean }[]
+  >([]);
   const [doctorAvailableDays, setDoctorAvailableDays] = useState<number[]>([]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,22 +124,23 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       const allSlots = generateTimeSlots(
         schedule.startTime,
         schedule.endTime,
-        schedule.slotDuration
+        schedule.slotDuration,
       );
 
       /* 3️⃣ Horarios ocupados (ENDPOINT NUEVO) */
       const { occupiedTimes } = await getDoctorAvailability(
         selectedDoctor,
         formattedDate,
-        token
+        token,
       );
 
       /* 4️⃣ Filtrado final */
-      const availableSlots = allSlots.filter(
-        (slot) => !occupiedTimes.includes(slot)
-      );
+      const slotsWithStatus = allSlots.map((slot) => ({
+        time: slot,
+        occupied: occupiedTimes.includes(slot),
+      }));
 
-      setAvailableTimes(availableSlots);
+      setAvailableTimes(slotsWithStatus);
     };
 
     loadTimes();
@@ -164,7 +167,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       Swal.fire(
         "Anticipación insuficiente",
         "Debes agendar con al menos 24hs",
-        "warning"
+        "warning",
       );
       return;
     }
@@ -178,7 +181,11 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
     try {
       setIsSubmitting(true);
 
-      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const formattedDate = [
+        selectedDate.getFullYear(),
+        String(selectedDate.getMonth() + 1).padStart(2, "0"),
+        String(selectedDate.getDate()).padStart(2, "0"),
+      ].join("-");
 
       const preReserve = await preReserveAppointment(
         {
@@ -187,10 +194,14 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
           specialtyId: specialities.find((s) => s.name === selectedSpeciality)
             ?.id,
         },
-        token
+        token,
       );
 
-      setAvailableTimes((prev) => prev.filter((t) => t !== time));
+      setAvailableTimes((prev) =>
+        prev.map((slot) =>
+          slot.time === time ? { ...slot, occupied: true } : slot,
+        ),
+      );
       setRefreshAvailability((prev) => prev + 1);
 
       const result = await Swal.fire({
@@ -213,7 +224,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
 
       const { initPoint } = await createPaymentPreference(
         preReserve.appointmentId,
-        token
+        token,
       );
 
       window.location.href = initPoint;
@@ -276,14 +287,31 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
       )}
 
       {selectedDoctor && selectedDate && (
-        <select name="time" className="w-full p-2 border rounded mb-4" required>
-          <option value="">Selecciona hora</option>
-          {availableTimes.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <>
+          <p className="text-sm text-gray-500 mb-2">
+            <span className="text-red-500 line-through">Horario ocupado</span> -
+            <span className="ml-2 text-green-500">Horario disponible</span>
+          </p>
+
+          <select
+            name="time"
+            className="w-full p-2 border rounded mb-4 "
+            required
+          >
+            <option value="">Selecciona hora</option>
+
+            {availableTimes.map(({ time, occupied }) => (
+              <option
+                key={time}
+                value={time}
+                disabled={occupied}
+                className={occupied ? "text-red-500 line-through" : "text-green-500"}
+              >
+                {time} {occupied ? "— Ocupado" : ""}
+              </option>
+            ))}
+          </select>
+        </>
       )}
 
       <div className="flex gap-3">
