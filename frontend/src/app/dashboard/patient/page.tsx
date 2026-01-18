@@ -56,7 +56,7 @@ export default function PatientDashboardHome() {
                 <img
                   src={avatar}
                   alt="Avatar"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-full"
                 />
               ) : (
                 <span className="text-4xl">👤</span>

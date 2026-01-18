@@ -89,6 +89,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         role: payload.role,
         dni: payload.dni ?? undefined,
         appointments: [],
+        
       },
     };
 

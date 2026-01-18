@@ -6,7 +6,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, ILike, In, Raw, Repository } from 'typeorm';
 
-
 import { Appointment } from './entities/appointment.entity';
 import { AppointmentStatus } from './enums/appointment-status.enum';
 import { AppointmentResponseDto } from './dto/appointment-response.dto';
@@ -22,6 +21,9 @@ import { AppointmentTimeHelper } from './utils/appointment-time.helper';
 import { AppointmentsRepository } from './appointments.repository';
 import { PreReserveAppointmentResponseDto } from './dto/pre-reserve-appointment-response.dto';
 import { NotificationService } from '../notification/notification.service';
+import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+
+const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
 
 type PreReservedAppointmentForPayment = {
   id: string;
@@ -91,7 +93,7 @@ export class AppointmentsService {
       dto.dateTime,
     );
 
-    const nowArgentina = AppointmentTimeHelper.nowArgentina();
+    const nowArgentina = AppointmentTimeHelper.now();
 
     AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
@@ -142,8 +144,8 @@ export class AppointmentsService {
       );
     }
 
-    const nowUtc = new Date();
-    const expiresAt = new Date(nowUtc.getTime() + 10 * 60 * 1000); // +10 min
+    const now = AppointmentTimeHelper.now();
+    const expiresAt = AppointmentTimeHelper.addMinutes(now, 10);
 
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,
@@ -208,7 +210,7 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const nowArgentina = AppointmentTimeHelper.nowArgentina();
+    const nowArgentina = AppointmentTimeHelper.now();
 
     AppointmentRules.validateCancellableStatus(appointment.status);
     AppointmentRules.validateCancellationWindow(
@@ -425,28 +427,28 @@ export class AppointmentsService {
   }
 
   async getAvailability(doctorId: string, date: string) {
-  const startOfDay = new Date(`${date}T00:00:00`);
-  const endOfDay = new Date(`${date}T23:59:59`);
+    const startOfDay = fromZonedTime(`${date}T00:00:00`, ARG_TIMEZONE);
 
-  const appointments = await this.appointmentRepository.find({
-    where: {
-      doctor: { id: doctorId },
-      status: In([
-        AppointmentStatus.CONFIRMED,
-        AppointmentStatus.PENDING,
-      ]),
-      date: Between(startOfDay, endOfDay),
-    },
-  });
+    const endOfDay = fromZonedTime(`${date}T23:59:59`, ARG_TIMEZONE);
 
-  const occupiedTimes = appointments.map((appointment) => {
+    const appointments = await this.appointmentRepository.find({
+      where: {
+        doctor: { id: doctorId },
+        status: In([AppointmentStatus.CONFIRMED, AppointmentStatus.PENDING]),
+        date: Between(startOfDay, endOfDay),
+      },
+    });
 
-    const hours = appointment.date.getHours().toString().padStart(2, "0");
-    const minutes = appointment.date.getMinutes().toString().padStart(2, "0");
+    const occupiedTimes = appointments.map((appointment) => {
+      const argentinaDate = toZonedTime(appointment.date, ARG_TIMEZONE);
 
-    return `${hours}:${minutes}`;
-  });
+      const hours = argentinaDate.getHours().toString().padStart(2, '0');
 
-  return { occupiedTimes };
-}
+      const minutes = argentinaDate.getMinutes().toString().padStart(2, '0');
+
+      return `${hours}:${minutes}`;
+    });
+
+    return { occupiedTimes };
+  }
 }

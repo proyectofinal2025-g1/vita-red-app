@@ -11,14 +11,18 @@ import { DoctorResponseDto } from './dto/doctor-response.dto';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { Speciality } from '../speciality/entities/speciality.entity';
 import { DoctorFindResponseDto } from './dto/doctor-find-response.dto';
+import { CreateDoctorDto } from './dto/create-doctor.dto';
+import { User } from '../user/entities/user.entity';
+import { DataSource, Repository } from 'typeorm';
+import { CreateUser_DoctorDto } from './dto/createUser-doctor.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { AppointmentsService } from '../appointments/appointments.service';
 
 @Injectable()
 export class DoctorService {
   constructor(
     private readonly doctorRepository: DoctorRepository,
+    private readonly dataSource: DataSource,
     @InjectRepository(Doctor)
     private readonly doctorRepo: Repository<Doctor>,
     private readonly appointmentService: AppointmentsService
@@ -35,11 +39,43 @@ export class DoctorService {
     };
   }
 
-  async create(data: {
-    licence_number: string;
-    user_id: string;
-    speciality_id: string;
-  }) {
+  async createDoctorWithUser(dto: CreateUser_DoctorDto) {
+    return await this.dataSource.transaction(async manager => {
+      const emailExist = await manager.findOne(User, {
+        where: { email: dto.email },
+      });
+      if (emailExist) {
+        throw new BadRequestException('El email ya está en uso');
+      }
+
+      const dniExist = await manager.findOne(User, {
+        where: { dni: dto.dni },
+      });
+      if (dniExist) {
+        throw new BadRequestException('El DNI ya está en uso');
+      }
+      
+      const user = await manager.save(User, {
+        email: dto.email,
+        password: dto.password,
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+        dni: dto.dni,
+        role: RolesEnum.Medic,
+        is_active: false
+      })
+
+      await manager.save(Doctor, {
+        licence_number: dto.licence_number,
+        speciality: { id: dto.speciality_id },
+        user
+      })
+
+      return { message: `El usuario se ha creado correctamente, tiene que esperar a que el administrador le de la alta para poder operar en la página` }
+    })
+  }
+  async create(data: CreateDoctorDto) {
+
     const licenceExist = await this.doctorRepository.findByLicence(
       data.licence_number,
     );

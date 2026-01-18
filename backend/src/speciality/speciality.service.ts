@@ -6,10 +6,14 @@ import {
 } from '@nestjs/common';
 import { SpecialityRepository } from './speciality.repository';
 import { Speciality } from './entities/speciality.entity';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class SpecialityService {
-  constructor(private readonly specialityRepository: SpecialityRepository) {}
+  constructor(
+    private readonly specialityRepository: SpecialityRepository,
+    private dataSource: DataSource
+  ) { }
 
   private toResponseDto(s: Speciality) {
     return {
@@ -35,26 +39,26 @@ export class SpecialityService {
   }
 
   async findById(id: string) {
-  const speciality = await this.specialityRepository.findByIdWithDoctors(id);
+    const speciality = await this.specialityRepository.findByIdWithDoctors(id);
 
-  if (!speciality) {
-    throw new NotFoundException(`Speciality with id ${id} not found`);
+    if (!speciality) {
+      throw new NotFoundException(`Speciality with id ${id} not found`);
+    }
+
+    return {
+      id: speciality.id,
+      name: speciality.name,
+      description: speciality.description,
+      isActive: speciality.isActive,
+      doctors: speciality.doctor.map((doctor) => ({
+        id: doctor.id,
+        first_name: doctor.user.first_name,
+        last_name: doctor.user.last_name,
+        licence_number: doctor.licence_number,
+        profileImageUrl: doctor.user.profileImageUrl,
+      })),
+    };
   }
-
-  return {
-    id: speciality.id,
-    name: speciality.name,
-    description: speciality.description,
-    isActive: speciality.isActive,
-    doctors: speciality.doctor.map((doctor) => ({
-      id: doctor.id,
-      first_name: doctor.user.first_name,
-      last_name: doctor.user.last_name,
-      licence_number: doctor.licence_number,
-      profileImageUrl: doctor.user.profileImageUrl,
-    })),
-  };
-}
 
 
   async findByNameWithDoctors(name: string) {
@@ -129,4 +133,49 @@ export class SpecialityService {
       description: `Especialidad de ${name}`,
     });
   }
+
+
+
+  /* METODO ALTERNO PARA EL CHATBOT */
+  async findByNameWithDoctorsChat(inputName: string) {
+  if (!inputName) return null;
+
+  const speciality = await this.dataSource
+    .getRepository(Speciality)
+    .createQueryBuilder('s')
+    .where('s.isActive = true')
+    .andWhere('s.name = :name', { name: inputName })
+    .leftJoin('s.doctor', 'doctor')
+    .leftJoin('doctor.user', 'user')
+    .addSelect([
+      's.id', // ✅ CLAVE
+      'doctor.id',
+      'doctor.licence_number',
+      'user.first_name',
+      'user.last_name',
+      'user.profileImageUrl',
+    ])
+    .getOne();
+
+  if (!speciality) return null;
+
+  const doctors = (speciality.doctor || [])
+    .filter(d => d.user)
+    .map(d => ({
+      id: d.id,
+      first_name: d.user.first_name,
+      last_name: d.user.last_name,
+      licence_number: d.licence_number,
+      profileImageUrl: d.user.profileImageUrl,
+    }));
+
+  return {
+    id: speciality.id, // ✅ ahora EXISTE también en el tipo
+    name: speciality.name,
+    description: speciality.description,
+    isActive: speciality.isActive,
+    doctors,
+  };
+}
+
 }
