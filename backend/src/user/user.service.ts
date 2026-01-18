@@ -146,4 +146,9 @@ export class UserService {
   }
 }
 
+
+ /* PARA EL CHAT */
+ async findByEmail(email: string){
+  return await this.userRepository.findByEmail(email)
+ }
 }
