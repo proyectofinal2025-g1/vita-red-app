@@ -15,6 +15,7 @@ import { DoctorService } from '../doctor.service';
 import { DoctorScheduleResponseDto } from './dto/doctor-schedule-response.dto';
 import { CreateDoctorScheduleDto } from './dto/create-doctor-schedule.dto';
 import { RolesEnum } from '../../user/enums/roles.enum';
+import { toZonedTime } from 'date-fns-tz';
 
 @Injectable()
 export class DoctorScheduleService {
@@ -112,7 +113,6 @@ export class DoctorScheduleService {
     userId: string,
     userRole: RolesEnum,
   ): Promise<DoctorScheduleResponseDto[]> {
-    // 🔎 Verificar que el doctor exista (para todos)
     const doctor = await this.doctorRepo.findOne({
       where: { id: doctorId, isActive: true },
     });
@@ -121,7 +121,6 @@ export class DoctorScheduleService {
       throw new NotFoundException('Not found doctor.');
     }
 
-    // 👨‍⚕️ Si es médico, solo puede ver su propio schedule
     if (userRole === RolesEnum.Medic) {
       const ownDoctor = await this.doctorRepo.findOne({
         where: {
@@ -138,7 +137,6 @@ export class DoctorScheduleService {
       }
     }
 
-    // 📅 Obtener schedules
     const schedulesList = await this.scheduleRepo.find({
       where: { doctor: { id: doctorId } },
       relations: { doctor: true },
@@ -162,44 +160,45 @@ export class DoctorScheduleService {
   }
 
   async validateScheduleForAppointment(
-    doctorId: string,
-    appointmentDate: Date,
-  ): Promise<void> {
-    const schedules = await this.scheduleRepo.find({
-      where: { doctor: { id: doctorId } },
-    });
+  doctorId: string,
+  appointmentDate: Date,
+): Promise<void> {
+  const schedules = await this.scheduleRepo.find({
+    where: { doctor: { id: doctorId } },
+  });
 
-    if (schedules.length === 0) {
-      throw new BadRequestException('The doctor does not have set hours.');
-    }
-
-    const localeDate = new Date(
-      appointmentDate.toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-      }),
-    );
-
-    const appointmentDay = localeDate.getDay();
-    const appointmentMinutes =
-      localeDate.getHours() * 60 + localeDate.getMinutes();
-
-    const isValid = schedules.some((s) => {
-      if (s.dayOfWeek !== appointmentDay) return false;
-
-      const startMinutes = this.timeToMinutes(s.startTime);
-      const endMinutes = this.timeToMinutes(s.endTime);
-
-      return (
-        appointmentMinutes >= startMinutes && appointmentMinutes < endMinutes
-      );
-    });
-
-    if (!isValid) {
-      throw new BadRequestException(
-        "The appointment is not within the doctor's office hours.",
-      );
-    }
+  if (schedules.length === 0) {
+    throw new BadRequestException('The doctor does not have set hours.');
   }
+
+  const argentinaDate = toZonedTime(
+    appointmentDate,
+    'America/Argentina/Buenos_Aires',
+  );
+
+  const appointmentDay = argentinaDate.getDay();
+  const appointmentMinutes =
+    argentinaDate.getHours() * 60 + argentinaDate.getMinutes();
+
+  const isValid = schedules.some((s) => {
+    if (s.dayOfWeek !== appointmentDay) return false;
+
+    const startMinutes = this.timeToMinutes(s.startTime);
+    const endMinutes = this.timeToMinutes(s.endTime);
+
+    return (
+      appointmentMinutes >= startMinutes &&
+      appointmentMinutes < endMinutes
+    );
+  });
+
+  if (!isValid) {
+    throw new BadRequestException(
+      "The appointment is not within the doctor's office hours.",
+    );
+  }
+}
+
 
   private timeToMinutes(time: string): number {
     const [hours, minutes] = time.split(':').map(Number);

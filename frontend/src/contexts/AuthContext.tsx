@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setDataUser(null);
+    localStorage.removeItem("vita_chat_messages");
   };
 
   const loginWithToken = (token: string) => {
@@ -89,6 +90,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
         role: payload.role,
         dni: payload.dni ?? undefined,
         appointments: [],
+        
       },
     };
 

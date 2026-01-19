@@ -9,5 +9,6 @@ export interface IUserSession {
     role: string;
     dni?: string;
     appointments: [];
+    profileImageUrl?: string;
   };
 }
