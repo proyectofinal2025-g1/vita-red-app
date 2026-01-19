@@ -50,7 +50,7 @@ export const loginUserService = async (userData: ILoginFormValues) => {
 };
 
 export const registerDoctorService = async (userData: IRegisterDoctorValues) => {
-  const response = await fetch(`${apiURL}/auth/register/doctor`, {
+  const response = await fetch(`${apiURL}/doctors/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -60,8 +60,8 @@ export const registerDoctorService = async (userData: IRegisterDoctorValues) => 
       last_name: userData.last_name,
       dni: userData.dni,
       email: userData.email,
-      licence_number: userData.licence_number,
-      specialty: userData.specialty,
+      licence_number: `MP-${userData.licence_number}`,
+      speciality_id: userData.speciality_id,
       password: userData.password,
       confirmPassword: userData.confirmPassword,
     }),
@@ -71,7 +71,7 @@ export const registerDoctorService = async (userData: IRegisterDoctorValues) => 
   console.log('Respuesta del backend:', data);
 
   if (!response.ok) {
-    const errorMsg = data.message || data.error || 'Error en el registro';
+    const errorMsg = data.message || data.error || 'Error en el registro del médico';
     throw new Error(errorMsg);
   }
   return data;
