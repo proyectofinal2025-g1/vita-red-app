@@ -9,7 +9,7 @@ export const initialValuesRegisterDoctor: IRegisterDoctorValues = {
     password: '',
     confirmPassword: '',
     licence_number: '',
-    specialty: ''
+    speciality_id: ''
 }
 
 export const registerDoctorSchema = Yup.object({
@@ -29,7 +29,7 @@ export const registerDoctorSchema = Yup.object({
     .matches(/^\d+$/, 'La matrícula solo debe contener números')
     .required("El número de matrícula es obligatorio")
     .max(4, "La matrícula no puede tener más de 4 caracteres"),
-    specialty: Yup.string()
+    speciality_id: Yup.string()
     .required("La especialidad es obligatoria"),
     email: Yup.string()
     .email('El correo electrónico no es válido')

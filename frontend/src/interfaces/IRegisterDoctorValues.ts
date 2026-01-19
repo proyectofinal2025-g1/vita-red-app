@@ -4,7 +4,7 @@ export interface IRegisterDoctorValues {
     dni: string;
     email: string;
     licence_number: string;
-    specialty: string;
+    speciality_id: string;
     password: string;
     confirmPassword: string;
 }
