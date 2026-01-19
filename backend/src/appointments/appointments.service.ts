@@ -97,7 +97,7 @@ export class AppointmentsService {
 
     AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
-    AppointmentRules.validateWorkingHours(appointmentDate, 8, 18);
+    AppointmentRules.validateWorkingHours(appointmentDate, 8, 21);
     AppointmentRules.validateMinimumAnticipation(
       appointmentDate,
       nowArgentina,
