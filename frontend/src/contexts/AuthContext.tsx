@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   const logout = () => {
     setDataUser(null);
+    localStorage.removeItem("vita_chat_messages");
   };
 
   const loginWithToken = (token: string) => {
