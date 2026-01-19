@@ -15,7 +15,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
     }
   },
@@ -33,9 +33,9 @@
     "doctor": { "licence_number": "MP-1002" },
     "speciality": "Cardiología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -56,7 +56,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -74,9 +74,9 @@
     "doctor": { "licence_number": "MP-2002" },
     "speciality": "Psiquiatría",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -97,7 +97,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -115,9 +115,9 @@
     "doctor": { "licence_number": "MP-3002" },
     "speciality": "Psicología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -138,7 +138,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -156,9 +156,9 @@
     "doctor": { "licence_number": "MP-4002" },
     "speciality": "Clínica Medica",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -179,7 +179,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -197,9 +197,9 @@
     "doctor": { "licence_number": "MP-5002" },
     "speciality": "Pediatría",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -220,7 +220,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -238,9 +238,9 @@
     "doctor": { "licence_number": "MP-6002" },
     "speciality": "Oftalmología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -261,7 +261,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -279,9 +279,9 @@
     "doctor": { "licence_number": "MP-7002" },
     "speciality": "Nutrición",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -302,7 +302,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -320,9 +320,9 @@
     "doctor": { "licence_number": "MP-8002" },
     "speciality": "Urología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -343,7 +343,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -361,9 +361,9 @@
     "doctor": { "licence_number": "MP-9002" },
     "speciality": "Nefrología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -384,7 +384,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -402,9 +402,9 @@
     "doctor": { "licence_number": "MP-10002" },
     "speciality": "Endocrinología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -425,7 +425,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -443,9 +443,9 @@
     "doctor": { "licence_number": "MP-11002" },
     "speciality": "Traumatología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -466,7 +466,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -484,9 +484,9 @@
     "doctor": { "licence_number": "MP-12002" },
     "speciality": "Kinesiología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -507,7 +507,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -525,9 +525,9 @@
     "doctor": { "licence_number": "MP-13002" },
     "speciality": "OdontologÍa",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -548,7 +548,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -566,9 +566,9 @@
     "doctor": { "licence_number": "MP-14002" },
     "speciality": "Otorrinolaringología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -589,7 +589,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -607,9 +607,9 @@
     "doctor": { "licence_number": "MP-15002" },
     "speciality": "Reumatología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -630,7 +630,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -648,9 +648,9 @@
     "doctor": { "licence_number": "MP-16002" },
     "speciality": "Diagnóstico por Imágenes",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -671,7 +671,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -689,9 +689,9 @@
     "doctor": { "licence_number": "MP-17002" },
     "speciality": "Ginecología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -712,7 +712,7 @@
     "schedule": {
     "dayOfWeek": [1, 3, 5],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   },
@@ -730,9 +730,9 @@
     "doctor": { "licence_number": "MP-18002" },
     "speciality": "Gastroenterología",
     "schedule": {
-    "dayOfWeek": [2, 4],
+    "dayOfWeek": [2, 4, 6],
     "startTime": "08:00",
-    "endTime": "14:00",
+    "endTime": "22:00",
     "slotDuration": 30
   }
   }
