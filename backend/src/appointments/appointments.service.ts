@@ -268,7 +268,7 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const nowUtc = new Date();
+    const nowUtc = AppointmentTimeHelper.now();
 
     if (
       appointment.status === AppointmentStatus.PENDING &&
@@ -322,7 +322,7 @@ export class AppointmentsService {
       throw new NotFoundException('El turno no existe o no está pre-reservado');
     }
 
-    const nowUtc = new Date();
+    const nowUtc = AppointmentTimeHelper.now();
     AppointmentRules.validateNotExpired(appointment.expiresAt, nowUtc);
 
     return {
