@@ -3,17 +3,39 @@
 import { useFormik } from 'formik';
 import { initialValuesRegisterDoctor, registerDoctorSchema } from '@/validators/registerDoctorSchema';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getPasswordStrength, getPasswordStrengthLabel } from '@/utils/passwordStrength';
 import { registerDoctorService } from '@/utils/auth.helper';
+import { getSpecialitiesService } from '@/utils/speciality.helper';
 import Swal from 'sweetalert2';
 import Link from 'next/link';
+
+interface Speciality {
+  id: string,
+  name: string,
+}
 
 export default function RegisterDoctorView() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const [specialities, setSpecialities] = useState<Speciality[]>([]);
+  const [loadingSpecialities, setLoadingSpecialities] = useState(true);
+
+  useEffect(() => {
+    const fetchSpecialities = async () => {
+      try {
+        const data = await getSpecialitiesService();
+        setSpecialities(data);
+      } catch (error) {
+        setError('No se pudieron cargar las especialidades');
+      }finally {
+        setLoadingSpecialities(false);
+      }
+    };
+    fetchSpecialities();
+  },[]);
 
   const formik = useFormik({
     initialValues: initialValuesRegisterDoctor,
@@ -27,7 +49,7 @@ export default function RegisterDoctorView() {
 
         Swal.fire({
           title: '¡Registro exitoso!',
-          text: 'Tu cuenta ha sido creada correctamente.',
+          text: 'Tu cuenta ha sido creada correctamente. Deberás esperar la verificación de un administrador antes de poder iniciar sesión.',
           icon: 'success',
           confirmButtonColor: '#3b82f6',
           confirmButtonText: 'Aceptar',
@@ -77,7 +99,7 @@ export default function RegisterDoctorView() {
       <div className='w-full max-w-md'>
         <div className='bg-white rounded-2xl shadow-xl p-8 border border-blue-200'>
           <div className='text-center mb-8'>
-            <h1 className='text-3xl font-bold text-gray-800'>Crear cuenta</h1>
+            <h1 className='text-3xl font-bold text-gray-800'>Crear cuenta🩺</h1>
             <p className='text-gray-600 mt-2'>
               Completa tus datos profesionales
             </p>
@@ -231,44 +253,32 @@ export default function RegisterDoctorView() {
             </div>
 
             <div>
-                <label htmlFor='specialty' className='block text-sm font-medium text-gray-700 mb-1'>
+                <label htmlFor='speciality_id' className='block text-sm font-medium text-gray-700 mb-1'>
                     Especialidad
                 </label>
                 <select
-                id='specialty'
-                name='specialty'
+                id='speciality_id'
+                name='speciality_id'
                 className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white ${
-                formik.touched.specialty && formik.errors.specialty
+                formik.touched.speciality_id && formik.errors.speciality_id
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300'
                 }`}
-                value={formik.values.specialty}
+                value={formik.values.speciality_id}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
+                disabled={loadingSpecialities}
                 >
-                    <option value="">Seleccionar especialidad</option>
-                    <option value="cardiologia">Cardiología</option>
-                    <option value="pasiquiatria">Psiquiatría</option>
-                    <option value="psicologia">Psicología</option>
-                    <option value="clinica medica">Clínica médica</option>
-                    <option value="pediatria">Pediatría</option>
-                    <option value="oftalmologia">Oftalmología</option>
-                    <option value="nutricion">Nutrición</option>
-                    <option value="urologia">Urología</option>
-                    <option value="nefrologia">Nefrología</option>
-                    <option value="endocrinologia">Endocrinología</option>
-                    <option value="traumatologia">Traumatología</option>
-                    <option value="kinesiologia">Kinesiología</option>
-                    <option value="odontologia">Odontología</option>
-                    <option value="otorrinolaringologia">Otorrinolaringología</option>
-                    <option value="reumatologia">Reumatología</option>
-                    <option value="diagnostico por imagenes">Diagnóstico por imágenes</option>
-                    <option value="ginecologia">Ginecología</option>
-                    <option value="gastroenterologia">Gastroenterología</option>
-                </select>
-                {formik.touched.specialty && formik.errors.specialty && (
+                    <option value="">{loadingSpecialities ? 'Cargando...' : 'Seleccionar especialidad'}</option>
+                    {specialities.map((spec) => (
+                      <option key={spec.id} value={spec.id}>
+                        {spec.name}
+                      </option>
+                    ))}
+                    </select>
+                {formik.touched.speciality_id && formik.errors.speciality_id && (
                     <p className='mt-1 text-sm text-red-600'>
-                        {formik.errors.specialty}
+                        {formik.errors.speciality_id}
                     </p>
                 )}
 </div>
