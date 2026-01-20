@@ -9,6 +9,7 @@ import { Appointment } from '../appointments/entities/appointment.entity';
 import { Between } from 'typeorm';
 import { AppointmentStatus } from '../appointments/enums/appointment-status.enum';
 
+
 @Injectable()
 export class SuperAdminRepository {
   constructor(
