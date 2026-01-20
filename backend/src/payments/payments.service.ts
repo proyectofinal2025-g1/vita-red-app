@@ -11,6 +11,7 @@ import { PaymentStatus } from './enums/payment-status.enum';
 import { AppointmentStatus } from '../appointments/enums/appointment-status.enum';
 import { PaymentsRepository } from './payments.repository';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { AppointmentTimeHelper } from '../appointments/utils/appointment-time.helper';
 
 @Injectable()
 export class PaymentsService {
@@ -26,16 +27,20 @@ export class PaymentsService {
       dto.appointmentId,
     );
 
-    const nowMs = Date.now();
-    const expiresAtMs = new Date(appointment.expiresAt).getTime();
+    const nowArgentina = AppointmentTimeHelper.toArgentina(
+      AppointmentTimeHelper.now(),
+    );
 
-    const diffSeconds = (expiresAtMs - nowMs) / 1000;
+    const expiresAtArgentina = AppointmentTimeHelper.toArgentina(
+      new Date(appointment.expiresAt),
+    );
+
+    const diffSeconds = (expiresAtArgentina.getTime() - nowArgentina.getTime()) / 1000;
 
     const BLOCK_SECONDS = Number(
       process.env.PAYMENT_BLOCK_BEFORE_EXPIRATION_SECONDS ?? 60,
     );
 
-    
     if (diffSeconds <= BLOCK_SECONDS) {
       throw new BadRequestException(
         'El turno está por expirar. No se puede iniciar el pago.',
@@ -74,6 +79,7 @@ export class PaymentsService {
 
     return { initPoint: mpPreference.initPoint };
   }
+
 
   async processApprovedPayment(data: {
     appointmentId: string;
