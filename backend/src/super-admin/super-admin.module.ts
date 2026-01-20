@@ -10,7 +10,10 @@ import { Appointment } from '../appointments/entities/appointment.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Doctor, Appointment]),
+    TypeOrmModule.forFeature([
+      User, 
+      Doctor, 
+      Appointment]),
     secretaryModule,
   ],
   controllers: [SuperAdminController],
