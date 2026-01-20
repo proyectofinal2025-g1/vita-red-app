@@ -25,3 +25,48 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
+
+@keyframes bot-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes user-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-bot-in {
+  animation: bot-in 0.25s ease-out;
+}
+
+.animate-user-in {
+  animation: user-in 0.15s ease-out;
+}
+
+@keyframes chat-open {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-chat-open {
+  animation: chat-open 0.25s ease-out;
+}

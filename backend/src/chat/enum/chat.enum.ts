@@ -6,5 +6,7 @@ export enum ChatIntent {
   BOOK_APPOINTMENT = 'book_appointment',
   LIST_USER_APPOINTMENTS = 'list_user_appointments',
   FALLBACK = 'fallback',
-  CONFIRM = 'CONFIRM'
+  CONFIRM = 'confirm',
+  REGISTER = 'register',
+  UPDATE = 'update'
 }

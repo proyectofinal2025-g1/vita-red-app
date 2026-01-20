@@ -1,13 +1,17 @@
 import { BadRequestException } from '@nestjs/common';
 import { AppointmentStatus } from '../enums/appointment-status.enum';
+import { toZonedTime } from 'date-fns-tz';
+
+const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
 
 export class AppointmentRules {
   static validateWorkingDay(date: Date): void {
-    const day = date.getUTCDay();
+    const argentinaDate = toZonedTime(date, ARG_TIMEZONE);
+    const day = argentinaDate.getDay(); 
 
-    if (day === 0 || day === 6) {
+    if (day === 0) {
       throw new BadRequestException(
-        'No se pueden agendar turnos los fines de semana',
+        'No se puede agendar turnos los domingos',
       );
     }
   }
@@ -17,14 +21,9 @@ export class AppointmentRules {
     startHour: number,
     endHour: number,
   ): void {
-    const argentinaTime = new Date(
-      date.toLocaleString('en-US', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-      }),
-    );
-
-    const hour = argentinaTime.getHours();
-    const minutes = argentinaTime.getMinutes();
+    const argentinaDate = toZonedTime(date, ARG_TIMEZONE);
+    const hour = argentinaDate.getHours();
+    const minutes = argentinaDate.getMinutes();
 
     if (hour < startHour) {
       throw new BadRequestException(
@@ -32,7 +31,7 @@ export class AppointmentRules {
       );
     }
 
-    if (hour >= endHour) {
+    if (hour > endHour || (hour === endHour && minutes > 30)) {
       throw new BadRequestException(
         `Los turnos no pueden ser después de las ${endHour}:00`,
       );

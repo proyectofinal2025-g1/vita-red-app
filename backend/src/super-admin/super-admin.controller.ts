@@ -1,6 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, ParseBoolPipe, ParseEnumPipe, UseGuards, ParseUUIDPipe, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Query,
+  ParseBoolPipe,
+  ParseEnumPipe,
+  UseGuards,
+  ParseUUIDPipe,
+  Request,
+} from '@nestjs/common';
 import { SuperAdminService } from './super-admin.service';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { RolesEnum } from '../user/enums/roles.enum';
 import { Roles } from '../decorators/role.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
@@ -16,14 +35,18 @@ import { CreateDoctorDto } from '../doctor/dto/create-doctor.dto';
 import { CreateDoctorScheduleDto } from '../doctor/schedule/dto/create-doctor-schedule.dto';
 import { UpdateDoctorScheduleDtoBySecretary } from '../secretary/dto/scheduleDoctor.dto';
 import { CreateAppointmentPreReserveDto } from '../appointments/dto/create-appointment-pre-reserve.dto';
+import { DashboardKpisResponseDto } from './dto/back-office/dashboard-kpis.response.dto';
+import { MonthlyAppointmentsResponseDto } from './dto/back-office/monthly-appointments.response.dto';
+import { MonthlyRevenueResponseDto } from './dto/back-office/monthly-revenue.response.dto';
+import { AppointmentStatusResponseDto } from './dto/back-office/appointment-status.response.dto';
 
 @ApiBearerAuth()
 @Controller('superadmin')
 export class SuperAdminController {
   constructor(
     private readonly superAdminService: SuperAdminService,
-    private readonly secretaryService: SecretaryService
-  ) { }
+    private readonly secretaryService: SecretaryService,
+  ) {}
 
   @ApiOperation({
     summary: 'Obtener todos los usuarios',
@@ -35,20 +58,23 @@ export class SuperAdminController {
     name: 'role',
     enum: RolesEnum,
     required: false,
-    description: 'Filtrar usuarios por rol'
+    description: 'Filtrar usuarios por rol',
   })
   @ApiQuery({
     name: 'is_active',
     required: false,
     type: Boolean,
-    description: 'Filtrar usuarios por estado de actividad'
+    description: 'Filtrar usuarios por estado de actividad',
   })
   @Get('users')
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
-  async findAll(@Query('role', new ParseEnumPipe(RolesEnum)) role?: RolesEnum, @Query('is_active', ParseBoolPipe) is_active?: boolean) {
+  async findAll(
+    @Query('role', new ParseEnumPipe(RolesEnum)) role?: RolesEnum,
+    @Query('is_active', ParseBoolPipe) is_active?: boolean,
+  ) {
     const users = await this.superAdminService.findAll(role, is_active);
-    return users.map(user => new SuperAdminResponse(user));
+    return users.map((user) => new SuperAdminResponse(user));
   }
 
   @ApiOperation({
@@ -61,7 +87,7 @@ export class SuperAdminController {
     name: 'speciality',
     enum: SpecialityEnum,
     required: false,
-    description: 'Filtrar doctores por especialidad'
+    description: 'Filtrar doctores por especialidad',
   })
   @Get('doctors')
   @Roles(RolesEnum.SuperAdmin)
@@ -69,7 +95,6 @@ export class SuperAdminController {
   async findAllDoctors(@Query('speciality') speciality?: SpecialityEnum) {
     return await this.superAdminService.findAllDoctors(speciality);
   }
-
 
   @ApiOperation({
     summary: 'Obtener estadísticas generales del sistema',
@@ -99,7 +124,7 @@ export class SuperAdminController {
     type: 'string',
     format: 'uuid',
     required: true,
-    description: 'UUID del usuario para actualizar el estado'
+    description: 'UUID del usuario para actualizar el estado',
   })
   @Patch('users/:id/status')
   @Roles(RolesEnum.SuperAdmin)
@@ -117,12 +142,15 @@ export class SuperAdminController {
   @ApiParam({
     name: 'id',
     format: 'uuid',
-    description: 'UUID del usuario'
+    description: 'UUID del usuario',
   })
   @Patch('users/:id/role')
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
-  async updateRole(@Param('id', ParseUUIDPipe) id: string, @Body() role: UpdateUserRoleDto) {
+  async updateRole(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() role: UpdateUserRoleDto,
+  ) {
     return await this.superAdminService.updateRole(id, role.role);
   }
 
@@ -130,7 +158,7 @@ export class SuperAdminController {
   @ApiOperation({
     summary: 'Obtener paciente por ID',
     description:
-      'Devuelve los datos de un paciente buscado por su ID. Endpoint exclusivo para SUPER_ADMIN.'
+      'Devuelve los datos de un paciente buscado por su ID. Endpoint exclusivo para SUPER_ADMIN.',
   })
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
@@ -142,69 +170,68 @@ export class SuperAdminController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Buscar un paciente por DNI',
-    description:
-      'Filtrar la búsqueda de pacientes por dni'
+    description: 'Filtrar la búsqueda de pacientes por dni',
   })
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('patients/dni/:dni')
   async getPatientByDni(@Param('dni') dni: string) {
-    return await this.secretaryService.getPatientByDni(dni)
+    return await this.secretaryService.getPatientByDni(dni);
   }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Crea un paciente nuevo',
-    description:
-      'Crea y guarda en la base de datos un paciente nuevo'
+    description: 'Crea y guarda en la base de datos un paciente nuevo',
   })
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Post('patients')
   async createPatient(@Body() registerDto: CreateUserDto) {
-    return await this.secretaryService.createPatient(registerDto)
+    return await this.secretaryService.createPatient(registerDto);
   }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Actualizar paciente',
-    description:
-      'Actualiza el perfil de un paciente por su ID'
+    description: 'Actualiza el perfil de un paciente por su ID',
   })
-  @Roles(RolesEnum.SuperAdmin,)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Patch('patients/:id')
-  async updatePatient(@Param('id', ParseUUIDPipe) id: string, @Body() updateUserDto: UpdateUserDto) {
+  async updatePatient(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return await this.secretaryService.updatePatient(id, updateUserDto);
   }
 
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Crea un perfil médico nuevo',
-    description:
-      'Crea y guarda en la base de datos un doctor nuevo'
+    description: 'Crea y guarda en la base de datos un doctor nuevo',
   })
-  @Roles(RolesEnum.SuperAdmin,)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Post('doctors')
   async createDoctor(@Body() createDoctor: CreateDoctorDto) {
-    return await this.secretaryService.createDoctor(createDoctor)
+    return await this.secretaryService.createDoctor(createDoctor);
   }
 
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Buscar un médico/a por id.'
+    summary: 'Buscar un médico/a por id.',
   })
   @ApiParam({
     name: 'doctorId',
     type: 'string',
-    required: true
+    required: true,
   })
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('doctors/:doctorId')
   async getDoctorById(@Param('doctorId') doctorId: string) {
-    return await this.secretaryService.getDoctorById(doctorId)
+    return await this.secretaryService.getDoctorById(doctorId);
   }
 
   @ApiBearerAuth()
@@ -233,7 +260,6 @@ export class SuperAdminController {
       req.user.role,
     );
   }
-
 
   @ApiBearerAuth()
   @ApiOperation({
@@ -274,7 +300,7 @@ export class SuperAdminController {
 
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Ver el historial de los turno del paciente.'
+    summary: 'Ver el historial de los turno del paciente.',
   })
   @ApiParam({
     name: 'patientId',
@@ -291,34 +317,38 @@ export class SuperAdminController {
     type: 'string',
     required: false,
   })
-  @Roles(RolesEnum.SuperAdmin,)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('appointments/:patientId/list')
   async findAppointmentsByPatientId(
     @Param('patientId', ParseUUIDPipe) patientId: string,
     @Query('date') date?: string,
-    @Query('speciality') speciality?: string
+    @Query('speciality') speciality?: string,
   ) {
-    return await this.secretaryService.findAppointmentsByPatientId(patientId, date, speciality)
+    return await this.secretaryService.findAppointmentsByPatientId(
+      patientId,
+      date,
+      speciality,
+    );
   }
 
   @ApiBearerAuth()
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @ApiOperation({
-    summary: 'Pre-reservar un turno para los pacientes'
+    summary: 'Pre-reservar un turno para los pacientes',
   })
   @Post('appointments/pre-reserve/:userId')
   async preReserveAppointment(
     @Body() dto: CreateAppointmentPreReserveDto,
-    @Param('userId') userId: string
+    @Param('userId') userId: string,
   ) {
-    return await this.secretaryService.preReserveAppointment(dto, userId)
+    return await this.secretaryService.preReserveAppointment(dto, userId);
   }
 
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Ver agenda del médico/a.'
+    summary: 'Ver agenda del médico/a.',
   })
   @ApiParam({
     name: 'doctorId',
@@ -335,15 +365,115 @@ export class SuperAdminController {
     type: 'string',
     required: false,
   })
-  @Roles(RolesEnum.SuperAdmin,)
+  @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('appointments/doctors/:doctorId')
   async findAgendByDoctor(
     @Param('doctorId', ParseUUIDPipe) doctorId: string,
     @Query('date') date?: string,
-    @Query('patientId', ParseUUIDPipe) patientId?: string
+    @Query('patientId', ParseUUIDPipe) patientId?: string,
   ) {
-    return await this.secretaryService.findAgendByDoctor(doctorId, date, patientId)
+    return await this.secretaryService.findAgendByDoctor(doctorId, date, patientId,);
   }
 
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener KPIs del dashboard del Back Office',
+    description:
+      'Devuelve métricas clave del sistema para el dashboard del SUPER_ADMIN. ' +
+      'Incluye cantidad de turnos, turnos confirmados, cancelados y total de ingresos. ' +
+      'Los ingresos se calculan únicamente a partir de turnos confirmados y pagados.',
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    type: Number,
+    description:
+      'Año para el cual se desean obtener las métricas. Por defecto, año actual.',
+  })
+  @ApiOkResponse({
+    description: 'KPIs del dashboard',
+    type: DashboardKpisResponseDto,
+  })
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('dashboard/kpis')
+  async getDashboardKpis(
+    @Query('year') year?: number,
+  ): Promise<DashboardKpisResponseDto> {
+    const targetYear = year ?? new Date().getUTCFullYear();
+    return await this.superAdminService.getDashboardKpis(targetYear);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener cantidad de turnos por mes',
+    description:
+      'Devuelve la cantidad de turnos agrupados por mes para el año indicado.',
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    type: Number,
+  })
+  @ApiOkResponse({
+    type: [MonthlyAppointmentsResponseDto],
+  })
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('dashboard/appointments/monthly')
+  async getMonthlyAppointments(
+    @Query('year') year?: number,
+  ): Promise<MonthlyAppointmentsResponseDto[]> {
+    const targetYear = year ?? new Date().getUTCFullYear();
+    return this.superAdminService.getMonthlyAppointments(targetYear);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener ingresos por mes',
+    description:
+      'Devuelve los ingresos mensuales basados únicamente en turnos confirmados y pagados.',
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    type: Number,
+  })
+  @ApiOkResponse({
+    type: [MonthlyRevenueResponseDto],
+  })
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('dashboard/revenue/monthly')
+  async getMonthlyRevenue(
+    @Query('year') year?: number,
+  ): Promise<MonthlyRevenueResponseDto[]> {
+    const targetYear = year ?? new Date().getUTCFullYear();
+    return this.superAdminService.getMonthlyRevenue(targetYear);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Obtener cantidad de turnos por estado',
+    description:
+      'Devuelve la cantidad de turnos agrupados por estado para el año indicado.',
+  })
+  @ApiQuery({
+    name: 'year',
+    required: false,
+    type: Number,
+  })
+  @ApiOkResponse({
+    type: [AppointmentStatusResponseDto],
+  })
+  @Roles(RolesEnum.SuperAdmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Get('dashboard/appointments/status')
+  async getAppointmentsByStatus(
+    @Query('year') year?: number,
+  ): Promise<AppointmentStatusResponseDto[]> {
+    const targetYear = year ?? new Date().getUTCFullYear();
+    return this.superAdminService.getAppointmentsByStatus(targetYear);
+  }
 }
