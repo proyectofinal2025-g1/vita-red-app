@@ -5,9 +5,9 @@ export class AppointmentRules {
   static validateWorkingDay(date: Date): void {
     const day = date.getDay(); // local
 
-    if (day === 0 || day === 6) {
+    if (day === 0) {
       throw new BadRequestException(
-        'No se pueden agendar turnos los fines de semana',
+        'No se puede agendar turnos los domingos',
       );
     }
   }
@@ -26,7 +26,7 @@ export class AppointmentRules {
       );
     }
 
-    if (hour >= endHour) {
+    if (hour > endHour || (hour === endHour && minutes !== 30)) {
       throw new BadRequestException(
         `Los turnos no pueden ser después de las ${endHour}:00`,
       );
