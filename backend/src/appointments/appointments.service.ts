@@ -52,7 +52,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) { }
+  ) {}
 
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
@@ -96,7 +96,6 @@ export class AppointmentsService {
     const nowArgentina = AppointmentTimeHelper.toArgentina(
       AppointmentTimeHelper.now(),
     );
-
 
     AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
@@ -147,9 +146,7 @@ export class AppointmentsService {
       );
     }
 
-    const now = AppointmentTimeHelper.toArgentina(
-      AppointmentTimeHelper.now(),
-    );
+    const now = AppointmentTimeHelper.now();
 
     const expiresAt = AppointmentTimeHelper.addMinutes(now, 10);
 
@@ -192,9 +189,9 @@ export class AppointmentsService {
       },
       speciality: appointment.speciality
         ? {
-          id: appointment.speciality.id,
-          name: appointment.speciality.name,
-        }
+            id: appointment.speciality.id,
+            name: appointment.speciality.name,
+          }
         : undefined,
     };
   }
@@ -216,7 +213,9 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const nowArgentina = AppointmentTimeHelper.now();
+    const nowArgentina = AppointmentTimeHelper.toArgentina(
+      AppointmentTimeHelper.now(),
+    );
 
     AppointmentRules.validateCancellableStatus(appointment.status);
     AppointmentRules.validateCancellationWindow(
@@ -268,7 +267,7 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const nowUtc = AppointmentTimeHelper.toArgentina(AppointmentTimeHelper.now())
+    const nowUtc = new Date();
 
     if (
       appointment.status === AppointmentStatus.PENDING &&
@@ -322,7 +321,7 @@ export class AppointmentsService {
       throw new NotFoundException('El turno no existe o no está pre-reservado');
     }
 
-    const nowUtc = AppointmentTimeHelper.toArgentina(AppointmentTimeHelper.now());
+    const nowUtc = new Date();
     AppointmentRules.validateNotExpired(appointment.expiresAt, nowUtc);
 
     return {
