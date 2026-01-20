@@ -131,9 +131,6 @@ export class SuperAdminService {
         endOfYear,
       );
 
-    // 🧠 REGLA DE NEGOCIO FINAL
-    // Ingresos = turnos CONFIRMADOS + PAGADOS
-    // (el repository NO decide esto)
     const totalRevenue = totalRevenueRaw;
 
     return {
