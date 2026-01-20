@@ -11,5 +11,5 @@ export class MonthlyAppointmentsResponseDto {
     example: 32,
     description: 'Total de citas para el mes determinado',
   })
-  totalAppointments: number;
+  totalAppointments: number; 
 }

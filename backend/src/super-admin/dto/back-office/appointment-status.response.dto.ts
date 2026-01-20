@@ -11,5 +11,5 @@ export class AppointmentStatusResponseDto {
     example: 120,
     description: 'Totalde turnos con sus estados',
   })
-  total: number;
+  total: number; 
 }

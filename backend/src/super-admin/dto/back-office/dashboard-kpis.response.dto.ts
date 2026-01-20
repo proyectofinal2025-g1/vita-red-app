@@ -29,5 +29,5 @@ export class DashboardKpisResponseDto {
     example: 125000,
     description: 'Ingresos totales generados por citas confirmadas (pagadas)',
   })
-  totalRevenue: number;
+  totalRevenue: number; 
 }

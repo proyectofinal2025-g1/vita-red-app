@@ -12,5 +12,5 @@ export class MonthlyRevenueResponseDto {
     description:
       'Ingresos totales generados por citas confirmadas (pagadas) en el mes determinado',
   })
-  revenue: number;
+  revenue: number; 
 }
