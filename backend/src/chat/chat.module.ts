@@ -11,13 +11,15 @@ import { ChatSessionService } from './chatIA/chatIA-memory.service';
 import { ChatIAService } from './chatIA/chatIA.service';
 import { User } from '../user/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleModule } from '../doctor/schedule/schedule.module';
 
 @Module({
   imports: [
      TypeOrmModule.forFeature([User]),
      ChatIAModule,
      UserModule,
-     DoctorModule, 
+     DoctorModule,
+     ScheduleModule,
      AppointmentsModule, 
      SpecialityModule,
      PaymentsModule
