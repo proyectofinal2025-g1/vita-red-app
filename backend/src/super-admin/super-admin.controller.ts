@@ -373,11 +373,7 @@ export class SuperAdminController {
     @Query('date') date?: string,
     @Query('patientId', ParseUUIDPipe) patientId?: string,
   ) {
-    return await this.secretaryService.findAgendByDoctor(
-      doctorId,
-      date,
-      patientId,
-    );
+    return await this.secretaryService.findAgendByDoctor(doctorId, date, patientId,);
   }
 
   @ApiBearerAuth()
