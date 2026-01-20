@@ -52,7 +52,7 @@ export class AppointmentsService {
 
     @InjectRepository(Speciality)
     private readonly specialityRepository: Repository<Speciality>,
-  ) {}
+  ) { }
 
   async preReserveAppointment(
     dto: CreateAppointmentPreReserveDto,
@@ -93,7 +93,10 @@ export class AppointmentsService {
       dto.dateTime,
     );
 
-    const nowArgentina = AppointmentTimeHelper.now();
+    const nowArgentina = AppointmentTimeHelper.toArgentina(
+      AppointmentTimeHelper.now(),
+    );
+
 
     AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
@@ -144,7 +147,10 @@ export class AppointmentsService {
       );
     }
 
-    const now = AppointmentTimeHelper.now();
+    const now = AppointmentTimeHelper.toArgentina(
+      AppointmentTimeHelper.now(),
+    );
+
     const expiresAt = AppointmentTimeHelper.addMinutes(now, 10);
 
     const appointment = this.appointmentRepository.create({
@@ -186,9 +192,9 @@ export class AppointmentsService {
       },
       speciality: appointment.speciality
         ? {
-            id: appointment.speciality.id,
-            name: appointment.speciality.name,
-          }
+          id: appointment.speciality.id,
+          name: appointment.speciality.name,
+        }
         : undefined,
     };
   }
