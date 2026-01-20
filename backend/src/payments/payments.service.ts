@@ -28,11 +28,11 @@ export class PaymentsService {
     );
 
     const nowArgentina = AppointmentTimeHelper.toArgentina(
-      AppointmentTimeHelper.now()
+      AppointmentTimeHelper.now(),
     );
 
     const expiresAtArgentina = AppointmentTimeHelper.toArgentina(
-      appointment.expiresAt
+      new Date(appointment.expiresAt),
     );
 
     const diffSeconds = (expiresAtArgentina.getTime() - nowArgentina.getTime()) / 1000;
@@ -79,6 +79,7 @@ export class PaymentsService {
 
     return { initPoint: mpPreference.initPoint };
   }
+
 
   async processApprovedPayment(data: {
     appointmentId: string;
