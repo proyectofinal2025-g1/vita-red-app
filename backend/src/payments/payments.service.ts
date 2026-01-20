@@ -73,6 +73,7 @@ export class PaymentsService {
     return { initPoint: mpPreference.initPoint };
   }
 
+
   async processApprovedPayment(data: {
     appointmentId: string;
     externalPaymentId: string;
