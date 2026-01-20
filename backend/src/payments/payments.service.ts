@@ -20,26 +20,19 @@ export class PaymentsService {
     private readonly appointmentsRepository: AppointmentsRepository,
     private readonly mercadoPagoService: MercadoPagoService,
     private readonly paymentsRepository: PaymentsRepository,
-  ) { }
+  ) {}
 
   async createPreference(dto: CreatePaymentDto): Promise<ResponsePaymentDto> {
     const appointment = await this.appointmentsService.findPreReservedById(
       dto.appointmentId,
     );
 
-    const nowArgentina = AppointmentTimeHelper.toArgentina(
-      AppointmentTimeHelper.now(),
-    );
+    const nowUtc = new Date();
+    const expiresAtUtc = new Date(appointment.expiresAt);
 
-    const expiresAtArgentina = AppointmentTimeHelper.toArgentina(
-      new Date(appointment.expiresAt),
-    );
+    const diffSeconds = (expiresAtUtc.getTime() - nowUtc.getTime()) / 1000;
 
-    const diffSeconds = (expiresAtArgentina.getTime() - nowArgentina.getTime()) / 1000;
-
-    const BLOCK_SECONDS = Number(
-      process.env.PAYMENT_BLOCK_BEFORE_EXPIRATION_SECONDS ?? 60,
-    );
+    const BLOCK_SECONDS = 60;
 
     if (diffSeconds <= BLOCK_SECONDS) {
       throw new BadRequestException(
@@ -112,7 +105,10 @@ export class PaymentsService {
       id: data.appointmentId,
     });
 
-    await this.appointmentsService.confirmPayment(data.appointmentId, data.externalPaymentId)
+    await this.appointmentsService.confirmPayment(
+      data.appointmentId,
+      data.externalPaymentId,
+    );
 
     const payment = this.paymentsRepository.create({
       appointment,

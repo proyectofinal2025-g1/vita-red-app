@@ -6,9 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/entities/user.entity';
 import { Doctor } from '../doctor/entities/doctor.entity';
 import { secretaryModule } from '../secretary/secretary.module';
+import { Appointment } from '../appointments/entities/appointment.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Doctor]), secretaryModule],
+  imports: [
+    TypeOrmModule.forFeature([
+      User, 
+      Doctor, 
+      Appointment]),
+    secretaryModule,
+  ],
   controllers: [SuperAdminController],
   providers: [SuperAdminService, SuperAdminRepository],
 })
