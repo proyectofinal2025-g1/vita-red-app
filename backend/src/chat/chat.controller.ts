@@ -11,23 +11,20 @@ export class ChatController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Enviar mensaje al chatbot' })
   @Post('message')
-@UseGuards(OptionalAuthGuard)
-async chatMessage(@Req() req: any, @Body() body: ChatMessageDto) {
-  
-console.log('AUTH HEADER', req.headers.authorization);
-console.log('REQ.USER', req.user);
+  @UseGuards(OptionalAuthGuard)
+  async chatMessage(@Req() req: any, @Body() body: ChatMessageDto) {
 
 
-  const chatUserId = req.user?.id ?? `anon-${req.ip}`;
+    const chatUserId = req.user?.id ?? `anon-${req.ip}`;
 
-  const reply = await this.chatService.chatMessage(
-    chatUserId,
-    body.message,
-    req.user ? { id: req.user.id } : undefined
-  );
+    const reply = await this.chatService.chatMessage(
+      chatUserId,
+      body.message,
+      req.user ? { id: req.user.id } : undefined
+    );
 
-  return { reply };
-}
+    return { reply };
+  }
 
 
 }

@@ -28,6 +28,7 @@ export interface ChatSession {
   awaitingMonth?: boolean;
   selectedMonth?: number;
 
+  availableDays?: number[];
   awaitingDay?: boolean;
   selectedDay?: number;
 
