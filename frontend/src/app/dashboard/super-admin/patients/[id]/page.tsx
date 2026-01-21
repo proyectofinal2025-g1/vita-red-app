@@ -7,7 +7,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { registerLocale } from 'react-datepicker';
+import {es} from 'date-fns/locale/es';
 
+registerLocale('es', es);
 const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
 interface Patient {
@@ -267,7 +270,7 @@ export default function PatientDetailPage() {
 
         // Convertir fecha a formato YYYY-MM-DD
         const formattedDate = preReserveData.date!.toISOString().split('T')[0];
-        const dayOfWeek = preReserveData.date!.getDay() + 1; // getDay() devuelve 0-6, pero necesitamos 1-7
+        const dayOfWeek = preReserveData.date!.getDay() ; // getDay() devuelve 0-6, pero necesitamos 1-7
 
         // Obtener el horario del médico para ese día
         const schedule = doctorSchedules.find((s) => s.dayOfWeek === dayOfWeek);
@@ -344,7 +347,7 @@ export default function PatientDetailPage() {
 
   // Función para filtrar días disponibles
   const isDoctorAvailableDay = (date: Date) => {
-    const dayOfWeek = date.getDay() + 1; // getDay() devuelve 0-6, pero nuestros días son 1-7
+    const dayOfWeek = date.getDay(); // getDay() devuelve 0-6, pero nuestros días son 1-7
     return doctorAvailableDays.includes(dayOfWeek);
   };
 
