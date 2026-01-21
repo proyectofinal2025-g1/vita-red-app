@@ -1,0 +1,19 @@
+const STATUS_STYLES = {
+  confirmed: "bg-green-100 text-green-700",
+  pending: "bg-yellow-100 text-yellow-700",
+  cancelled: "bg-red-100 text-red-700",
+}
+
+export default function StatusBadge({
+  status,
+}: {
+  status: keyof typeof STATUS_STYLES
+}) {
+  return (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[status]}`}
+    >
+      {status}
+    </span>
+  )
+}
