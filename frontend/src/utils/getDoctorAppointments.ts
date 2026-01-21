@@ -1,9 +1,10 @@
-import { cookies } from "next/headers"
+import { cookies } from "next/headers";
 
 export async function getDoctorAppointments() {
-  const token = cookies().get("token")?.value
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
 
-  if (!token) return []
+  if (!token) return [];
 
   const res = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`,
@@ -12,10 +13,10 @@ export async function getDoctorAppointments() {
         Authorization: `Bearer ${token}`,
       },
       cache: "no-store",
-    }
-  )
+    },
+  );
 
-  if (!res.ok) return []
+  if (!res.ok) return [];
 
-  return res.json()
+  return res.json();
 }
