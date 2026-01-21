@@ -50,6 +50,8 @@ export class ChatIAService {
     }
   }
 
+  
+
   private systemPrompt(): string {
     return `
 You are a medical administrative chatbot.

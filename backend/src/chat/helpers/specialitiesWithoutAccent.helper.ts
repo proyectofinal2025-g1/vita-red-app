@@ -39,6 +39,7 @@ export function isGeneral(symptoms: string[]): boolean {
   const normalized = normalizeText(symptoms.join(' '));
 
   const keywords = [
+    'solo control',
     'control',
     'chequeo',
     'chequeo general',
@@ -61,3 +62,6 @@ export function isStrongPassword(password: string): boolean {
 
   return strongPasswordRegex.test(password);
 }
+
+
+
