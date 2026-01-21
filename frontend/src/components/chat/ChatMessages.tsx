@@ -69,7 +69,7 @@ export default function ChatMessages({
       {sending && (
         <div className="flex items-center gap-2 text-xs text-gray-800 animate-pulse">
           <img
-            src="/robotPNG.png"
+            src="/RobotPNG.png"
             alt="VitaBot"
             className="w-6 h-6 object-contain text-black"
           />

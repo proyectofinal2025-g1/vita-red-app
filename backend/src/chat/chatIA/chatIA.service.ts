@@ -17,7 +17,7 @@ export class ChatIAService {
   async detectIntent(message: string): Promise<ChatResponse> {
      const normalized = normalizeText(message);
 
-  if (['si', 'sí', 'dale', 'ok', 'okey', 'claro', 'confirmar', 'por su pollo'].includes(normalized)) {
+  if (['si', 'sí', 'dale', 'ok', 'okey', 'claro', 'confirmar', 'de una', 'de 1'].includes(normalized)) {
     return { intent: ChatIntent.CONFIRM };
   }
 

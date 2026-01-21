@@ -93,11 +93,13 @@ export class AppointmentsService {
       dto.dateTime,
     );
 
-    const nowArgentina = AppointmentTimeHelper.now();
+    const nowArgentina = AppointmentTimeHelper.toArgentina(
+      AppointmentTimeHelper.now(),
+    );
 
     AppointmentRules.validateNotInPast(appointmentDate, nowArgentina);
     AppointmentRules.validateWorkingDay(appointmentDate);
-    AppointmentRules.validateWorkingHours(appointmentDate, 8, 18);
+    AppointmentRules.validateWorkingHours(appointmentDate, 8, 21);
     AppointmentRules.validateMinimumAnticipation(
       appointmentDate,
       nowArgentina,
@@ -145,6 +147,7 @@ export class AppointmentsService {
     }
 
     const now = AppointmentTimeHelper.now();
+
     const expiresAt = AppointmentTimeHelper.addMinutes(now, 10);
 
     const appointment = this.appointmentRepository.create({
@@ -210,7 +213,9 @@ export class AppointmentsService {
       throw new NotFoundException('Turno no encontrado');
     }
 
-    const nowArgentina = AppointmentTimeHelper.now();
+    const nowArgentina = AppointmentTimeHelper.toArgentina(
+      AppointmentTimeHelper.now(),
+    );
 
     AppointmentRules.validateCancellableStatus(appointment.status);
     AppointmentRules.validateCancellationWindow(

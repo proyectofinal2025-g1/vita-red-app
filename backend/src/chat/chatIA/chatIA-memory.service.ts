@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ChatIntent } from '../enum/chat.enum';
+import { RolesEnum } from '../../user/enums/roles.enum';
 
 
 export interface DoctorOption {
@@ -9,6 +10,7 @@ export interface DoctorOption {
 }
 
 export interface ChatSession {
+  userId?: string;
   lastIntent?: ChatIntent;
 
   symptoms?: string[];
@@ -63,6 +65,7 @@ export interface ChatSession {
   pendingUpdateField?: 'first_name' | 'last_name' | 'email' | 'password';
   pendingUpdateValue?: string;
   awaitingUserIdentification?: boolean
+  userRole: RolesEnum;
 }
 
 
@@ -73,8 +76,18 @@ export class ChatSessionService {
   private sessions = new Map<string, ChatSession>();
 
   get(userId: string): ChatSession {
-    return this.sessions.get(userId) || {};
-  }
+  return this.sessions.get(userId) || {
+    userId,
+    doctorId: undefined,
+    selectedDay: undefined,
+    selectedMonth: undefined,
+    availableHours: [],
+    awaitingDay: false,
+    awaitingHourSelection: false,
+    userRole: RolesEnum.User
+  };
+}
+
 
   set(userId: string, session: ChatSession) {
     this.sessions.set(userId, session);
