@@ -7,15 +7,27 @@ import { OptionalAuthGuard } from '../auth/guards/optionalAuth.guard';
 @Controller('chat')
 export class ChatController {
   constructor(private readonly chatService: ChatService) { }
+
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Enviar mensaje al chatbot' })
-  @UseGuards(OptionalAuthGuard)
   @Post('message')
-  @UseGuards(OptionalAuthGuard)
-  async chatMessage(@Req() req: any, @Body() body: ChatMessageDto) {
-    const userId = req.user?.id ?? `anon-${req.ip}`;
+@UseGuards(OptionalAuthGuard)
+async chatMessage(@Req() req: any, @Body() body: ChatMessageDto) {
+  
+console.log('AUTH HEADER', req.headers.authorization);
+console.log('REQ.USER', req.user);
 
-    const reply = await this.chatService.chatMessage(userId, body.message);
-    return { reply };
-  }
+
+  const chatUserId = req.user?.id ?? `anon-${req.ip}`;
+
+  const reply = await this.chatService.chatMessage(
+    chatUserId,
+    body.message,
+    req.user ? { id: req.user.id } : undefined
+  );
+
+  return { reply };
+}
+
+
 }
