@@ -20,6 +20,7 @@ import { DoctorScheduleService } from "../doctor/schedule/schedule.service";
 import { UpdateDoctorScheduleDtoBySecretary } from "./dto/scheduleDoctor.dto";
 import { CreateDoctorScheduleDto } from "../doctor/schedule/dto/create-doctor-schedule.dto";
 import { mapDayToNumber } from "../doctor/schedule/helper/mapDayOfWeek.helper";
+import { CreateUser_DoctorDto } from "../doctor/dto/createUser-doctor.dto";
 
 
 @Injectable()
@@ -112,8 +113,8 @@ export class SecretaryService {
 
   /*  DOCTOR   */
 
-  async createDoctor(createDoctor: CreateDoctorDto): Promise<DoctorResponseDto> {
-    return await this.doctorService.create(createDoctor)
+  async createDoctor(createDoctor: CreateUser_DoctorDto) {
+    return await this.doctorService.createDoctorWithUser(createDoctor)
   }
 
   async getDoctors(name?: string): Promise<DoctorFindResponseDto[]> {
@@ -250,30 +251,12 @@ export class SecretaryService {
 
   async findAgendByDoctor(
     doctorId: string,
-    date?: string,
-    patientId?: string
   ): Promise<DoctorAppointmentListResponseDto[]> {
-    await this.doctorService.findyById(doctorId)
-
-    const appointments = await this.appointmentsService.findByFiltersDoctor({
-      doctorId,
-      date,
-      patientId
-    });
-
-    if (!appointments.length) {
-      if (date) {
-        throw new NotFoundException(
-          `No appointments were found on ${date}.`,
-        );
-      }
-
-
-      throw new NotFoundException(
-        'No appointments were found for this doctor.',
-      );
+    const doctorFound = await this.doctorService.findyById(doctorId)
+    if (!doctorFound) {
+      throw new NotFoundException('Doctor not found');
     }
-
+    const appointments = await this.appointmentsService.findAppointmentsByMedic(doctorId)
     return appointments.map((appointment) => ({
       id: appointment.id,
       date: appointment.date.toISOString().substring(0, 10),
