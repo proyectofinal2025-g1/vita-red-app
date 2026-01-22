@@ -39,6 +39,7 @@ import { DashboardKpisResponseDto } from './dto/back-office/dashboard-kpis.respo
 import { MonthlyAppointmentsResponseDto } from './dto/back-office/monthly-appointments.response.dto';
 import { MonthlyRevenueResponseDto } from './dto/back-office/monthly-revenue.response.dto';
 import { AppointmentStatusResponseDto } from './dto/back-office/appointment-status.response.dto';
+import { CreateUser_DoctorDto } from '../doctor/dto/createUser-doctor.dto';
 
 @ApiBearerAuth()
 @Controller('superadmin')
@@ -214,7 +215,7 @@ export class SuperAdminController {
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Post('doctors')
-  async createDoctor(@Body() createDoctor: CreateDoctorDto) {
+  async createDoctor(@Body() createDoctor: CreateUser_DoctorDto) {
     return await this.secretaryService.createDoctor(createDoctor);
   }
 
@@ -355,25 +356,13 @@ export class SuperAdminController {
     type: 'string',
     required: true,
   })
-  @ApiQuery({
-    name: 'date',
-    type: 'string',
-    required: false,
-  })
-  @ApiQuery({
-    name: 'patientId',
-    type: 'string',
-    required: false,
-  })
   @Roles(RolesEnum.SuperAdmin)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('appointments/doctors/:doctorId')
   async findAgendByDoctor(
     @Param('doctorId', ParseUUIDPipe) doctorId: string,
-    @Query('date') date?: string,
-    @Query('patientId', ParseUUIDPipe) patientId?: string,
   ) {
-    return await this.secretaryService.findAgendByDoctor(doctorId, date, patientId,);
+    return await this.secretaryService.findAgendByDoctor(doctorId);
   }
 
   @ApiBearerAuth()
