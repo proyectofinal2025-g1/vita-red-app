@@ -44,7 +44,7 @@ export default function SuperAdminDashboardHome() {
   };
 
   return (
-    <div className='min-h-[70vh] bg-gray-50 flex flex-col items-center justify-start px-4 py-8'>
+    <div className='min-h-[70vh] bg-white flex flex-col items-center justify-start px-4 py-8'>
       <div className='w-full max-w-md bg-white rounded-3xl shadow-xl p-6 space-y-6 border border-gray-100'>
         {/* Avatar y bienvenida */}
         <div className='text-center space-y-2'>
