@@ -32,8 +32,8 @@ interface Appointment {
   status: string;
   patient?: {
     id: string;
-    first_name: string;
-    last_name: string;
+    fullName: string;
+
     email: string;
   };
   doctor: {
@@ -138,6 +138,7 @@ export default function DoctorProfilePage() {
         );
         if (appointmentsRes.ok) {
           const appointmentsData: Appointment[] = await appointmentsRes.json();
+          console.log("ADMIN APPOINTMENTS RESPONSE:", appointmentsData);
           setAppointments(appointmentsData);
         }
       } catch (err) {
@@ -327,6 +328,30 @@ export default function DoctorProfilePage() {
     }
 
     setSchedules((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCancelAppointment = async (appointmentId: string) => {
+    try {
+      const userSession = localStorage.getItem("userSession");
+      if (!userSession) throw new Error("Sesión no encontrada");
+      const token = JSON.parse(userSession).token;
+
+      await fetch(`${apiURL}/appointments/${appointmentId}/cancel`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      // Actualizar estado en la UI
+      setAppointments((prev) =>
+        prev.map((appt) =>
+          appt.id === appointmentId ? { ...appt, status: "CANCELLED" } : appt,
+        ),
+      );
+    } catch (error) {
+      console.error("Error cancelando turno", error);
+    }
   };
 
   const daysOfWeek = [
@@ -695,41 +720,56 @@ export default function DoctorProfilePage() {
                 {appointments.map((appt) => (
                   <tr key={appt.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap text-gray-900">
-                      {new Date(appt.date).toLocaleDateString()} {appt.time}
+                      {new Date(appt.date).toLocaleString("es-AR", {
+                        timeZone: "America/Argentina/Buenos_Aires",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </td>
+
                     <td className="px-4 py-3 whitespace-nowrap text-gray-600">
-                      {appt.patient?.id ? (
-                        <>
-                          {appt.patient.first_name} {appt.patient.last_name}
-                        </>
+                      {appt.patient ? (
+                        appt.patient.fullName
                       ) : (
                         <span className="italic text-gray-400">
                           Paciente no disponible
                         </span>
                       )}
                     </td>
+
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          appt.status === "scheduled"
-                            ? "bg-blue-100 text-blue-800"
-                            : appt.status === "confirmed"
+                          appt.status === "PENDING"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : appt.status === "CONFIRMED"
                               ? "bg-green-100 text-green-800"
-                              : appt.status === "cancelled"
+                              : appt.status === "CANCELLED"
                                 ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-800"
+                                : appt.status === "COMPLETED"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
                         }`}
                       >
                         {appt.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm">
-                      <Link
-                        href={`/dashboard/super-admin/appointments/${appt.id}`}
-                        className="text-blue-600 hover:underline"
-                      >
-                        Ver Detalle
-                      </Link>
+                    <td className="px-4 py-3 whitespace-nowrap text-sm ">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm ">
+                        {appt.status !== "CANCELLED" ? (
+                          <button
+                            onClick={() => handleCancelAppointment(appt.id)}
+                            className="flex items-center gap-1 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700 text-sm"
+                          >
+                            Cancelar turno
+                          </button>
+                        ) : (
+                          <span className="text-red-300 italic">Cancelado</span>
+                        )}
+                      </td>
                     </td>
                   </tr>
                 ))}

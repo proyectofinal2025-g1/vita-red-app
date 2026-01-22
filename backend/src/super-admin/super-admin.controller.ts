@@ -40,6 +40,8 @@ import { MonthlyAppointmentsResponseDto } from './dto/back-office/monthly-appoin
 import { MonthlyRevenueResponseDto } from './dto/back-office/monthly-revenue.response.dto';
 import { AppointmentStatusResponseDto } from './dto/back-office/appointment-status.response.dto';
 import { CreateUser_DoctorDto } from '../doctor/dto/createUser-doctor.dto';
+import { AppointmentsService } from '../appointments/appointments.service';
+
 
 @ApiBearerAuth()
 @Controller('superadmin')
@@ -47,6 +49,7 @@ export class SuperAdminController {
   constructor(
     private readonly superAdminService: SuperAdminService,
     private readonly secretaryService: SecretaryService,
+    private readonly appointmentsService: AppointmentsService,
   ) {}
 
   @ApiOperation({
@@ -362,7 +365,9 @@ export class SuperAdminController {
   async findAgendByDoctor(
     @Param('doctorId', ParseUUIDPipe) doctorId: string,
   ) {
-    return await this.secretaryService.findAgendByDoctor(doctorId);
+    return await this.appointmentsService.findAppointmentsByDoctorForAdmin(
+    doctorId,
+  );
   }
 
   @ApiBearerAuth()

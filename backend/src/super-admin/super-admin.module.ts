@@ -7,6 +7,7 @@ import { User } from '../user/entities/user.entity';
 import { Doctor } from '../doctor/entities/doctor.entity';
 import { secretaryModule } from '../secretary/secretary.module';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { AppointmentsModule } from '../appointments/appointments.module';
 
 @Module({
   imports: [
@@ -15,8 +16,9 @@ import { Appointment } from '../appointments/entities/appointment.entity';
       Doctor, 
       Appointment]),
     secretaryModule,
+    AppointmentsModule
   ],
   controllers: [SuperAdminController],
-  providers: [SuperAdminService, SuperAdminRepository],
+  providers: [SuperAdminService, SuperAdminRepository, ],
 })
 export class SuperAdminModule {}
