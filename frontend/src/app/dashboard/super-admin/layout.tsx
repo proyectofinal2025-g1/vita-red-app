@@ -1,7 +1,4 @@
-// frontend/src/app/dashboard/super-admin/layout.tsx
-
 import React from 'react';
-import { redirect } from 'next/navigation';
 
 export default function SuperAdminLayout({
   children,
@@ -9,7 +6,7 @@ export default function SuperAdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='flex min-h-screen bg-gray-50'>
+    <div className='flex min-h-screen '>
       <main className='flex-1 p-6'>{children}</main>
     </div>
   );
