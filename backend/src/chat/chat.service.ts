@@ -10,12 +10,21 @@ import { normalizeText } from "./helpers/text.helper";
 import { isGeneral, isStrongPassword, resolveSpecialityName } from "./helpers/specialitiesWithoutAccent.helper";
 import { UserService } from "../user/user.service";
 import * as bcrypt from 'bcrypt';
-import { UserRepository } from "../user/user.repository";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "../user/entities/user.entity";
 import { Repository } from "typeorm";
 import { DoctorScheduleService } from "../doctor/schedule/schedule.service";
 import { months } from "./enum/months.enum";
+
+
+
+const FLOW_BREAKING_INTENTS = [
+  ChatIntent.GREETING,
+  ChatIntent.RECOMMEND_SPECIALITY,
+  ChatIntent.LIST_DOCTORS,
+  ChatIntent.LIST_USER_APPOINTMENTS,
+  ChatIntent.UPDATE,
+];
 
 
 @Injectable()
@@ -33,6 +42,10 @@ export class ChatService {
     private readonly userRepository: Repository<User>
   ) { }
 
+
+
+
+  //////////////////////////////////////////////////////////////////////////////////
   async chatMessage(
     userId: string,
     message: string,
@@ -41,21 +54,42 @@ export class ChatService {
 
     const session = this.sessionService.get(userId);
 
+    const ai = await this.chatIA.detectIntent(message);
 
-  if (authUser && !session.userAuthenticated) {
-    session.realUserId = authUser.id;
-    session.userAuthenticated = true;
+
+
+    if (authUser && !session.userAuthenticated) {
+      session.realUserId = authUser.id;
+      session.userAuthenticated = true;
       this.sessionService.set(userId, session);
     }
 
-    console.log('CHAT MESSAGE', {
-      chatUserId: userId,
-      message,
-      realUserId: session.realUserId,
-      userAuthenticated: session.userAuthenticated,
-    });
 
     const normalized = normalizeText(message);
+
+    if (['cancelar', 'salir', 'volver', 'reiniciar'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return '¿En qué otra cosa puedo ayudarte?';
+    }
+
+
+    const hasActiveFlow =
+      session.awaitingMonth ||
+      session.awaitingDay ||
+      session.awaitingHourSelection ||
+      session.awaitingSlotsConfirmation ||
+      session.awaitingReserveConfirmation ||
+      session.awaitingFinalConfirmation ||
+      session.awaitingRecommendConfirmation ||
+      session.lastDoctorsList?.length;
+
+    if (
+      hasActiveFlow &&
+      FLOW_BREAKING_INTENTS.includes(ai.intent)
+    ) {
+      this.sessionService.clear(userId);
+      return 'Entendido. Cambiamos de tema. ¿En qué te ayudo ahora?';
+    }
 
     const looksLikeNumber = /^\d+$/.test(normalized);
     const looksLikeNewIntent =
@@ -64,6 +98,15 @@ export class ChatService {
       normalized.includes('pediatr') ||
       normalized.includes('clinic') ||
       normalized.includes('cardio');
+
+    const looksLikeFreeText = /[a-zA-Z]/.test(normalized);
+
+    if (session.awaitingDay && looksLikeFreeText) {
+      this.sessionService.clear(userId);
+      return 'Entendido. Dejamos el turno por ahora. ¿En qué te ayudo?';
+    }
+
+
 
     if (session.awaitingRegisterEmail) {
       return this.handleRegisterEmail(userId, message);
@@ -95,11 +138,6 @@ export class ChatService {
       !looksLikeNumber &&
       looksLikeNewIntent
     ) {
-      console.log('⚠️ CLEAR POR NUEVO INTENT', {
-        message,
-        realUserIdAntes: session.realUserId,
-      });
-
       this.sessionService.clear(userId);
     }
 
@@ -107,9 +145,27 @@ export class ChatService {
       return this.handleReserveConfirmation(userId, message);
     }
 
+    if (
+      session.lastDoctorsList &&
+      session.lastDoctorsList.length > 0 &&
+      ['no', 'n', 'cancelar', 'mejor no', 'no quiero', 'arrepenti'].includes(normalized)
+    ) {
+      this.sessionService.clear(userId);
+      return 'Está bien, dejamos el turno por ahora. ¿En qué te ayudo?';
+    }
+
+
     if (session.lastDoctorsList && session.lastDoctorsList.length > 0) {
+      const normalized = normalizeText(message);
+
+      if (['no', 'n', 'cancelar', 'mejor no', 'no quiero', 'arrepenti'].includes(normalized)) {
+        this.sessionService.clear(userId);
+        return 'Está bien, dejamos el turno por ahora. ¿En qué te ayudo?';
+      }
+
       return this.handleDoctorSelection(userId, message);
     }
+
 
     if (session.awaitingSlotsConfirmation) {
       return this.handleSlotsConfirmation(userId, message);
@@ -147,7 +203,6 @@ export class ChatService {
       return this.handleUpdateValue(userId, message);
     }
 
-    const ai = await this.chatIA.detectIntent(message);
     session.lastIntent = ai.intent;
 
     switch (ai.intent) {
@@ -333,8 +388,11 @@ export class ChatService {
   }
 
 
+
+
   private async handleRecommendSpeciality(userId: string, payload?: any): Promise<string> {
     const session = this.sessionService.get(userId);
+
 
     if (session.recommendedSpeciality) {
       session.awaitingRecommendConfirmation = true;
@@ -360,16 +418,28 @@ export class ChatService {
       return 'Perfecto, para un control te recomiendo Clínica Médica. ¿Querés que te muestre los médicos disponibles?';
     }
 
-    const normalized = normalizeText(payload?.suggestedSpeciality ?? '');
-    const resolved = resolveSpecialityName(normalized) ?? 'clinico';
 
-    session.recommendedSpeciality = resolved;
+
+    const suggested = normalizeText(payload?.suggestedSpeciality ?? '');
+    const validSpeciality = await this.getValidSpecialityOrClinico(suggested);
+
+
+    session.recommendedSpeciality = validSpeciality;
     session.awaitingRecommendConfirmation = true;
 
     this.sessionService.set(userId, session);
+    if (validSpeciality === 'clinico') {
+      return (
+        'Para estos síntomas, lo más adecuado es comenzar con Clínica Médica.\n' +
+        '¿Querés que te muestre los médicos disponibles?'
+      );
+    }
 
-    return `Te recomiendo ${resolved}. ¿Querés que te muestre médicos disponibles?`;
+    return `Te recomiendo ${validSpeciality}. ¿Querés que te muestre médicos disponibles?`;
   }
+
+
+
 
 
   private async handleRecommendConfirmation(
@@ -386,7 +456,7 @@ export class ChatService {
       return await this.handleListDoctors(userId);
     }
 
-    if (['no', 'n', 'cancelar'].includes(normalized)) {
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
       this.sessionService.clear(userId);
       return 'Está bien. Si querés, puedo ayudarte con otra consulta.';
     }
@@ -452,6 +522,8 @@ export class ChatService {
 
   private handleDoctorSelection(userId: string, message: string): string {
     const session = this.sessionService.get(userId);
+    const normalized = normalizeText(message);
+
 
     const option = parseInt(message, 10);
 
@@ -467,6 +539,10 @@ export class ChatService {
       return 'Ese número no corresponde a ningún médico del listado.';
     }
 
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien, dejamos el turno por ahora. ¿En qué te ayudo?';
+    }
 
     session.doctorId = selected.doctorId;
     session.awaitingSlotsConfirmation = true;
@@ -497,7 +573,7 @@ export class ChatService {
       return 'Perfecto. ¿Para qué mes querés el turno? ';
     }
 
-    if (['no', 'n', 'cancelar'].includes(normalized)) {
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
       this.sessionService.clear(userId);
       return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
     }
@@ -531,9 +607,6 @@ export class ChatService {
     this.sessionService.set(userId, session);
 
     return `Turnos disponibles:\n${list}\n¿Querés reservar alguno?`;
-
-
-    return `Turnos disponibles:\n${list}\n¿Querés reservar alguno?`;
   }
 
 
@@ -565,7 +638,6 @@ export class ChatService {
 
   private async handleListUserAppointments(userId: string): Promise<string> {
     const appointments = await this.appointmentsService.findAllByPatientId(userId);
-    console.log("holaa")
 
     if (!appointments || appointments.length === 0) {
       return 'No tenés turnos asignados actualmente.';
@@ -588,144 +660,211 @@ export class ChatService {
 
 
 
-  private handleMonthSelection(userId: string, message: string): string {
-  const session = this.sessionService.get(userId);
-  
-  const input = message.trim().toLowerCase();
-  
-  let month = parseInt(input, 10);
 
-  if (isNaN(month) || month < 1 || month > 12) {
-    const monthKey = input as keyof typeof months;
-    if (months[monthKey]) {
-      month = months[monthKey];
+  private async handleAvailableDays(userId: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+
+    if (!session.doctorId || !session.selectedMonth) {
+      return 'Faltan datos para calcular los días disponibles.';
     }
-  }
 
-  if (isNaN(month) || month < 1 || month > 12) {
-    return 'Por favor, ingresá un mes válido (ej: "1" o "enero").';
-  }
+    const year = new Date().getFullYear();
+    const monthIndex = session.selectedMonth - 1;
 
-  session.selectedMonth = month;
-  session.awaitingMonth = false; 
-  session.awaitingDay = true;
+    const schedules = await this.doctorScheduleService.findByDoctor(
+      session.doctorId,
+      userId,
+      session.userRole
+    );
 
-  this.sessionService.set(userId, session);
+    if (schedules.length === 0) {
+      return 'El médico no tiene días de atención configurados.';
+    }
 
-  const monthName = Object.keys(months).find(key => months[key as keyof typeof months] === month);
-  
-  return `Perfecto. ¿Qué día de ${monthName} querés?`;
-}
+    const workingDays = new Set(schedules.map(s => s.dayOfWeek));
 
+    const lastDayOfMonth = new Date(year, monthIndex + 1, 0).getDate();
 
+    const availableDays: number[] = [];
 
+    for (let day = 1; day <= lastDayOfMonth; day++) {
+      const date = new Date(year, monthIndex, day);
+      const dayOfWeek = date.getDay();
 
-
-private async handleDaySelection(
-  userId: string,
-  message: string
-): Promise<string> {
-  const session = this.sessionService.get(userId);
-  const day = parseInt(message, 10);
-
-  if (isNaN(day) || day < 1 || day > 31) {
-    return 'Ingresá un día válido.';
-  }
-
-  if (!session.selectedMonth || !session.doctorId) {
-    return 'Faltan datos para seleccionar el día.';
-  }
-
-  const year = new Date().getFullYear();
-  const monthIndex = session.selectedMonth - 1;
-
-  const selectedDate = new Date(year, monthIndex, day);
-  const dayOfWeek = selectedDate.getDay();
-
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    return 'Ese día es fin de semana. Por favor, elegí un día de lunes a viernes.';
-  }
-
-  session.selectedDay = day;
-  session.awaitingDay = false;
-  this.sessionService.set(userId, session);
-
-  return this.handleAvailableHours(userId);
-}
-
-
-
-
-
-
-private async handleAvailableHours(userId: string): Promise<string> {
-  const session = this.sessionService.get(userId);
-
-  if (!session.doctorId || !session.selectedDay || !session.selectedMonth) {
-    return 'Faltan datos para calcular los horarios disponibles.';
-  }
-
-  const year = new Date().getFullYear();
-  const month = String(session.selectedMonth).padStart(2, '0');
-  const day = String(session.selectedDay).padStart(2, '0');
-
-  const jsDate = new Date(`${year}-${month}-${day}T00:00:00`);
-  const dayOfWeek = jsDate.getDay(); // 0 = domingo, 6 = sábado
-
-
-  const allSchedules = await this.doctorScheduleService.findByDoctor(
-    session.doctorId,
-    userId,
-    session.userRole 
-  );
-
-  const daySchedules = allSchedules.filter(s => s.dayOfWeek === dayOfWeek);
-
-  if (daySchedules.length === 0) {
-    return 'El médico no atiende ese día.';
-  }
-
-  const allSlots: string[] = [];
-  for (const s of daySchedules) {
-    let [h, m] = s.startTime.split(':').map(Number);
-    const [endH, endM] = s.endTime.split(':').map(Number);
-
-    while (h < endH || (h === endH && m < endM)) {
-      allSlots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-      m += 30; // duración fija de 30 min, o usar s.slotDuration si quieres
-      if (m >= 60) {
-        m = 0;
-        h++;
+      if (workingDays.has(dayOfWeek)) {
+        availableDays.push(day);
       }
     }
+
+    if (availableDays.length === 0) {
+      return 'El médico no atiende ningún día ese mes.';
+    }
+
+    session.availableDays = availableDays;
+    session.awaitingDay = true;
+    this.sessionService.set(userId, session);
+
+    const list = availableDays.map(d => d.toString()).join(', ');
+
+    return `Estos son los días disponibles:\n${list}\n\nElegí un día para continuar.`;
   }
 
-  // Quitamos los horarios ya ocupados
-  const dateStr = `${year}-${month}-${day}`;
-  const { occupiedTimes } = await this.appointmentsService.getAvailability(
-    session.doctorId,
-    dateStr
-  );
 
-  const availableSlots = allSlots.filter(slot => !occupiedTimes.includes(slot));
 
-  if (availableSlots.length === 0) {
-    return 'No hay horarios disponibles para ese día.';
+
+  private handleMonthSelection(userId: string, message: string) {
+    const session = this.sessionService.get(userId);
+    const normalized = normalizeText(message);
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien, dejamos el turno por ahora. ¿En qué te ayudo?';
+    }
+
+
+    const input = message.trim().toLowerCase();
+
+    let month = parseInt(input, 10);
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      const monthKey = input as keyof typeof months;
+      if (months[monthKey]) {
+        month = months[monthKey];
+      }
+    }
+
+    if (isNaN(month) || month < 1 || month > 12) {
+      return 'Por favor, ingresá un mes válido (ej: "1" o "enero").';
+    }
+
+    session.selectedMonth = month;
+    session.awaitingMonth = false;
+    session.awaitingDay = true;
+
+    this.sessionService.set(userId, session);
+
+    const monthName = Object.keys(months).find(key => months[key as keyof typeof months] === month);
+
+    return this.handleAvailableDays(userId);
   }
 
-  session.availableHours = availableSlots;
-  session.awaitingHourSelection = true;
-  this.sessionService.set(userId, session);
 
-  // Armamos el texto de la lista
-  const list = availableSlots.map((h, i) => `${i + 1}) ${h}`).join('\n');
 
-  return (
-    `Horarios disponibles el ${day}/${month}:\n` +
-    `${list}\n\n` +
-    `Elegí un número para continuar.`
-  );
-}
+
+
+  private async handleDaySelection(
+    userId: string,
+    message: string
+  ): Promise<string> {
+    const session = this.sessionService.get(userId);
+    const day = parseInt(message, 10);
+    const normalized = normalizeText(message);
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien, dejamos el turno por ahora. ¿En qué te ayudo?';
+    }
+
+    if (isNaN(day) || day < 1 || day > 31) {
+      return 'Ingresá un día válido.';
+    }
+
+    if (!session.selectedMonth || !session.doctorId) {
+      return 'Faltan datos para seleccionar el día.';
+    }
+
+    const year = new Date().getFullYear();
+    const monthIndex = session.selectedMonth - 1;
+
+    const selectedDate = new Date(year, monthIndex, day);
+    const dayOfWeek = selectedDate.getDay();
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return 'Ese día es fin de semana. Por favor, elegí un día de lunes a viernes.';
+    }
+
+    if (!session.availableDays?.includes(day)) {
+      return 'Ese día no está disponible para el médico. Elegí uno de los días mostrados.';
+    }
+
+    session.selectedDay = day;
+    session.awaitingDay = false;
+    this.sessionService.set(userId, session);
+
+    return this.handleAvailableHours(userId);
+  }
+
+
+
+
+
+
+  private async handleAvailableHours(userId: string): Promise<string> {
+    const session = this.sessionService.get(userId);
+
+    if (!session.doctorId || !session.selectedDay || !session.selectedMonth) {
+      return 'Faltan datos para calcular los horarios disponibles.';
+    }
+
+    const year = new Date().getFullYear();
+    const month = String(session.selectedMonth).padStart(2, '0');
+    const day = String(session.selectedDay).padStart(2, '0');
+
+    const jsDate = new Date(`${year}-${month}-${day}T00:00:00`);
+    const dayOfWeek = jsDate.getDay();
+
+
+    const allSchedules = await this.doctorScheduleService.findByDoctor(
+      session.doctorId,
+      userId,
+      session.userRole
+    );
+
+    const daySchedules = allSchedules.filter(s => s.dayOfWeek === dayOfWeek);
+
+    if (daySchedules.length === 0) {
+      return 'El médico no atiende ese día.';
+    }
+
+    const allSlots: string[] = [];
+    for (const s of daySchedules) {
+      let [h, m] = s.startTime.split(':').map(Number);
+      const [endH, endM] = s.endTime.split(':').map(Number);
+
+      while (h < endH || (h === endH && m < endM)) {
+        allSlots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
+        m += 30;
+        if (m >= 60) {
+          m = 0;
+          h++;
+        }
+      }
+    }
+
+
+    const dateStr = `${year}-${month}-${day}`;
+    const { occupiedTimes } = await this.appointmentsService.getAvailability(
+      session.doctorId,
+      dateStr
+    );
+
+    const availableSlots = allSlots.filter(slot => !occupiedTimes.includes(slot));
+
+    if (availableSlots.length === 0) {
+      return 'No hay horarios disponibles para ese día.';
+    }
+
+    session.availableHours = availableSlots;
+    session.awaitingHourSelection = true;
+    this.sessionService.set(userId, session);
+
+
+    const list = availableSlots.map((h, i) => `${i + 1}) ${h}`).join('\n');
+
+    return (
+      `Horarios disponibles el ${day}/${month}:\n` +
+      `${list}\n\n` +
+      `Elegí un número para continuar.`
+    );
+  }
 
 
 
@@ -735,6 +874,11 @@ private async handleAvailableHours(userId: string): Promise<string> {
   private handleHourSelection(userId: string, message: string): string {
     const session = this.sessionService.get(userId);
     const option = parseInt(message, 10);
+    const normalized = normalizeText(message);
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
+      this.sessionService.clear(userId);
+      return 'Está bien, dejamos el turno por ahora. ¿En qué te ayudo?';
+    }
 
     if (
       isNaN(option) ||
@@ -770,59 +914,59 @@ private async handleAvailableHours(userId: string): Promise<string> {
 
 
 
- private async confirmAppointment(userId: string): Promise<string> {
-  const session = this.sessionService.get(userId);
+  private async confirmAppointment(userId: string): Promise<string> {
+    const session = this.sessionService.get(userId);
 
 
-  if (!session.userAuthenticated || !session.realUserId) {
-    session.awaitingRegisterEmail = true;
+    if (!session.userAuthenticated || !session.realUserId) {
+      session.awaitingRegisterEmail = true;
+      this.sessionService.set(userId, session);
+
+      return (
+        'Para confirmar el turno necesitás registrarte.\n\n' +
+        'Comencemos. Ingresá tu email por favor.'
+      );
+    }
+
+    const preReserve = await this.appointmentsService.preReserveAppointment(
+      {
+        doctorId: session.doctorId!,
+        specialtyId: session.specialtyId,
+        dateTime: session.selectedDateTime!,
+        reason: session.reason,
+      },
+      session.realUserId,
+    );
+
+    const payment = await this.paymentsService.createPreference({
+      appointmentId: preReserve.appointmentId,
+    });
+
+    console.log('payment: ', payment)
+    delete session.doctorId;
+    delete session.specialtyId;
+    delete session.selectedMonth;
+    delete session.selectedDay;
+    delete session.selectedHour;
+    delete session.selectedDateTime;
+    delete session.availableHours;
+    delete session.awaitingFinalConfirmation;
+    delete session.awaitingHourSelection;
+    delete session.awaitingDay;
+    delete session.awaitingMonth;
+    delete session.awaitingSlotsConfirmation;
+    delete session.awaitingReserveConfirmation;
+
     this.sessionService.set(userId, session);
 
     return (
-      'Para confirmar el turno necesitás registrarte.\n\n' +
-      'Comencemos. Ingresá tu email por favor.'
+      `Turno pre-reservado con éxito.\n\n` +
+      `Vence el: ${preReserve.expiresAt.toLocaleString('es-AR')}\n` +
+      `Precio: $${preReserve.price}\n\n` +
+      `Para confirmarlo, completá el pago en el siguiente link:\n` +
+      `${payment.initPoint}`
     );
   }
-
-  const preReserve = await this.appointmentsService.preReserveAppointment(
-    {
-      doctorId: session.doctorId!,
-      specialtyId: session.specialtyId,
-      dateTime: session.selectedDateTime!,
-      reason: session.reason,
-    },
-    session.realUserId,
-  );
-
-  const payment = await this.paymentsService.createPreference({
-    appointmentId: preReserve.appointmentId,
-  });
-
-  console.log('payment: ', payment)
-  delete session.doctorId;
-  delete session.specialtyId;
-  delete session.selectedMonth;
-  delete session.selectedDay;
-  delete session.selectedHour;
-  delete session.selectedDateTime;
-  delete session.availableHours;
-  delete session.awaitingFinalConfirmation;
-  delete session.awaitingHourSelection;
-  delete session.awaitingDay;
-  delete session.awaitingMonth;
-  delete session.awaitingSlotsConfirmation;
-  delete session.awaitingReserveConfirmation;
-
-  this.sessionService.set(userId, session);
-
-  return (
-    `Turno pre-reservado con éxito.\n\n` +
-    `Vence el: ${preReserve.expiresAt.toLocaleString('es-AR')}\n` +
-    `Precio: $${preReserve.price}\n\n` +
-    `Para confirmarlo, completá el pago en el siguiente link:\n` +
-    `${payment.initPoint}`
-  );
-}
 
 
 
@@ -841,7 +985,7 @@ private async handleAvailableHours(userId: string): Promise<string> {
       return this.confirmAppointment(userId);
     }
 
-    if (['no', 'n', 'cancelar'].includes(normalized)) {
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
       this.sessionService.clear(userId);
       return 'Turno cancelado. Si querés, puedo ayudarte a buscar otro horario o médico.';
     }
@@ -865,7 +1009,7 @@ private async handleAvailableHours(userId: string): Promise<string> {
       return 'Perfecto. ¿Para qué mes querés el turno? (1 a 12)';
     }
 
-    if (['no', 'n', 'cancelar'].includes(normalized)) {
+    if (['no', 'n', 'cancelar', 'no quiero', 'mejor no', 'arrepenti'].includes(normalized)) {
       this.sessionService.clear(userId);
       return 'Está bien. Si querés, puedo ayudarte a buscar otro médico o especialidad.';
     }
@@ -892,8 +1036,7 @@ private async handleAvailableHours(userId: string): Promise<string> {
       '¿Qué dato querés actualizar?\n' +
       '1) Nombre\n' +
       '2) Apellido\n' +
-      '3) Email\n' +
-      '4) Contraseña'
+      '3) Email\n'
     );
   }
 
@@ -908,14 +1051,13 @@ private async handleAvailableHours(userId: string): Promise<string> {
     const fieldMap = {
       1: 'first_name',
       2: 'last_name',
-      3: 'email',
-      4: 'password',
+      3: 'email'
     } as const;
 
     const selectedField = fieldMap[option];
 
     if (!selectedField) {
-      return 'Elegí una opción válida (1 a 4).';
+      return 'Elegí una opción válida (1 a 3).';
     }
 
     session.pendingUpdateField = selectedField;
@@ -1006,9 +1148,28 @@ private async handleAvailableHours(userId: string): Promise<string> {
       '¿Qué dato querés actualizar?\n' +
       '1) Nombre\n' +
       '2) Apellido\n' +
-      '3) Email\n' +
-      '4) Contraseña'
+      '3) Email\n'
     );
+  }
+
+
+
+
+
+
+  private async getValidSpecialityOrClinico(
+    specialityKey: string
+  ): Promise<string> {
+    const resolved = resolveSpecialityName(specialityKey);
+
+    const speciality =
+      await this.specialityService.findByNameWithDoctorsChat(resolved);
+
+    if (!speciality || !speciality.doctors || speciality.doctors.length === 0) {
+      return 'clinico';
+    }
+
+    return specialityKey;
   }
 
 
