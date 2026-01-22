@@ -21,6 +21,7 @@ interface DashboardKpis {
   confirmedAppointments: number;
   cancelledAppointments: number;
   totalRevenue: number;
+  monthlyRevenue: number;
 }
 
 interface MonthlyAppointments {

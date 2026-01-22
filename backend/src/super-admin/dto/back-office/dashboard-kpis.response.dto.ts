@@ -29,5 +29,11 @@ export class DashboardKpisResponseDto {
     example: 125000,
     description: 'Ingresos totales generados por citas confirmadas (pagadas)',
   })
-  totalRevenue: number; 
+  totalRevenue: number;
+
+  @ApiProperty({
+    example: 45000,
+    description: 'Ingresos del mes actual (solo turnos confirmados y pagados)',
+  })
+  monthlyRevenue: number;
 }

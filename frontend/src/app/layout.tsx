@@ -2,11 +2,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "../components/Navbar";
-import { Footer } from "../components/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast"; // 👈 nueva importación
-import ChatBotGuard from "@/components/chat/ChatBotGuard";
 import AppShell from "@/components/AppShell";
 
 const geistSans = Geist({
@@ -36,9 +33,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <>
-            <AppShell>
-              {children}
-              </AppShell>
+            <AppShell>{children}</AppShell>
             <Toaster
               position="top-right"
               toastOptions={{

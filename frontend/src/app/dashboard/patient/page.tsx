@@ -45,7 +45,15 @@ export default function PatientDashboardHome() {
 
   return (
     <>
-      <div className="min-h-[70vh] flex items-center justify-center px-4">
+      <div className="min-h-[70vh] flex flex-col items-center justify-center px-4">
+        <div className="flex justify-end w-110 items-center mb-6">
+          <Link
+            href="/"
+            className="text-blue-600 hover:underline flex items-center gap-1"
+          >
+            ← Volver inicio
+          </Link>
+        </div>
         <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8 space-y-6">
           <div className="flex flex-col items-center mb-8">
             <div
