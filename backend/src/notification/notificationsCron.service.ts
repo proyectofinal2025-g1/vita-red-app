@@ -19,12 +19,11 @@ export class NotificationsCronService {
     private readonly notificationService: NotificationService
   ) {}
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron(CronExpression.EVERY_5_MINUTES)
   async cronService() {
     const now = AppointmentTimeHelper.now();
-
-    const nextDay = AppointmentTimeHelper.addMinutes(now, 1440);
-    const limitDate = AppointmentTimeHelper.addMinutes(now, 1441);
+    const nextDay = AppointmentTimeHelper.addMinutes(now, 720);
+    const limitDate = AppointmentTimeHelper.addMinutes(now, 725);
 
     const appointments = await this.appointmentRepo.find({
       where: {
@@ -35,14 +34,14 @@ export class NotificationsCronService {
     });
 
     for (const appointment of appointments) {
-      if (
+      /*if (
         appointment.notifications.some(
           notification =>
             notification.type === NotificationType.APPOINTMENT_REMINDER
         )
       ) {
         continue;
-      }
+      }*/
 
       const argentinaDate = toZonedTime(
         appointment.date,
