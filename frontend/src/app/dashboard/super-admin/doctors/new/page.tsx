@@ -1,5 +1,4 @@
 // frontend/src/app/dashboard/super-admin/doctors/new/page.tsx
-
 'use client';
 
 import { useRoleGuard } from '@/hooks/useRoleGuard';
@@ -18,7 +17,6 @@ import {
 
 const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
-// ✅ Interfaz Speciality definida localmente (opción recomendada para este archivo)
 interface Speciality {
   id: string;
   name: string;
@@ -74,8 +72,7 @@ export default function CreateDoctorPage() {
         if (!userSession) throw new Error('Sesión no encontrada');
         const token = JSON.parse(userSession).token;
 
-        // Paso 1: Crear el médico
-        const createRes = await fetch(`${apiURL}/superadmin/doctors`, {
+        const res = await fetch(`${apiURL}/superadmin/doctors`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -84,40 +81,11 @@ export default function CreateDoctorPage() {
           body: JSON.stringify(values),
         });
 
-        if (!createRes.ok) {
-          const errorData = await createRes.json().catch(() => ({}));
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
           throw new Error(errorData.message || 'Error al crear el médico');
         }
 
-        const doctorData = await createRes.json();
-
-        // 👇 Extraer el ID del usuario (ajusta si la estructura es diferente)
-        const userId = doctorData.user?.id || doctorData.userId;
-
-        if (!userId) {
-          throw new Error('No se pudo obtener el ID del usuario creado');
-        }
-
-        // Paso 2: Activar al usuario
-        const activateRes = await fetch(
-          `${apiURL}/superadmin/users/${userId}/status`,
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ is_active: true }),
-          }
-        );
-
-        if (!activateRes.ok) {
-          console.warn(
-            'El médico fue creado, pero no se pudo activar automáticamente.'
-          );
-        }
-
-        // Éxito
         setTimeout(() => router.push('/dashboard/super-admin/doctors'), 1500);
       } catch (err: unknown) {
         if (err instanceof Error) {
@@ -153,7 +121,7 @@ export default function CreateDoctorPage() {
 
       {formik.isSubmitting && !error && (
         <div className='mb-4 p-3 bg-green-50 text-green-700 rounded-lg'>
-          ✅ Médico creado y activado correctamente. Redirigiendo...
+          ✅ Médico creado exitosamente. Redirigiendo...
         </div>
       )}
 
