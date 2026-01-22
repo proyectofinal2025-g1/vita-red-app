@@ -86,7 +86,7 @@ async existsSameDayWithDoctor(
       where: {
         doctor: { id: doctorId },
       },
-      relations: ['doctor'],
+      relations: ['doctor', 'patient'],
     });
 
     if (!listAppointments) throw new NotFoundException('Not Found for this doctor appointments.')
