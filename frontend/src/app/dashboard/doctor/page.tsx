@@ -7,6 +7,7 @@ import QuickAccessCard from "./components/QuickAccessCard"
 import NextAppointmentCard from "./components/NextAppointmentCard"
 import DashboardSkeleton from "./components/DashboardSkeleton"
 import MedicalRecordsTable from "./components/MedicalRecordsTable"
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DoctorDashboardPage() {
   const router = useRouter()
@@ -16,17 +17,19 @@ export default function DoctorDashboardPage() {
   const [medicalRecords, setMedicalRecords] = useState<any[]>([])
   const [appointments, setAppointments] = useState<any[]>([])
   const [filter, setFilter] = useState<"today" | "week" | "pending" | null>(null)
+  const { dataUser } = useAuth();
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
+    const token = dataUser?.token;
 
-    if (!token) {
-      router.push("/auth/login")
-      return
-    }
+    if (!dataUser?.token) {
+    router.push("/auth/login");
+    return;
+  }
 
     async function loadDashboard() {
       try {
+
         const [doctorRes, recordsRes, appointmentsRes] = await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -53,7 +56,7 @@ export default function DoctorDashboardPage() {
     }
 
     loadDashboard()
-  }, [router])
+  }, [dataUser, router])
 
   if (loading) return <DashboardSkeleton />
   if (!doctor) return null

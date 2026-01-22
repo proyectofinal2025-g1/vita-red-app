@@ -17,6 +17,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CreateUser_DoctorDto } from './dto/createUser-doctor.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AppointmentsService } from '../appointments/appointments.service';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class DoctorService {
@@ -54,10 +55,12 @@ export class DoctorService {
       if (dniExist) {
         throw new BadRequestException('El DNI ya está en uso');
       }
+
+      const hashedPassword = await bcrypt.hash(dto.password, 10);
       
       const user = await manager.save(User, {
         email: dto.email,
-        password: dto.password,
+        password: hashedPassword,
         first_name: dto.first_name,
         last_name: dto.last_name,
         dni: dto.dni,
@@ -74,6 +77,7 @@ export class DoctorService {
       return { message: `El usuario se ha creado correctamente, tiene que esperar a que el administrador le de la alta para poder operar en la página` }
     })
   }
+
   async create(data: CreateDoctorDto) {
 
     const licenceExist = await this.doctorRepository.findByLicence(

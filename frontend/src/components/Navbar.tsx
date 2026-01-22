@@ -5,12 +5,16 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import Swal from 'sweetalert2';
+import { useRouter } from 'next/navigation';
+
 
 export const Navbar = () => {
   const [openMenu, setOpenMenu] = useState(false);
   const { dataUser, logout } = useAuth();
 
   const [isClient, setIsClient] = useState(false);
+  const router = useRouter();
+
 
   useEffect(() => {
     setIsClient(true);
@@ -81,6 +85,7 @@ export const Navbar = () => {
       if (result.isConfirmed) {
         logout();
         setOpenMenu(false);
+        router.replace('/auth/login');
       }
     });
   };
