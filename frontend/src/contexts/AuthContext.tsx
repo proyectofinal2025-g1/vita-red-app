@@ -5,6 +5,8 @@ import { IAuthContextProps } from '@/interfaces/IAuthContextProps';
 import { IAuthProviderProps } from '@/interfaces/IAuthProviderProps';
 import { IUserSession } from '@/interfaces/IUserSession';
 import { decodeJWT } from '@/utils/decodeJWT';
+import { useSessionTimer } from '@/hooks/useSessionTimer';
+import { useRouter } from 'next/navigation';
 
 export const AuthContext = createContext<IAuthContextProps>({
   dataUser: null,
@@ -41,6 +43,12 @@ const getUserFromLocalStorage = (): IUserSession | null => {
 export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
   const [dataUser, setDataUser] = useState<IUserSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+   useSessionTimer(dataUser?.token ?? null, () => {
+    setDataUser(null);
+    router.replace('/auth/login');
+  });
 
   useEffect(() => {
     const session = getUserFromLocalStorage();

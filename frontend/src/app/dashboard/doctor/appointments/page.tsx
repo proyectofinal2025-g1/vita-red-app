@@ -1,0 +1,68 @@
+'use client'
+
+import AppointmentsTable from "./components/AppointmentsTable"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+
+export default function DoctorAppointmentsPage() {
+
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const router = useRouter()
+
+  function handleAttend(appointment: any) {
+    router.push(`/appointments/${appointment.id}/medical-record`)
+  }
+
+  useEffect(() => {
+    async function fetchAppointments() {
+      try {
+        const token = localStorage.getItem("token")
+        if (!token) {
+          throw new Error("No token")
+        }
+
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        if (!res.ok) {
+          throw new Error("No autorizado")
+        }
+
+        const data = await res.json()
+        setAppointments(data)
+      } catch (error) {
+        console.error("Error cargando turnos", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchAppointments()
+  }, [])
+
+
+  return (
+    <div className="space-y-8">
+      <header>
+        <h2 className="text-2xl font-bold text-slate-800">
+          Mi Agenda🗓️
+        </h2>
+        <p className="text-slate-500">
+          Turnos programados
+        </p>
+      </header>
+
+      {loading ? (
+        <p className="text-slate-500">Cargando turnos...</p>
+      ) : (
+        <AppointmentsTable appointments={appointments} onAttend={handleAttend} />
+      )}
+    </div>
+  )
+}
