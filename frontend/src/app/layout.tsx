@@ -6,7 +6,7 @@ import { Navbar } from '../components/Navbar';
 import { Footer } from '../components/Footer';
 import { AuthProvider } from '@/contexts/AuthContext';
 import ChatBot from "@/components/chat/ChatBot";
-import { Toaster } from 'react-hot-toast'; // 👈 nueva importación
+import { Toaster } from 'react-hot-toast'; 
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

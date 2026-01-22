@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Input from "./components/Input"
 import Swal from "sweetalert2"
+import { useAuth } from "@/contexts/AuthContext"
 
 const EMPTY_DOCTOR = {
   first_name: "",
@@ -19,39 +20,53 @@ export default function DoctorProfilePage() {
   const [saving, setSaving] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const { dataUser } = useAuth()
+
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
-    if (!token) return
+  if (!dataUser?.token) {
+    setLoading(false)
+    return
+  }
 
-    async function fetchDoctor() {
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/doctors/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+  async function fetchDoctor() {
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/doctors/me`,
+        {
+          headers: {
+            Authorization: `Bearer ${dataUser?.token}`,
+          },
+        }
+      )
 
-        if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error()
 
-        const data = await res.json()
-        setForm(data)
-      } catch {
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "No se pudieron cargar los datos del perfil",
-        })
-      } finally {
-        setLoading(false)
-      }
+      const doctorData = await res.json()
+
+      setForm({
+        first_name: dataUser?.user.first_name ?? "",
+        last_name: dataUser?.user.last_name ?? "",
+        email: dataUser?.user.email ?? "",
+        dni: dataUser?.user.dni ?? "",
+        speciality_id: doctorData.speciality_id ?? "",
+        licence_number: doctorData.licence_number ?? "",
+        photo: dataUser?.user.profileImageUrl ?? "",
+      })
+    } catch {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudieron cargar los datos del perfil",
+      })
+    } finally {
+      setLoading(false)
     }
+  }
 
-    fetchDoctor()
-  }, [])
+  fetchDoctor()
+}, [dataUser])
+
 
   async function handlePhotoUpload(
     e: React.ChangeEvent<HTMLInputElement>
@@ -96,7 +111,7 @@ export default function DoctorProfilePage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            avatar: data.secure_url,
+            profileImageUrl: data.secure_url,
           }),
         }
       )
@@ -166,7 +181,14 @@ export default function DoctorProfilePage() {
     }
   }
 
-  if (loading) return null
+  if (loading) {
+  return (
+    <p className="text-center text-slate-500 mt-10">
+      Cargando perfil...
+    </p>
+  )
+}
+
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
