@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { decodeJWT } from '@/utils/decodeJWT';
 import { getDashboardRoute } from '@/utils/getDashboardRoute';
+import Link from 'next/link';
 
 const LoginForm = () => {
   const { loginWithToken } = useAuth();
@@ -250,12 +251,12 @@ const LoginForm = () => {
             <div className='text-center mt-6'>
               <p className='text-gray-600 text-sm'>
                 ¿No tienes cuenta?{' '}
-                <a
+                <Link
                   href='/auth/register'
                   className='font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200'
                 >
                   Regístrate ahora
-                </a>
+                </Link>
               </p>
             </div>
           </form>

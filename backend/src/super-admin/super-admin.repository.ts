@@ -91,6 +91,18 @@ export class SuperAdminRepository {
     return Number(result.total);
   }
 
+  async sumConfirmedRevenueByDateRange(start: Date, end: Date) {
+  const result = await this.appointmentRepository
+    .createQueryBuilder('appointment')
+    .select('COALESCE(SUM(appointment.priceAtBooking), 0)', 'total')
+    .where('appointment.date BETWEEN :start AND :end', { start, end })
+    .andWhere('appointment.status = :status', { status: 'CONFIRMED' })
+    .andWhere('appointment.paidAt IS NOT NULL')
+    .getRawOne();
+
+  return Number(result.total);
+}
+
   async countAppointmentsGroupedByMonth(year: number) {
     return this.appointmentRepository
       .createQueryBuilder('appointment')
@@ -122,4 +134,31 @@ export class SuperAdminRepository {
       .groupBy('appointment.status')
       .getRawMany();
   }
+
+  async sumConfirmedRevenueGroupedByMonth(year: number) {
+  return this.appointmentRepository
+    .createQueryBuilder('appointment')
+    .select(
+      `EXTRACT(
+        MONTH FROM appointment.date AT TIME ZONE 'UTC'
+      )`,
+      'month',
+    )
+    .addSelect(
+      'COALESCE(SUM(appointment.priceAtBooking), 0)',
+      'revenue',
+    )
+    .where(
+      `EXTRACT(
+        YEAR FROM appointment.date AT TIME ZONE 'UTC'
+      ) = :year`,
+      { year },
+    )
+    .andWhere('appointment.status = :status', { status: 'CONFIRMED' })
+    .andWhere('appointment.paidAt IS NOT NULL')
+    .groupBy('month')
+    .orderBy('month', 'ASC')
+    .getRawMany();
+}
+
 }
