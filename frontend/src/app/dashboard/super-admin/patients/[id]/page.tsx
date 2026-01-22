@@ -8,7 +8,7 @@ import Link from 'next/link';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { registerLocale } from 'react-datepicker';
-import {es} from 'date-fns/locale/es';
+import { es } from 'date-fns/locale/es';
 
 registerLocale('es', es);
 const apiURL = process.env.NEXT_PUBLIC_API_URL;
@@ -23,14 +23,13 @@ interface Patient {
   createdAt: string;
 }
 
-// ✅ Actualizado: Estructura correcta según los logs
 interface Appointment {
   id: string;
   date: string;
   time: string;
   status: string;
-  doctorName?: string; // Nombre del médico (puede ser undefined)
-  speciality?: string; // Especialidad del médico (puede ser undefined)
+  doctorName?: string;
+  speciality?: string;
 }
 
 interface Doctor {
@@ -49,10 +48,15 @@ interface Doctor {
   bio: string | null;
   consultationPrice: string;
   speciality: {
-    id: string;
+    // ⚠️ El backend actual NO devuelve 'id' aquí, solo 'name'
     name: string;
     description?: string;
   };
+}
+
+interface Specialty {
+  id: string;
+  name: string;
 }
 
 interface DoctorSchedule {
@@ -87,25 +91,25 @@ export default function PatientDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // 🆕 Estado para citas
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
-
-  // ✅ Estado para saber si estamos en el cliente
   const [isClient, setIsClient] = useState(false);
 
-  // 🆕 Estados para pre-reserva de turnos
-  const [showPreReserveForm, setShowPreReserveForm] = useState(false);
   const [preReserveData, setPreReserveData] = useState({
     doctorId: '',
+    specialtyId: '',
     date: null as Date | null,
     time: '',
     reason: '',
   });
+
+  const [showPreReserveForm, setShowPreReserveForm] = useState(false);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [loadingSpecialties, setLoadingSpecialties] = useState(false); // ✅ Nuevo
   const [loadingSchedules, setLoadingSchedules] = useState(false);
   const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [specialties, setSpecialties] = useState<Specialty[]>([]); // ✅ Nuevo
   const [doctorSchedules, setDoctorSchedules] = useState<DoctorSchedule[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [doctorAvailableDays, setDoctorAvailableDays] = useState<number[]>([]);
@@ -117,7 +121,7 @@ export default function PatientDetailPage() {
   }, []);
 
   useEffect(() => {
-    if (!isClient) return; // ✅ Solo ejecutar si estamos en el cliente
+    if (!isClient) return;
 
     const fetchData = async () => {
       try {
@@ -125,7 +129,6 @@ export default function PatientDetailPage() {
         if (!userSession) throw new Error('Sesión no encontrada');
         const token = JSON.parse(userSession).token;
 
-        // Cargar paciente
         const patientRes = await fetch(`${apiURL}/superadmin/patients/${id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -144,7 +147,6 @@ export default function PatientDetailPage() {
           email: data.email,
         });
 
-        // Cargar citas del paciente
         const appointmentsRes = await fetch(
           `${apiURL}/superadmin/appointments/${id}/list`,
           {
@@ -153,23 +155,16 @@ export default function PatientDetailPage() {
         );
 
         if (!appointmentsRes.ok) {
-          // ✅ Si es 404, significa que no hay citas → listado vacío
           if (appointmentsRes.status === 404) {
             setAppointments([]);
             setLoadingAppointments(false);
             return;
           }
-
-          // Para otros errores, lanzamos el error normal
           const errorData = await appointmentsRes.json().catch(() => ({}));
           throw new Error(errorData.message || 'Error al cargar citas');
         }
 
         const appointmentsData: Appointment[] = await appointmentsRes.json();
-
-        // 🔥 LOG PARA VERIFICAR LA ESTRUCTURA DE LAS CITAS
-        console.log('Estructura completa de citas:', appointmentsData);
-
         setAppointments(appointmentsData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error desconocido');
@@ -180,39 +175,49 @@ export default function PatientDetailPage() {
     };
 
     if (id) fetchData();
-  }, [id, isClient]); // ✅ Dependemos de isClient
+  }, [id, isClient]);
 
-  // Cargar doctores para pre-reserva
+  // ✅ Cargar doctores Y especialidades cuando se abre el formulario
   useEffect(() => {
     if (!isClient || !showPreReserveForm) return;
 
-    const loadDoctors = async () => {
+    const loadDoctorsAndSpecialties = async () => {
       try {
         const userSession = localStorage.getItem('userSession');
         if (!userSession) throw new Error('Sesión no encontrada');
         const token = JSON.parse(userSession).token;
 
-        // Cargar doctores
         setLoadingDoctors(true);
+        setLoadingSpecialties(true);
+
+        // Cargar especialidades (con id)
+        const specialtiesRes = await fetch(`${apiURL}/speciality`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (specialtiesRes.ok) {
+          const specialtiesData: Specialty[] = await specialtiesRes.json();
+          setSpecialties(specialtiesData);
+        }
+
+        // Cargar doctores (solo con nombre de especialidad)
         const doctorsRes = await fetch(`${apiURL}/superadmin/doctors`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
         if (doctorsRes.ok) {
           const doctorsData: Doctor[] = await doctorsRes.json();
           setDoctors(doctorsData);
         }
       } catch (err) {
-        console.error('Error cargando doctores:', err);
+        console.error('Error cargando datos:', err);
       } finally {
         setLoadingDoctors(false);
+        setLoadingSpecialties(false);
       }
     };
 
-    loadDoctors();
+    loadDoctorsAndSpecialties();
   }, [showPreReserveForm, isClient]);
 
-  // Cargar horarios del doctor seleccionado
   useEffect(() => {
     if (!preReserveData.doctorId) {
       setDoctorAvailableDays([]);
@@ -255,7 +260,6 @@ export default function PatientDetailPage() {
     loadSchedules();
   }, [preReserveData.doctorId]);
 
-  // Cargar horarios disponibles para la fecha seleccionada
   useEffect(() => {
     if (!preReserveData.doctorId || !preReserveData.date) {
       setAvailableTimes([]);
@@ -268,25 +272,21 @@ export default function PatientDetailPage() {
         if (!userSession) throw new Error('Sesión no encontrada');
         const token = JSON.parse(userSession).token;
 
-        // Convertir fecha a formato YYYY-MM-DD
         const formattedDate = preReserveData.date!.toISOString().split('T')[0];
-        const dayOfWeek = preReserveData.date!.getDay() ; // getDay() devuelve 0-6, pero necesitamos 1-7
+        const dayOfWeek = preReserveData.date!.getDay();
 
-        // Obtener el horario del médico para ese día
         const schedule = doctorSchedules.find((s) => s.dayOfWeek === dayOfWeek);
         if (!schedule) {
           setAvailableTimes([]);
           return;
         }
 
-        // Generar todos los slots posibles
         const allSlots = generateTimeSlots(
           schedule.startTime,
           schedule.endTime,
           schedule.slotDuration
         );
 
-        // Obtener horarios ocupados
         setLoadingAvailability(true);
         const availabilityRes = await fetch(
           `${apiURL}/superadmin/doctors/${preReserveData.doctorId}/availability?date=${formattedDate}`,
@@ -302,7 +302,6 @@ export default function PatientDetailPage() {
           occupiedTimes = availabilityData.occupiedTimes;
         }
 
-        // Filtrar horarios disponibles
         const availableSlots = allSlots.filter(
           (time) => !occupiedTimes.includes(time)
         );
@@ -318,7 +317,6 @@ export default function PatientDetailPage() {
     loadAvailability();
   }, [preReserveData.doctorId, preReserveData.date, doctorSchedules]);
 
-  // Función para generar slots de tiempo
   const generateTimeSlots = (
     startTime: string,
     endTime: string,
@@ -345,9 +343,8 @@ export default function PatientDetailPage() {
     return slots;
   };
 
-  // Función para filtrar días disponibles
   const isDoctorAvailableDay = (date: Date) => {
-    const dayOfWeek = date.getDay(); // getDay() devuelve 0-6, pero nuestros días son 1-7
+    const dayOfWeek = date.getDay();
     return doctorAvailableDays.includes(dayOfWeek);
   };
 
@@ -398,19 +395,6 @@ export default function PatientDetailPage() {
     }
   };
 
-  const handlePreReserveChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setPreReserveData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDateChange = (date: Date | null) => {
-    setPreReserveData((prev) => ({ ...prev, date, time: '' }));
-  };
-
   const handlePreReserveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setPreReserveError('');
@@ -418,6 +402,7 @@ export default function PatientDetailPage() {
 
     if (
       !preReserveData.doctorId ||
+      !preReserveData.specialtyId ||
       !preReserveData.date ||
       !preReserveData.time
     ) {
@@ -430,7 +415,6 @@ export default function PatientDetailPage() {
       if (!userSession) throw new Error('Sesión no encontrada');
       const token = JSON.parse(userSession).token;
 
-      // Convertir fecha y hora al formato ISO
       const formattedDate = preReserveData.date.toISOString().split('T')[0];
       const dateTime = `${formattedDate}T${preReserveData.time}:00`;
 
@@ -444,6 +428,7 @@ export default function PatientDetailPage() {
           },
           body: JSON.stringify({
             doctorId: preReserveData.doctorId,
+            specialtyId: preReserveData.specialtyId,
             dateTime,
             reason: preReserveData.reason,
           }),
@@ -455,16 +440,15 @@ export default function PatientDetailPage() {
         throw new Error(errorData.message || 'Error al pre-reservar el turno');
       }
 
-      // Reiniciar el formulario
       setPreReserveData({
         doctorId: '',
+        specialtyId: '',
         date: null,
         time: '',
         reason: '',
       });
       setPreReserveSuccess(true);
 
-      // Recargar citas
       const appointmentsRes = await fetch(
         `${apiURL}/superadmin/appointments/${id}/list`,
         {
@@ -760,21 +744,38 @@ export default function PatientDetailPage() {
             )}
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              {/* Selector de doctor */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Doctor *
                 </label>
                 <select
                   value={preReserveData.doctorId}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const selectedDoctorId = e.target.value;
+                    const selectedDoctor = doctors.find(
+                      (d) => d.id === selectedDoctorId
+                    );
+
+                    let specialtyId = '';
+                    if (selectedDoctor) {
+                      // ✅ Buscar el ID usando el nombre
+                      const match = specialties.find(
+                        (s) => s.name === selectedDoctor.speciality.name
+                      );
+                      specialtyId = match ? match.id : '';
+                    }
+
                     setPreReserveData({
                       ...preReserveData,
-                      doctorId: e.target.value,
-                    })
-                  }
+                      doctorId: selectedDoctorId,
+                      specialtyId,
+                    });
+                    console.log('specialtyId asignado:', specialtyId);
+                  }}
                   required
                   className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
-                  disabled={loadingDoctors}
+                  disabled={loadingDoctors || loadingSpecialties}
                 >
                   <option value=''>Seleccionar doctor</option>
                   {doctors.map((doctor) => (
@@ -786,13 +787,16 @@ export default function PatientDetailPage() {
                 </select>
               </div>
 
+              {/* Fecha */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Fecha *
                 </label>
                 <DatePicker
                   selected={preReserveData.date}
-                  onChange={handleDateChange}
+                  onChange={(date: Date | null) =>
+                    setPreReserveData({ ...preReserveData, date })
+                  }
                   filterDate={isDoctorAvailableDay}
                   minDate={new Date()}
                   locale='es'
@@ -803,6 +807,7 @@ export default function PatientDetailPage() {
                 />
               </div>
 
+              {/* Hora */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Hora *
@@ -828,6 +833,7 @@ export default function PatientDetailPage() {
                 </select>
               </div>
 
+              {/* Motivo */}
               <div>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>
                   Motivo
