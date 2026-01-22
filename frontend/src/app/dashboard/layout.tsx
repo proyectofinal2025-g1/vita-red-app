@@ -13,8 +13,8 @@ export default function DashboardLayout({ children }: {
         }, []); 
         if (loading) return null;
 
-        if (!dataUser) { 
-            redirect("/auth/login"); 
-        } 
+        // if (!dataUser) { 
+        //     redirect("/auth/login"); 
+        // } 
     return <>{children}</>; 
 }
