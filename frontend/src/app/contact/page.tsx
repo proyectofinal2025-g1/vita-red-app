@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function ContactPage() {
     return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-4xl bg-indigo-50 rounded-2xl shadow-lg shadow-black/10 p-8 space-y-8">
+        <div className="w-full max-w-4xl bg-white rounded-2xl shadow-lg shadow-black/10 p-8 space-y-8">
         
         <div className="space-y-3 text-center">
             <h1 className="text-3xl font-semibold text-gray-800">

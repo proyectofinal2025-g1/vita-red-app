@@ -58,40 +58,45 @@ export class AppointmentsRepository extends Repository<Appointment> {
     });
   }
 
+  async existsSameDayWithDoctor(
+    patientId: string,
+    doctorId: string,
+    date: Date,
+  ): Promise<boolean> {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
 
-async existsSameDayWithDoctor(
-  patientId: string,
-  doctorId: string,
-  date: Date,
-): Promise<boolean> {
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
 
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  return this.exists({
-    where: {
-      patient: { id: patientId },
-      doctor: { id: doctorId },
-      date: Between(startOfDay, endOfDay),
-    },
-  });
-}
-
-
+    return this.exists({
+      where: {
+        patient: { id: patientId },
+        doctor: { id: doctorId },
+        date: Between(startOfDay, endOfDay),
+      },
+    });
+  }
 
   async findByDoctorId(doctorId: string) {
     const listAppointments = await this.AppointmentRepo.find({
       where: {
         doctor: { id: doctorId },
       },
-      relations: ['doctor', 'patient'],
+      relations: {
+        doctor: { user: true },
+        patient: true,
+        speciality: true,
+      },
+      order: {
+        date: 'ASC',
+      },
     });
 
-    if (!listAppointments) throw new NotFoundException('Not Found for this doctor appointments.')
-    return listAppointments
+    if (!listAppointments || listAppointments.length === 0) {
+      throw new NotFoundException('Not Found for this doctor appointments.');
+    }
+
+    return listAppointments;
   }
-
-
 }

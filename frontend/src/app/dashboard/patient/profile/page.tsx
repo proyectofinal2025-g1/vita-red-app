@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 
@@ -168,25 +169,23 @@ export default function ProfilePage() {
     const data = await res.json();
 
     setUserData((prev) =>
-      prev ? { ...prev, profileImageUrl: data.profileImageUrl } : prev
+      prev ? { ...prev, profileImageUrl: data.profileImageUrl } : prev,
     );
 
     setAvatarPreview(data.profileImageUrl);
 
     setDataUser({
-  ...dataUser!,
-  user: {
-    ...dataUser!.user,
-    profileImageUrl: data.profileImageUrl,
-  },
-});
-
+      ...dataUser!,
+      user: {
+        ...dataUser!.user,
+        profileImageUrl: data.profileImageUrl,
+      },
+    });
 
     avatarFileRef.current = null;
   };
 
   const handleSaveAll = async () => {
-
     const result = await Swal.fire({
       title: "¿Guardar cambios?",
       text: "Se actualizarán tus datos de perfil",
@@ -295,7 +294,7 @@ export default function ProfilePage() {
               currentPassword: passwordData.currentPassword,
               newPassword: passwordData.password,
             }),
-          }
+          },
         );
 
         if (!resPassword.ok) {
@@ -368,7 +367,15 @@ export default function ProfilePage() {
   const canSave = hasProfileChanges || hasPasswordChanges;
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 mt-4 ">
+      <div className="flex justify-end items-center mb-6">
+        <Link
+          href="/dashboard/patient"
+          className="text-blue-600 hover:underline flex items-center gap-1"
+        >
+          ← Volver al Panel
+        </Link>
+      </div>
       <div className="bg-white rounded-lg shadow-md p-8">
         <h1 className="text-3xl font-bold text-center mb-8">Mi Perfil</h1>
 

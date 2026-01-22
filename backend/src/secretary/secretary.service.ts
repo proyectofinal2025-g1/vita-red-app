@@ -1,27 +1,35 @@
-import { BadRequestException, Inject, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { UserService } from "../user/user.service";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { UserService } from '../user/user.service';
 import { DoctorService } from '../doctor/doctor.service';
 import * as bcrypt from 'bcrypt';
-import { User } from "../user/entities/user.entity";
-import { InjectRepository } from "@nestjs/typeorm";
-import { FindOptionsWhere, ILike, Repository } from "typeorm";
-import { RolesEnum } from "../user/enums/roles.enum";
-import { UserResponse } from "../user/dto/user-response.dto";
-import { CreateDoctorDto } from "../doctor/dto/create-doctor.dto";
-import { Doctor } from "../doctor/entities/doctor.entity";
-import { DoctorFindResponseDto } from "../doctor/dto/doctor-find-response.dto";
-import { SpecialityService } from "../speciality/speciality.service";
-import { DoctorResponseDto } from "../doctor/dto/doctor-response.dto";
-import { CreateAppointmentPreReserveDto } from "../appointments/dto/create-appointment-pre-reserve.dto";
-import { AppointmentsService } from "../appointments/appointments.service";
-import { PatientAppointmentListResponseDto } from "../appointments/dto/patient-appointment-list-response.dto";
-import { DoctorAppointmentListResponseDto } from "../appointments/dto/doctor-appointment-list.dto";
-import { DoctorScheduleService } from "../doctor/schedule/schedule.service";
-import { UpdateDoctorScheduleDtoBySecretary } from "./dto/scheduleDoctor.dto";
-import { CreateDoctorScheduleDto } from "../doctor/schedule/dto/create-doctor-schedule.dto";
-import { mapDayToNumber } from "../doctor/schedule/helper/mapDayOfWeek.helper";
-import { CreateUser_DoctorDto } from "../doctor/dto/createUser-doctor.dto";
+import { User } from '../user/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { RolesEnum } from '../user/enums/roles.enum';
+import { UserResponse } from '../user/dto/user-response.dto';
+import { CreateDoctorDto } from '../doctor/dto/create-doctor.dto';
+import { Doctor } from '../doctor/entities/doctor.entity';
+import { DoctorFindResponseDto } from '../doctor/dto/doctor-find-response.dto';
+import { SpecialityService } from '../speciality/speciality.service';
+import { DoctorResponseDto } from '../doctor/dto/doctor-response.dto';
+import { CreateAppointmentPreReserveDto } from '../appointments/dto/create-appointment-pre-reserve.dto';
+import { AppointmentsService } from '../appointments/appointments.service';
+import { PatientAppointmentListResponseDto } from '../appointments/dto/patient-appointment-list-response.dto';
+import { DoctorAppointmentListResponseDto } from '../appointments/dto/doctor-appointment-list.dto';
+import { DoctorScheduleService } from '../doctor/schedule/schedule.service';
+import { UpdateDoctorScheduleDtoBySecretary } from './dto/scheduleDoctor.dto';
+import { CreateDoctorScheduleDto } from '../doctor/schedule/dto/create-doctor-schedule.dto';
+import { mapDayToNumber } from '../doctor/schedule/helper/mapDayOfWeek.helper';
+import { CreateUser_DoctorDto } from '../doctor/dto/createUser-doctor.dto';
+import { toZonedTime, format } from 'date-fns-tz';
 
+const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
 
 @Injectable()
 export class SecretaryService {
@@ -34,8 +42,8 @@ export class SecretaryService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Doctor)
-    private readonly doctorRepository: Repository<Doctor>
-  ) { }
+    private readonly doctorRepository: Repository<Doctor>,
+  ) {}
 
   /* TODOS LOS USUARIOS */
 
@@ -54,46 +62,53 @@ export class SecretaryService {
     }
 
     const listUser = await this.userRepository.find({ where });
-    return listUser.map(({ password, ...user }) => user)
+    return listUser.map(({ password, ...user }) => user);
   }
 
-
   async findOne(id: string): Promise<UserResponse> {
-    const userFound = await this.userRepository.findOneBy({ id })
+    const userFound = await this.userRepository.findOneBy({ id });
     if (!userFound) {
-      throw new NotFoundException('ID not found')
+      throw new NotFoundException('ID not found');
     }
-    const { password, ...userWithoutPassword } = userFound
-    return userWithoutPassword
+    const { password, ...userWithoutPassword } = userFound;
+    return userWithoutPassword;
   }
 
   /* PATIENTS  */
 
-  async getPatientByName(first_name?: string, last_name?: string): Promise<UserResponse[]> {
-    const listUser = await this.userService.findByName(first_name, last_name)
-    return listUser.filter(user => user.role === RolesEnum.User)
+  async getPatientByName(
+    first_name?: string,
+    last_name?: string,
+  ): Promise<UserResponse[]> {
+    const listUser = await this.userService.findByName(first_name, last_name);
+    return listUser.filter((user) => user.role === RolesEnum.User);
   }
 
   async getPatientByDni(dni: string): Promise<UserResponse> {
-    const userFound = await this.userService.findByDni(dni)
-    if (userFound.role !== 'patient') throw new BadRequestException('User is not patient')
-    return userFound
+    const userFound = await this.userService.findByDni(dni);
+    if (userFound.role !== 'patient')
+      throw new BadRequestException('User is not patient');
+    return userFound;
   }
 
-  async createPatient({ confirmPassword, password, ...user }: { confirmPassword: string, password: string } & Pick<User, 'email' | 'first_name' | 'last_name' | 'dni'>) {
-
+  async createPatient({
+    confirmPassword,
+    password,
+    ...user
+  }: { confirmPassword: string; password: string } & Pick<
+    User,
+    'email' | 'first_name' | 'last_name' | 'dni'
+  >) {
     if (password !== confirmPassword) {
-      throw new BadRequestException('The passwords do not match')
+      throw new BadRequestException('The passwords do not match');
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
+    const hashedPassword = await bcrypt.hash(password, 10);
     if (!hashedPassword) {
-      throw new InternalServerErrorException(
-        'Error generating password hash',
-      );
+      throw new InternalServerErrorException('Error generating password hash');
     }
 
-    await this.userService.create({ ...user, password: hashedPassword, });
+    await this.userService.create({ ...user, password: hashedPassword });
 
     return {
       success: 'User successfully registered',
@@ -106,31 +121,27 @@ export class SecretaryService {
   }
 
   async disablePatient(id: string) {
-    return await this.userService.disable(id)
+    return await this.userService.disable(id);
   }
-
-
 
   /*  DOCTOR   */
 
   async createDoctor(createDoctor: CreateUser_DoctorDto) {
-    return await this.doctorService.createDoctorWithUser(createDoctor)
+    return await this.doctorService.createDoctorWithUser(createDoctor);
   }
 
   async getDoctors(name?: string): Promise<DoctorFindResponseDto[]> {
     if (name) {
-      const foundDoctor = await this.doctorService.findByDoctorName(name)
-      if (!foundDoctor) throw new NotFoundException('Not found doctor')
-      return foundDoctor
+      const foundDoctor = await this.doctorService.findByDoctorName(name);
+      if (!foundDoctor) throw new NotFoundException('Not found doctor');
+      return foundDoctor;
     }
-    return await this.doctorService.findAll()
+    return await this.doctorService.findAll();
   }
-
 
   async getDoctorById(doctorId: string) {
-    return await this.doctorService.findyById(doctorId)
+    return await this.doctorService.findyById(doctorId);
   }
-
 
   async createScheduleDoctor(
     dto: CreateDoctorScheduleDto,
@@ -139,8 +150,6 @@ export class SecretaryService {
   ) {
     return this.doctorScheduleService.create(dto, userId, role);
   }
-
-
 
   async updateScheduleDoctor(
     doctorId: string,
@@ -153,28 +162,26 @@ export class SecretaryService {
     );
   }
 
-
-
-  async findSchedulesByDoctor(doctorId: string, userId: string, userRole: RolesEnum) {
-    return this.doctorScheduleService.findByDoctor(
-      doctorId,
-      userId,
-      userRole,
-    );
+  async findSchedulesByDoctor(
+    doctorId: string,
+    userId: string,
+    userRole: RolesEnum,
+  ) {
+    return this.doctorScheduleService.findByDoctor(doctorId, userId, userRole);
   }
 
-  async getBySpeciality(specialityName?: string): Promise<DoctorFindResponseDto[]> {
+  async getBySpeciality(
+    specialityName?: string,
+  ): Promise<DoctorFindResponseDto[]> {
     const doctors = await this.doctorRepository.find({
-      where:
-      {
-        speciality:
-          { name: ILike(`%${specialityName}%`) }
+      where: {
+        speciality: { name: ILike(`%${specialityName}%`) },
       },
       relations: {
         speciality: true,
-        user: true
-      }
-    })
+        user: true,
+      },
+    });
     return doctors.map((doctor) => ({
       id: doctor.id,
       fullName: `${doctor.user.first_name} ${doctor.user.last_name}`,
@@ -184,20 +191,24 @@ export class SecretaryService {
   }
 
   async disableDoctor(id: string) {
-    const foundDoctor = await this.doctorService.remove(id)
-    if (!foundDoctor) throw new NotFoundException('Not Found Doctor')
+    const foundDoctor = await this.doctorService.remove(id);
+    if (!foundDoctor) throw new NotFoundException('Not Found Doctor');
   }
-
 
   /*    SPECIALITYS      */
   async getSpecialitys(nameSpeciality?: string) {
-    if (nameSpeciality) { return await this.specialityService.findByNameWithDoctors(nameSpeciality) }
-    return await this.specialityService.findAll()
+    if (nameSpeciality) {
+      return await this.specialityService.findByNameWithDoctors(nameSpeciality);
+    }
+    return await this.specialityService.findAll();
   }
 
   /*   APPOINTMENTS     */
-  async preReserveAppointment(dto: CreateAppointmentPreReserveDto, userId: string) {
-    return await this.appointmentsService.preReserveAppointment(dto, userId)
+  async preReserveAppointment(
+    dto: CreateAppointmentPreReserveDto,
+    userId: string,
+  ) {
+    return await this.appointmentsService.preReserveAppointment(dto, userId);
   }
 
   async findAppointmentsByPatientId(
@@ -213,7 +224,6 @@ export class SecretaryService {
       speciality,
     });
 
-
     if (!appointments.length) {
       if (date && speciality) {
         throw new NotFoundException(
@@ -222,9 +232,7 @@ export class SecretaryService {
       }
 
       if (date) {
-        throw new NotFoundException(
-          `No appointments were found on ${date}.`,
-        );
+        throw new NotFoundException(`No appointments were found on ${date}.`);
       }
 
       if (speciality) {
@@ -238,25 +246,32 @@ export class SecretaryService {
       );
     }
 
-    return appointments.map((appointment) => ({
-      id: appointment.id,
-      date: appointment.date.toISOString().substring(0, 10),
-      time: appointment.date.toISOString().substring(11, 16),
-      doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
-      speciality: appointment.speciality.name,
-      status: appointment.status,
-    }));
-  }
+    return appointments.map((appointment) => {
+      const argentinaDate = toZonedTime(
+        appointment.date,
+        'America/Argentina/Buenos_Aires',
+      );
 
+      return {
+        id: appointment.id,
+        date: format(argentinaDate, 'yyyy-MM-dd'),
+        time: format(argentinaDate, 'HH:mm'),
+        doctorName: `${appointment.doctor.user.first_name} ${appointment.doctor.user.last_name}`,
+        speciality: appointment.speciality.name,
+        status: appointment.status,
+      };
+    });
+  }
 
   async findAgendByDoctor(
     doctorId: string,
   ): Promise<DoctorAppointmentListResponseDto[]> {
-    const doctorFound = await this.doctorService.findyById(doctorId)
+    const doctorFound = await this.doctorService.findyById(doctorId);
     if (!doctorFound) {
       throw new NotFoundException('Doctor not found');
     }
-    const appointments = await this.appointmentsService.findAppointmentsByMedic(doctorId)
+    const appointments =
+      await this.appointmentsService.findAppointmentsByMedic(doctorId);
     return appointments.map((appointment) => ({
       id: appointment.id,
       date: appointment.date.toISOString().substring(0, 10),
@@ -266,8 +281,7 @@ export class SecretaryService {
     }));
   }
 
-
   async getAppointmentById(id: string) {
-    return await this.appointmentsService.findById(id)
+    return await this.appointmentsService.findById(id);
   }
 }
