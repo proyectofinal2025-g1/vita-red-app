@@ -1,13 +1,24 @@
 // frontend/src/app/dashboard/super-admin/doctors/new/page.tsx
+
 'use client';
 
 import { useRoleGuard } from '@/hooks/useRoleGuard';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useFormik } from 'formik';
+import {
+  initialValuesRegisterDoctor,
+  registerDoctorSchema,
+} from '@/validators/registerDoctorSchema';
+import {
+  getPasswordStrength,
+  getPasswordStrengthLabel,
+} from '@/utils/passwordStrength';
 
 const apiURL = process.env.NEXT_PUBLIC_API_URL;
 
+// ✅ Interfaz Speciality definida localmente (opción recomendada para este archivo)
 interface Speciality {
   id: string;
   name: string;
@@ -17,32 +28,20 @@ interface Speciality {
 
 export default function CreateDoctorPage() {
   useRoleGuard('superadmin');
-
   const router = useRouter();
-
-  const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    dni: '',
-    email: '',
-    password: '',
-    licence_number: '',
-    speciality_id: '',
-  });
-
-  const [specialities, setSpecialities] = useState<Speciality[]>([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [specialities, setSpecialities] = useState<Speciality[]>([]);
 
-  // Cargar especialidades al montar
+  // Cargar especialidades
   useEffect(() => {
     const loadSpecialities = async () => {
       try {
         const res = await fetch(`${apiURL}/speciality`);
         if (!res.ok) throw new Error('Error al cargar especialidades');
         const data: Speciality[] = await res.json();
-        setSpecialities(data);
+        setSpecialities(data.filter((s) => s.isActive));
       } catch (err) {
         console.error('Error al cargar especialidades:', err);
       }
@@ -50,104 +49,87 @@ export default function CreateDoctorPage() {
     loadSpecialities();
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const getPasswordColor = (strength: string) => {
+    switch (strength) {
+      case 'weak':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-yellow-500';
+      case 'strong':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-300';
+    }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+  const formik = useFormik({
+    initialValues: initialValuesRegisterDoctor,
+    validationSchema: registerDoctorSchema,
+    onSubmit: async (values, { setSubmitting }) => {
+      setError(null);
+      setSubmitting(true);
 
-    if (formData.password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
+      try {
+        const userSession = localStorage.getItem('userSession');
+        if (!userSession) throw new Error('Sesión no encontrada');
+        const token = JSON.parse(userSession).token;
 
-    if (!formData.speciality_id) {
-      setError('Debes seleccionar una especialidad');
-      return;
-    }
+        // Paso 1: Crear el médico
+        const createRes = await fetch(`${apiURL}/superadmin/doctors`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(values),
+        });
 
-    setLoading(true);
-    setSuccess(false);
+        if (!createRes.ok) {
+          const errorData = await createRes.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Error al crear el médico');
+        }
 
-    try {
-      const userSession = localStorage.getItem('userSession');
-      if (!userSession) throw new Error('Sesión no encontrada');
-      const token = JSON.parse(userSession).token;
+        const doctorData = await createRes.json();
 
-      // Paso 1: Crear usuario como paciente
-      const patientRes = await fetch(`${apiURL}/superadmin/patients`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          dni: formData.dni,
-          email: formData.email,
-          password: formData.password,
-          confirmPassword: formData.password,
-        }),
-      });
+        // 👇 Extraer el ID del usuario (ajusta si la estructura es diferente)
+        const userId = doctorData.user?.id || doctorData.userId;
 
-      if (!patientRes.ok) {
-        const errorData = await patientRes.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al crear el usuario');
-      }
+        if (!userId) {
+          throw new Error('No se pudo obtener el ID del usuario creado');
+        }
 
-      const patient = await patientRes.json();
-      const userId = patient.id;
-
-      // Paso 2: Cambiar rol a médico
-      const roleRes = await fetch(`${apiURL}/superadmin/users/${userId}/role`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ role: 'medico' }),
-      });
-
-      if (!roleRes.ok) {
-        const errorData = await roleRes.json().catch(() => ({}));
-        throw new Error(
-          errorData.message || 'Error al cambiar el rol a médico'
+        // Paso 2: Activar al usuario
+        const activateRes = await fetch(
+          `${apiURL}/superadmin/users/${userId}/status`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ is_active: true }),
+          }
         );
+
+        if (!activateRes.ok) {
+          console.warn(
+            'El médico fue creado, pero no se pudo activar automáticamente.'
+          );
+        }
+
+        // Éxito
+        setTimeout(() => router.push('/dashboard/super-admin/doctors'), 1500);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Error desconocido al crear el médico.');
+        }
+      } finally {
+        setSubmitting(false);
       }
-
-      // Paso 3: Crear perfil médico
-      const doctorRes = await fetch(`${apiURL}/superadmin/doctors`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          licence_number: formData.licence_number,
-          user_id: userId,
-          speciality_id: formData.speciality_id,
-        }),
-      });
-
-      if (!doctorRes.ok) {
-        const errorData = await doctorRes.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al crear el perfil médico');
-      }
-
-      setSuccess(true);
-      setTimeout(() => router.push('/dashboard/super-admin/doctors'), 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error desconocido');
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+  });
 
   return (
     <div className='max-w-3xl mx-auto p-6'>
@@ -163,109 +145,183 @@ export default function CreateDoctorPage() {
         </Link>
       </div>
 
-      {success && (
-        <div className='mb-6 p-4 bg-green-50 border border-green-500 text-green-700 rounded-lg'>
-          ✅ Médico creado exitosamente. Redirigiendo...
-        </div>
-      )}
-
       {error && (
-        <div className='mb-6 p-4 bg-red-50 border border-red-500 text-red-700 rounded-lg'>
+        <div className='mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg'>
           ❌ {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className='bg-white p-6 rounded-xl shadow'>
+      {formik.isSubmitting && !error && (
+        <div className='mb-4 p-3 bg-green-50 text-green-700 rounded-lg'>
+          ✅ Médico creado y activado correctamente. Redirigiendo...
+        </div>
+      )}
+
+      <form
+        onSubmit={formik.handleSubmit}
+        className='bg-white p-6 rounded-xl shadow'
+      >
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-4'>
+          {/* Nombres */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label
+              htmlFor='first_name'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
               Nombres *
             </label>
             <input
-              type='text'
+              id='first_name'
               name='first_name'
-              value={formData.first_name}
-              onChange={handleChange}
-              required
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              type='text'
+              placeholder='Juan'
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.first_name && formik.errors.first_name
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300'
+              }`}
+              value={formik.values.first_name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
             />
+            {formik.touched.first_name && formik.errors.first_name && (
+              <p className='mt-1 text-sm text-red-600'>
+                {formik.errors.first_name}
+              </p>
+            )}
           </div>
+
+          {/* Apellidos */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label
+              htmlFor='last_name'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
               Apellidos *
             </label>
             <input
-              type='text'
+              id='last_name'
               name='last_name'
-              value={formData.last_name}
-              onChange={handleChange}
-              required
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              type='text'
+              placeholder='Pérez'
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.last_name && formik.errors.last_name
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300'
+              }`}
+              value={formik.values.last_name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
             />
+            {formik.touched.last_name && formik.errors.last_name && (
+              <p className='mt-1 text-sm text-red-600'>
+                {formik.errors.last_name}
+              </p>
+            )}
           </div>
+
+          {/* DNI */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              DNI * (único)
+            <label
+              htmlFor='dni'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
+              DNI *
             </label>
             <input
-              type='text'
+              id='dni'
               name='dni'
-              value={formData.dni}
-              onChange={handleChange}
-              required
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              type='text'
+              placeholder='12345678'
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.dni && formik.errors.dni
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300'
+              }`}
+              value={formik.values.dni}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
             />
+            {formik.touched.dni && formik.errors.dni && (
+              <p className='mt-1 text-sm text-red-600'>{formik.errors.dni}</p>
+            )}
           </div>
+
+          {/* Email */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+            <label
+              htmlFor='email'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
               Email *
             </label>
             <input
-              type='email'
+              id='email'
               name='email'
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              type='email'
+              placeholder='tu@email.com'
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.email && formik.errors.email
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300'
+              }`}
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
             />
+            {formik.touched.email && formik.errors.email && (
+              <p className='mt-1 text-sm text-red-600'>{formik.errors.email}</p>
+            )}
           </div>
+
+          {/* Licencia */}
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Contraseña *
+            <label
+              htmlFor='licence_number'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
+              Número de Matrícula *
             </label>
             <input
-              type='password'
-              name='password'
-              value={formData.password}
-              onChange={handleChange}
-              required
-              placeholder='Mínimo 6 caracteres'
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
-            />
-          </div>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
-              Número de Licencia *
-            </label>
-            <input
-              type='text'
+              id='licence_number'
               name='licence_number'
-              value={formData.licence_number}
-              onChange={handleChange}
-              required
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              type='text'
+              placeholder='1234'
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.licence_number && formik.errors.licence_number
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300'
+              }`}
+              value={formik.values.licence_number}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
             />
+            {formik.touched.licence_number && formik.errors.licence_number && (
+              <p className='mt-1 text-sm text-red-600'>
+                {formik.errors.licence_number}
+              </p>
+            )}
           </div>
-          <div className='md:col-span-2'>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>
+
+          {/* Especialidad */}
+          <div>
+            <label
+              htmlFor='speciality_id'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
               Especialidad *
             </label>
             <select
+              id='speciality_id'
               name='speciality_id'
-              value={formData.speciality_id}
-              onChange={handleChange}
-              required
-              className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500'
+              value={formik.values.speciality_id}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                formik.touched.speciality_id && formik.errors.speciality_id
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300'
+              }`}
             >
               <option value=''>Seleccione una especialidad</option>
               {specialities.map((spec) => (
@@ -274,20 +330,215 @@ export default function CreateDoctorPage() {
                 </option>
               ))}
             </select>
+            {formik.touched.speciality_id && formik.errors.speciality_id && (
+              <p className='mt-1 text-sm text-red-600'>
+                {formik.errors.speciality_id}
+              </p>
+            )}
           </div>
         </div>
+
+        {/* Contraseñas lado a lado */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 mb-6'>
+          {/* Password */}
+          <div className='relative'>
+            <label
+              htmlFor='password'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
+              Contraseña *
+            </label>
+            <div className='relative'>
+              <input
+                id='password'
+                name='password'
+                type={showPassword ? 'text' : 'password'}
+                placeholder='••••••••'
+                className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  formik.touched.password && formik.errors.password
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300'
+                }`}
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              <button
+                type='button'
+                className='absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700'
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={
+                  showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'
+                }
+              >
+                {showPassword ? (
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-5 h-5'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.774 3.162 10.066 7.5-1.292 4.338-5.31 7.5-10.066 7.5-1.225 0-2.41-.177-3.537-.506M6.228 6.228 3.5 3.5m2.728 2.728 14.002 14.002M18.364 18.364l-2.728-2.728'
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-5 h-5'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z'
+                    />
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {formik.touched.password && formik.errors.password && (
+              <p className='mt-1 text-sm text-red-600'>
+                {formik.errors.password}
+              </p>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div className='relative'>
+            <label
+              htmlFor='confirmPassword'
+              className='block text-sm font-medium text-gray-700 mb-1'
+            >
+              Confirmar contraseña *
+            </label>
+            <div className='relative'>
+              <input
+                id='confirmPassword'
+                name='confirmPassword'
+                type={showConfirmPassword ? 'text' : 'password'}
+                placeholder='••••••••'
+                className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
+                  formik.touched.confirmPassword &&
+                  formik.errors.confirmPassword
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300'
+                }`}
+                value={formik.values.confirmPassword}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
+              <button
+                type='button'
+                className='absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700'
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                aria-label={
+                  showConfirmPassword
+                    ? 'Ocultar confirmación'
+                    : 'Mostrar confirmación'
+                }
+              >
+                {showConfirmPassword ? (
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-5 h-5'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.774 3.162 10.066 7.5-1.292 4.338-5.31 7.5-10.066 7.5-1.225 0-2.41-.177-3.537-.506M6.228 6.228 3.5 3.5m2.728 2.728 14.002 14.002M18.364 18.364l-2.728-2.728'
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                    strokeWidth={1.5}
+                    stroke='currentColor'
+                    className='w-5 h-5'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z'
+                    />
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      d='M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z'
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {formik.touched.confirmPassword &&
+              formik.errors.confirmPassword && (
+                <p className='mt-1 text-sm text-red-600'>
+                  {formik.errors.confirmPassword}
+                </p>
+              )}
+          </div>
+        </div>
+
+        {/* Fortaleza de la contraseña */}
+        {formik.values.password && (
+          <div className='mb-6'>
+            {(() => {
+              const strength = getPasswordStrength(formik.values.password);
+              const color = getPasswordColor(strength);
+              const label = getPasswordStrengthLabel(strength);
+              const width =
+                strength === 'weak'
+                  ? '33%'
+                  : strength === 'medium'
+                  ? '66%'
+                  : '100%';
+
+              return (
+                <div>
+                  <div className='w-full h-2 bg-gray-200 rounded-full overflow-hidden'>
+                    <div
+                      className={`h-full ${color} transition-all duration-300`}
+                      style={{ width }}
+                    />
+                  </div>
+                  <p className='text-sm mt-1 text-gray-600'>
+                    Fortaleza: <span className='font-medium'>{label}</span>
+                  </p>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         <div className='flex gap-3 pt-4'>
           <button
             type='submit'
-            disabled={loading}
+            disabled={formik.isSubmitting}
             className={`px-5 py-2 rounded-lg font-medium ${
-              loading
+              formik.isSubmitting
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 hover:bg-blue-700 text-white'
             }`}
           >
-            {loading ? 'Creando...' : 'Crear Médico'}
+            {formik.isSubmitting ? 'Creando...' : 'Crear Médico'}
           </button>
           <Link
             href='/dashboard/super-admin/doctors'
