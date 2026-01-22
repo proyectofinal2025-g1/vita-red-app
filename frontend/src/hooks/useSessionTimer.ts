@@ -13,13 +13,7 @@ export const useSessionTimer = (
   useEffect(() => {
     hasExpired.current = false; // Reset al cambiar el token
 
-    if (!token) {
-      if (!hasExpired.current) {
-        hasExpired.current = true;
-        onExpire?.();
-      }
-      return;
-    }
+    if (!token) {return; }
 
     const payload = decodeJWT(token);
     if (!payload || typeof payload.exp !== 'number') {
