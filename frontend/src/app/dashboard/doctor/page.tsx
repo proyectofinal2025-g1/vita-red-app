@@ -1,125 +1,109 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import StatCard from "./components/StatCard"
-import QuickAccessCard from "./components/QuickAccessCard"
-import NextAppointmentCard from "./components/NextAppointmentCard"
-import DashboardSkeleton from "./components/DashboardSkeleton"
-import MedicalRecordsTable from "./components/MedicalRecordsTable"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import StatCard from "./components/StatCard";
+import QuickAccessCard from "./components/QuickAccessCard";
+import NextAppointmentCard from "./components/NextAppointmentCard";
+import DashboardSkeleton from "./components/DashboardSkeleton";
+import MedicalRecordsTable from "./components/MedicalRecordsTable";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function DoctorDashboardPage() {
-  const router = useRouter()
+  const router = useRouter();
 
-  const [doctor, setDoctor] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [medicalRecords, setMedicalRecords] = useState<any[]>([])
-  const [appointments, setAppointments] = useState<any[]>([])
-  const [filter, setFilter] = useState<"today" | "week" | "pending" | null>(null)
+  const [doctor, setDoctor] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [filter, setFilter] = useState<"today" | "week" | "pending" | null>(
+    null,
+  );
   const { dataUser } = useAuth();
-  const [specialities, setSpecialities] = useState<any[]>([])
+  const safeAppointments = Array.isArray(appointments) ? appointments : [];
 
   useEffect(() => {
   const token = dataUser?.token
 
-  if (dataUser === undefined) return;
-  if (!dataUser?.token) {
-    router.push("/auth/login")
-    return
-  }
+    if (!token) {
+      router.push("/auth/login");
+      return;
+    }
 
-  async function loadDashboard() {
-  try {
-    const token = dataUser?.token
-    if (!token) throw new Error("No token")
+    async function loadDashboard() {
+      try {
+        const doctorRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/doctors/me`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
 
-    const [doctorRes, recordsRes, appointmentsRes, specialtiesRes] =
-      await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/speciality`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ])
+        if (!doctorRes.ok) throw new Error("Unauthorized");
 
-    if (!doctorRes.ok) throw new Error("Unauthorized")
+        const doctorData = await doctorRes.json();
+        setDoctor(doctorData);
 
-    const doctorData = await doctorRes.json()
+        const recordsRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records?doctor_id=${doctorData.id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        console.log("recordsRes.status", recordsRes.status);
 
-    const specialtiesJson = await specialtiesRes.json()
-    const specialtiesArray = Array.isArray(specialtiesJson)
-      ? specialtiesJson
-      : specialtiesJson.data ?? []
+        const recordsData = await recordsRes.json();
+        console.log("recordsData", recordsData);
+        setMedicalRecords(Array.isArray(recordsData) ? recordsData : []);
 
-    const specialtyName =
-      specialtiesArray.find(
-        (s: any) => s.id === doctorData.speciality_id
-      )?.name ?? "Especialidad no definida"
+        setAppointments([]);
+      } catch (error) {
+        console.error(error);
+        router.push("/auth/login");
+      } finally {
+        setLoading(false);
+      }
+    }
 
-    setDoctor({
-      ...doctorData,
-      first_name: dataUser?.user.first_name,
-      last_name: dataUser?.user.last_name,
-      specialty: specialtyName,
-    })
+    loadDashboard();
+  }, [dataUser, router]);
 
-    setMedicalRecords(await recordsRes.json())
-    setAppointments(await appointmentsRes.json())
-  } catch (error) {
-    console.error(error)
-    router.push("/auth/login")
-  } finally {
-    setLoading(false)
-  }
-}
+  if (loading) return <DashboardSkeleton />;
+  if (!doctor) return null;
 
+  const today = new Date().toISOString().slice(0, 10);
 
-  loadDashboard()
-}, [dataUser, router])
+  const todayAppointments = safeAppointments.filter((a) => a.date === today);
 
+  const weekAppointments = safeAppointments.filter((a) => {
+    const apptDate = new Date(a.date);
+    const now = new Date();
 
-  if (loading) return <DashboardSkeleton />
-  if (!doctor) return null
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
 
-  const today = new Date().toISOString().slice(0, 10)
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 7);
 
-  const todayAppointments = appointments.filter(a => a.date === today)
+    return apptDate >= startOfWeek && apptDate < endOfWeek;
+  });
 
-  const weekAppointments = appointments.filter(a => {
-    const apptDate = new Date(a.date)
-    const now = new Date()
-
-    const startOfWeek = new Date(now)
-    startOfWeek.setDate(now.getDate() - now.getDay())
-
-    const endOfWeek = new Date(startOfWeek)
-    endOfWeek.setDate(startOfWeek.getDate() + 7)
-
-    return apptDate >= startOfWeek && apptDate < endOfWeek
-  })
-
-  const pendingAppointments = appointments.filter(a => a.status === "pending")
+  const pendingAppointments = safeAppointments.filter(
+    (a) => a.status === "pending",
+  );
 
   const filteredAppointments =
     filter === "today"
       ? todayAppointments
       : filter === "week"
-      ? weekAppointments
-      : filter === "pending"
-      ? pendingAppointments
-      : []
+        ? weekAppointments
+        : filter === "pending"
+          ? pendingAppointments
+          : [];
 
   async function completeAppointment(id: number) {
     try {
-      const token = localStorage.getItem("token")
+      const token = dataUser?.token;
 
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/appointments/${id}/cancel`,
@@ -129,16 +113,14 @@ export default function DoctorDashboardPage() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
-      )
+        },
+      );
 
-      setAppointments(prev =>
-        prev.map(a =>
-          a.id === id ? { ...a, status: "completed" } : a
-        )
-      )
+      setAppointments((prev) =>
+        prev.map((a) => (a.id === id ? { ...a, status: "completed" } : a)),
+      );
     } catch (error) {
-      console.error("Error al completar turno", error)
+      console.error("Error al completar turno", error);
     }
   }
 
@@ -186,8 +168,11 @@ export default function DoctorDashboardPage() {
             <p className="text-slate-500">No hay turnos</p>
           ) : (
             <ul className="space-y-2 text-sm">
-              {filteredAppointments.map(a => (
-                <li key={a.id} className="flex justify-between items-center border-b pb-2">
+              {filteredAppointments.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex justify-between items-center border-b pb-2"
+                >
                   <div>
                     <p className="font-medium">
                       {a.patient?.first_name ?? a.patient}
@@ -233,5 +218,5 @@ export default function DoctorDashboardPage() {
         <MedicalRecordsTable records={medicalRecords} />
       </section>
     </div>
-  )
+  );
 }

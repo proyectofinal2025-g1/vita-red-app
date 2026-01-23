@@ -148,7 +148,7 @@ export class AppointmentsService {
 
     const now = AppointmentTimeHelper.now();
 
-    const expiresAt = AppointmentTimeHelper.addMinutes(now, 10);
+    const expiresAt = AppointmentTimeHelper.addMinutes(now, 5);
 
     const appointment = this.appointmentRepository.create({
       date: appointmentDate,
