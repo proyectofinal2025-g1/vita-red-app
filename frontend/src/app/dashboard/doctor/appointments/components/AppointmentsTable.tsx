@@ -1,26 +1,36 @@
 import StatusBadge from "./StatusBadge";
+import {
+  formatArgentinaDate,
+  formatArgentinaTime,
+} from "@/utils/formatArgentinaDateTime";
+
+interface Patient {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
 
 interface Appointment {
-  id: number
-  patient: string
-  date: string
-  hour: string
-  status: "confirmed" | "pending" | "cancelled" | "completed"
+  id: number;
+  patient: Patient | null;
+  date: string;
+  hour: string;
+  status: "confirmed" | "pending" | "cancelled" | "completed";
 }
 
 export default function AppointmentsTable({
   appointments,
-  onAttend
+  onAttend,
 }: {
-  appointments: Appointment[]
-  onAttend: (a: Appointment) => void
+  appointments: Appointment[];
+  onAttend: (a: Appointment) => void;
 }) {
   if (!appointments.length) {
     return (
       <div className="bg-white rounded-2xl p-6 border text-slate-500 ">
         No tenés turnos asignados
       </div>
-    )
+    );
   }
 
   return (
@@ -37,33 +47,38 @@ export default function AppointmentsTable({
         </thead>
 
         <tbody>
-          {appointments.map(a => (
+          {appointments.map((a) => (
             <tr
               key={a.id}
               className="border-t hover:bg-slate-50 cursor-pointer"
             >
               <td className="px-4 py-3">
-                {a.patient}
+                {a.patient
+                  ? `${a.patient.first_name} ${a.patient.last_name}`
+                  : "Paciente"}
               </td>
               <td className="px-4 py-3 text-center">
-                {a.date}
+                {formatArgentinaDate(a.date)}
               </td>
               <td className="px-4 py-3 text-center">
-                {a.hour}
+                {formatArgentinaTime(a.date)}
               </td>
+
               <td className="px-4 py-3 text-center">
                 <StatusBadge status={a.status} />
               </td>
               <td>
-                {a.status === "confirmed" && (
-                  <button onClick={() => onAttend(a)} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-semibold">
+                {a.status.toLowerCase() === "confirmed" && (
+                  <button
+                    onClick={() => onAttend(a)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-semibold"
+                  >
                     Atender
                   </button>
                 )}
+
                 {a.status !== "confirmed" && (
-                  <span className="text-slate-400 text-xs">
-                    -
-                  </span>
+                  <span className="text-slate-400 text-xs">-</span>
                 )}
               </td>
             </tr>
@@ -71,5 +86,5 @@ export default function AppointmentsTable({
         </tbody>
       </table>
     </div>
-  )
+  );
 }

@@ -19,11 +19,11 @@ export class NotificationsCronService {
     private readonly notificationService: NotificationService
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async cronService() {
     const now = AppointmentTimeHelper.now();
     const nextDay = AppointmentTimeHelper.addMinutes(now, 720);
-    const limitDate = AppointmentTimeHelper.addMinutes(now, 725);
+    const limitDate = AppointmentTimeHelper.addMinutes(now, 721);
 
     const appointments = await this.appointmentRepo.find({
       where: {

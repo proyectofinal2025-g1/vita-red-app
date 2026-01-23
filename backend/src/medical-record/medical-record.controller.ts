@@ -46,7 +46,7 @@ export class MedicalRecordController {
     name: 'doctor_id',
     required: true
   })
-  @Roles(RolesEnum.Medic, RolesEnum.SuperAdmin)
+  @Roles(RolesEnum.SuperAdmin, RolesEnum.Medic)
   @UseGuards(AuthGuard, RolesGuard)
   @Get('doctor/medical-records')
   async findMedicalRecords(@Query('doctor_id', ParseUUIDPipe) doctorId: string) {

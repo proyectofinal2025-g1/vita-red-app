@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import AppointmentsTable from "./components/AppointmentsTable"
 import { useEffect, useState } from "react"
@@ -12,7 +12,7 @@ export default function DoctorAppointmentsPage() {
   const { dataUser } = useAuth()
 
   function handleAttend(appointment: any) {
-    router.push(`/appointments/${appointment.id}/medical-record`)
+    router.push(`/dashboard/doctor/medical-records/${appointment.id}`)
   }
 
   useEffect(() => {
@@ -27,7 +27,8 @@ export default function DoctorAppointmentsPage() {
       try {
         const token = dataUser?.token
         if (!token) {
-          throw new Error("No token")
+          router.push("/auth/login");
+          return;
         }
 
         const res = await fetch(
@@ -40,7 +41,7 @@ export default function DoctorAppointmentsPage() {
         )
         
         if (!res.ok) {
-          throw new Error("No autorizado")
+          throw new Error("No autorizado");
         }
 
         const data = await res.json()
@@ -49,7 +50,7 @@ export default function DoctorAppointmentsPage() {
         console.error("Error cargando turnos", error)
         setAppointments([])
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
     
@@ -59,18 +60,17 @@ export default function DoctorAppointmentsPage() {
   return (
     <div className="space-y-8">
       <header>
-        <h2 className="text-2xl font-bold text-slate-800">
-          Mi Agenda🗓️
-        </h2>
-        <p className="text-slate-500">
-          Turnos programados
-        </p>
+        <h2 className="text-2xl font-bold text-slate-800">Mi Agenda🗓️</h2>
+        <p className="text-slate-500">Turnos programados</p>
       </header>
 
       {loading ? (
         <p className="text-slate-500">Cargando turnos...</p>
       ) : (
-        <AppointmentsTable appointments={appointments} onAttend={handleAttend} />
+        <AppointmentsTable
+          appointments={appointments}
+          onAttend={handleAttend}
+        />
       )}
     </div>
   )
