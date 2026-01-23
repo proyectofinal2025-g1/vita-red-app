@@ -3,22 +3,29 @@
 import AppointmentsTable from "./components/AppointmentsTable"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function DoctorAppointmentsPage() {
-
   const [appointments, setAppointments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-
   const router = useRouter()
+  const { dataUser } = useAuth()
 
   function handleAttend(appointment: any) {
     router.push(`/appointments/${appointment.id}/medical-record`)
   }
 
   useEffect(() => {
+    if (dataUser === undefined) return
+
+    if (!dataUser?.token) {
+      router.push("/auth/login")
+      return
+    }
+
     async function fetchAppointments() {
       try {
-        const token = localStorage.getItem("token")
+        const token = dataUser?.token
         if (!token) {
           throw new Error("No token")
         }
@@ -31,21 +38,23 @@ export default function DoctorAppointmentsPage() {
             },
           }
         )
+        
         if (!res.ok) {
           throw new Error("No autorizado")
         }
 
         const data = await res.json()
-        setAppointments(data)
+        setAppointments(Array.isArray(data) ? data : data.data ?? [])
       } catch (error) {
         console.error("Error cargando turnos", error)
+        setAppointments([])
       } finally {
         setLoading(false)
       }
     }
+    
     fetchAppointments()
-  }, [])
-
+  }, [dataUser, router])
 
   return (
     <div className="space-y-8">

@@ -72,7 +72,11 @@ export default function DoctorDashboardPage() {
     })
 
     setMedicalRecords(await recordsRes.json())
-    setAppointments(await appointmentsRes.json())
+    const appointmentsData = await appointmentsRes.json()
+    const appointmentsArray = Array.isArray(appointmentsData) 
+    ? appointmentsData 
+    : (appointmentsData.data ?? [])
+    setAppointments(appointmentsArray)
   } catch (error) {
     console.error(error)
     router.push("/auth/login")
