@@ -85,10 +85,13 @@ async function handlePhotoUpload(
   const file = e.target.files?.[0]
   if (!file || !dataUser?.token) return
 
-  setPreview(URL.createObjectURL(file))
+  const localPreview = URL.createObjectURL(file)
+  setPreview(localPreview)
 
   const formData = new FormData()
-  formData.append("image", file)
+  formData.append('file', file)
+
+  console.log('Enviando archivo:', file.name, file.size, file.type)
 
   try {
     const res = await fetch(
@@ -102,14 +105,12 @@ async function handlePhotoUpload(
       }
     )
 
-    if (!res.ok) throw new Error()
+    const responseText = await res.text()
+    console.log('Respuesta del servidor:', responseText)
 
-    const updatedUser = await res.json()
-
-    setForm((prev) => ({
-      ...prev,
-      photo: updatedUser.profileImageUrl,
-    }))
+    if (!res.ok) {
+      throw new Error(`Backend rechazó la imagen: ${responseText}`)
+    }
 
     await refreshUser()
 
@@ -121,13 +122,15 @@ async function handlePhotoUpload(
     })
   } catch (error) {
     console.error(error)
+
     Swal.fire({
       icon: "error",
       title: "Error",
-      text: "No se pudo actualizar la foto",
+      text: "No se pudo subir la imagen",
     })
   }
 }
+
 
 
   function handleChange(
