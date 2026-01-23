@@ -23,63 +23,64 @@ export default function DoctorDashboardPage() {
   useEffect(() => {
   const token = dataUser?.token
 
-  if (!token) {
+  if (dataUser === undefined) return;
+  if (!dataUser?.token) {
     router.push("/auth/login")
     return
   }
 
   async function loadDashboard() {
-    try {
-      const [doctorRes, recordsRes, appointmentsRes, specialitiesRes] =
-        await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/specialties`),
-        ])
+  try {
+    const token = dataUser?.token
+    if (!token) throw new Error("No token")
 
-      if (!doctorRes.ok) throw new Error("Unauthorized")
+    const [doctorRes, recordsRes, appointmentsRes, specialtiesRes] =
+      await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/speciality`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ])
 
-      const doctorData = await doctorRes.json()
+    if (!doctorRes.ok) throw new Error("Unauthorized")
 
-      const specialitiesResponse = await specialitiesRes.json()
+    const doctorData = await doctorRes.json()
 
-      const specialitiesArray = Array.isArray(specialitiesResponse)
-        ? specialitiesResponse
-        : specialitiesResponse.data ?? []
+    const specialtiesJson = await specialtiesRes.json()
+    const specialtiesArray = Array.isArray(specialtiesJson)
+      ? specialtiesJson
+      : specialtiesJson.data ?? []
 
-      setSpecialities(specialitiesArray)
+    const specialtyName =
+      specialtiesArray.find(
+        (s: any) => s.id === doctorData.speciality_id
+      )?.name ?? "Especialidad no definida"
 
-      const specialtyName =
-        specialitiesArray.find(
-          (s: any) => s.id === doctorData.speciality_id
-        )?.name ?? "Especialidad no definida"
+    setDoctor({
+      ...doctorData,
+      first_name: dataUser?.user.first_name,
+      last_name: dataUser?.user.last_name,
+      specialty: specialtyName,
+    })
 
-      setDoctor({
-        ...doctorData,
-        first_name: dataUser?.user.first_name,
-        last_name: dataUser?.user.last_name,
-        specialty: specialtyName,
-      })
-
-      setMedicalRecords(await recordsRes.json())
-      setAppointments(await appointmentsRes.json())
-    } catch (error) {
-      console.error(error)
-      router.push("/auth/login")
-    } finally {
-      setLoading(false)
-    }
+    setMedicalRecords(await recordsRes.json())
+    setAppointments(await appointmentsRes.json())
+  } catch (error) {
+    console.error(error)
+    router.push("/auth/login")
+  } finally {
+    setLoading(false)
   }
+}
+
 
   loadDashboard()
 }, [dataUser, router])
@@ -216,12 +217,12 @@ export default function DoctorDashboardPage() {
 
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <QuickAccessCard
-          title="Mi Perfil👤"
+          title="🧑🏻‍⚕️ Mi Perfil"
           description="Ver y editar datos"
           href="/dashboard/doctor/profile"
         />
         <QuickAccessCard
-          title="Mi Agenda🗓️"
+          title="🗓️ Mi Agenda"
           description="Gestionar turnos"
           href="/dashboard/doctor/appointments"
         />
