@@ -13,6 +13,7 @@ export const AuthContext = createContext<IAuthContextProps>({
   setDataUser: () => {},
   logout: () => {},
   loginWithToken: () => {},
+  refreshUser: async () => {},
   loading: true,
 });
 
@@ -68,15 +69,48 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
     }
   }, [dataUser]);
 
-  const logout = () => {
-    setDataUser(null);
-    localStorage.removeItem("vita_chat_messages");
-  };
+const logout = () => {
+  setDataUser(null);
+  localStorage.removeItem("vita_chat_messages");
+};
 
-  const loginWithToken = (token: string) => {
-    if (typeof window === 'undefined') return;
+const refreshUser = async () => {
+  if (!dataUser?.token) return;
 
-    const payload = decodeJWT(token);
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
+      {
+        headers: {
+          Authorization: `Bearer ${dataUser.token}`,
+        },
+      }
+    );
+
+    if (!res.ok) return;
+
+    const updatedUser = await res.json();
+
+    setDataUser(prev => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        user: {
+          ...prev.user,
+          ...updatedUser,
+        },
+      };
+    });
+  } catch (error) {
+    console.error("Error refreshing user", error);
+  }
+};
+
+const loginWithToken = (token: string) => {
+  if (typeof window === 'undefined') return;
+
+  const payload = decodeJWT(token);
     if (
       !payload ||
       typeof payload.exp !== 'number' ||
@@ -105,8 +139,16 @@ export const AuthProvider: React.FC<IAuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ dataUser, setDataUser, logout, loginWithToken, loading }}
-    >
+  value={{
+    dataUser,
+    setDataUser,
+    logout,
+    loginWithToken,
+    refreshUser,
+    loading,
+  }}
+>
+
       {children}
     </AuthContext.Provider>
   );

@@ -91,7 +91,6 @@ export class UserController {
             maxSize: 2000000,
             message: 'Superas el peso maximo de 2MB',
           }),
-          new FileTypeValidator({ fileType: /(.jpg|.png|.svg|.webp|.jpeg)/ }),
         ],
       }),
     )
