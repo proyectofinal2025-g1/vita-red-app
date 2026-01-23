@@ -1,5 +1,7 @@
 import { RefObject } from "react";
 import { ChatMessage } from "@/interfaces/IChat";
+import { renderMessageWithLinks } from "./renderMessageWithLinks";
+
 
 type Props = {
   messages: ChatMessage[];
@@ -49,7 +51,8 @@ export default function ChatMessages({
                   }
                 `}
               >
-                {m.text}
+                {renderMessageWithLinks(m.text)}
+
               </div>
 
 
