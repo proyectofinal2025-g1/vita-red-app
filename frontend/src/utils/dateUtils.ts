@@ -28,7 +28,7 @@ export const isWithin24Hours = (date: Date, time: string): boolean => {
 
   const now = new Date();
 
-  return appointmentDateTime.getTime() - now.getTime() < 24 * 60 * 60 * 1000;
+  return appointmentDateTime.getTime() - now.getTime() < 12 * 60 * 60 * 1000;
 };
 
 
