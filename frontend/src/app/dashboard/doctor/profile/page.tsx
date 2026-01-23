@@ -20,116 +20,133 @@ export default function DoctorProfilePage() {
   const [saving, setSaving] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const { dataUser } = useAuth()
-
+  const { dataUser, refreshUser } = useAuth()
+  const [specialityName, setSpecialityName] = useState("")
 
   useEffect(() => {
-  if (!dataUser?.token) {
-    setLoading(false)
-    return
-  }
-
-  async function fetchDoctor() {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/doctors/me`,
-        {
-          headers: {
-            Authorization: `Bearer ${dataUser?.token}`,
-          },
-        }
-      )
-
-      if (!res.ok) throw new Error()
-
-      const doctorData = await res.json()
-
-      setForm({
-        first_name: dataUser?.user.first_name ?? "",
-        last_name: dataUser?.user.last_name ?? "",
-        email: dataUser?.user.email ?? "",
-        dni: dataUser?.user.dni ?? "",
-        speciality_id: doctorData.speciality_id ?? "",
-        licence_number: doctorData.licence_number ?? "",
-        photo: dataUser?.user.profileImageUrl ?? "",
-      })
-    } catch {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los datos del perfil",
-      })
-    } finally {
+    if (!dataUser?.token) {
       setLoading(false)
+      return
     }
-  }
 
-  fetchDoctor()
-}, [dataUser])
+    async function fetchDoctor() {
+      try {
+        const doctorRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/doctors/me`,
+          {
+            headers: {
+              Authorization: `Bearer ${dataUser?.token}`,
+            },
+          }
+        )
 
+        if (!doctorRes.ok) throw new Error()
+        const doctorData = await doctorRes.json()
 
-  async function handlePhotoUpload(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const file = e.target.files?.[0]
-    if (!file) return
+        const specRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/speciality`
+        )
+        const specJson = await specRes.json()
+        const specArray = specJson.data ?? specJson
 
-    const localPreview = URL.createObjectURL(file)
-    setPreview(localPreview)
+        const specName =
+          specArray.find(
+            (s: any) => s.id === doctorData.speciality_id
+          )?.name ?? ""
 
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append(
-      "upload_preset",
-      process.env.NEXT_PUBLIC_CLOUDINARY_PRESET!
-    )
+        setSpecialityName(specName)
 
-    try {
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      )
-
-      const data = await res.json()
-
-      setForm(prev => ({
-        ...prev,
-        photo: data.secure_url,
-      }))
-
-      const token = localStorage.getItem("token")
-
-      await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/me/avatar`,
-        {
-          method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            profileImageUrl: data.secure_url,
-          }),
-        }
-      )
-
-      Swal.fire({
-        icon: "success",
-        title: "Foto actualizada",
-        timer: 1500,
-        showConfirmButton: false,
-      })
-    } catch {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo subir la imagen",
-      })
+        setForm({
+          first_name: dataUser?.user.first_name ?? "",
+          last_name: dataUser?.user.last_name ?? "",
+          email: dataUser?.user.email ?? "",
+          dni: dataUser?.user.dni ?? "",
+          speciality_id: doctorData.speciality_id ?? "",
+          licence_number: doctorData.licence_number ?? "",
+          photo: dataUser?.user.profileImageUrl ?? "",
+        })
+      } catch {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "No se pudieron cargar los datos del perfil",
+        })
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchDoctor()
+  }, [dataUser])
+
+async function handlePhotoUpload(
+  e: React.ChangeEvent<HTMLInputElement>
+) {
+  const file = e.target.files?.[0];
+  if (!file || !dataUser?.token) return;
+
+  const localPreview = URL.createObjectURL(file);
+  setPreview(localPreview);
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append(
+    "upload_preset",
+    process.env.NEXT_PUBLIC_CLOUDINARY_PRESET!
+  );
+
+  try {
+    const res = await fetch(
+      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+
+    if (!data.secure_url) {
+      console.error("Cloudinary error:", data);
+      throw new Error("No image url");
+    }
+
+    setForm(prev => ({
+      ...prev,
+      photo: data.secure_url,
+    }));
+
+    await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/user/me/avatar`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${dataUser.token}`,
+          "Content-Type": "application/json",
+        },
+        body: formData
+      }
+    );
+
+    await refreshUser();
+
+    Swal.fire({
+      icon: "success",
+      title: "Foto actualizada",
+      timer: 2000,
+      showConfirmButton: false,
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "No se pudo subir la imagen",
+    });
   }
+}
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement>
@@ -145,22 +162,20 @@ export default function DoctorProfilePage() {
     setSaving(true)
 
     try {
-      const token = localStorage.getItem("token")
+      if (!dataUser?.token) throw new Error()
 
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/user/me`,
         {
           method: "PATCH",
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${dataUser.token}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             first_name: form.first_name,
             last_name: form.last_name,
             email: form.email,
-            specialty: form.speciality_id,
-            licence_number: form.licence_number,
           }),
         }
       )
@@ -168,7 +183,7 @@ export default function DoctorProfilePage() {
       Swal.fire({
         icon: "success",
         title: "Perfil actualizado",
-        text: "Los cambios se guardaron correctamente",
+        text: "Los cambios se guardaron correctamente, para visualizarlos vuelve a iniciar sesión.",
       })
     } catch {
       Swal.fire({
@@ -182,19 +197,18 @@ export default function DoctorProfilePage() {
   }
 
   if (loading) {
-  return (
-    <p className="text-center text-slate-500 mt-10">
-      Cargando perfil...
-    </p>
-  )
-}
-
+    return (
+      <p className="text-center text-slate-500 mt-10">
+        Cargando perfil...
+      </p>
+    )
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <header>
         <h2 className="text-2xl font-bold text-slate-800">
-          Mi Perfil👤
+          🧑🏻‍⚕️ Mi Perfil
         </h2>
         <p className="text-slate-500">
           Datos personales del médico
@@ -238,14 +252,14 @@ export default function DoctorProfilePage() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="DNI" name="dni" value={form.dni} disabled />
-          <Input label="Especialidad" name="specialty" value={form.speciality_id} onChange={handleChange} />
+          <Input label="Especialidad" name="specialty" value={specialityName} disabled />
         </div>
 
         <Input
           label="Matrícula"
           name="licence_number"
           value={form.licence_number}
-          onChange={handleChange}
+          disabled
         />
 
         <div className="flex justify-end">
