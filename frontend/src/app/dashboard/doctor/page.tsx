@@ -23,7 +23,7 @@ export default function DoctorDashboardPage() {
   const safeAppointments = Array.isArray(appointments) ? appointments : [];
 
   useEffect(() => {
-    const token = dataUser?.token;
+  const token = dataUser?.token
 
     if (!token) {
       router.push("/auth/login");
@@ -202,12 +202,12 @@ export default function DoctorDashboardPage() {
 
       <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <QuickAccessCard
-          title="Mi Perfil👤"
+          title="🧑🏻‍⚕️ Mi Perfil"
           description="Ver y editar datos"
           href="/dashboard/doctor/profile"
         />
         <QuickAccessCard
-          title="Mi Agenda🗓️"
+          title="🗓️ Mi Agenda"
           description="Gestionar turnos"
           href="/dashboard/doctor/appointments"
         />
