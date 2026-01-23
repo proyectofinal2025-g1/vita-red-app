@@ -19,7 +19,7 @@ export class NotificationsCronService {
     private readonly notificationService: NotificationService
   ) {}
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron(CronExpression.EVERY_MINUTE)
   async cronService() {
     const now = AppointmentTimeHelper.now();
     const nextDay = AppointmentTimeHelper.addMinutes(now, 720);
