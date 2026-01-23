@@ -18,45 +18,72 @@ export default function DoctorDashboardPage() {
   const [appointments, setAppointments] = useState<any[]>([])
   const [filter, setFilter] = useState<"today" | "week" | "pending" | null>(null)
   const { dataUser } = useAuth();
+  const [specialities, setSpecialities] = useState<any[]>([])
 
   useEffect(() => {
-    const token = dataUser?.token;
+  const token = dataUser?.token
 
-    if (!dataUser?.token) {
-    router.push("/auth/login");
-    return;
+  if (!token) {
+    router.push("/auth/login")
+    return
   }
 
-    async function loadDashboard() {
-      try {
-
-        const [doctorRes, recordsRes, appointmentsRes] = await Promise.all([
+  async function loadDashboard() {
+    try {
+      const [doctorRes, recordsRes, appointmentsRes, specialitiesRes] =
+        await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/specialties`),
         ])
 
-        if (!doctorRes.ok) throw new Error("Unauthorized")
+      if (!doctorRes.ok) throw new Error("Unauthorized")
 
-        setDoctor(await doctorRes.json())
-        setMedicalRecords(await recordsRes.json())
-        setAppointments(await appointmentsRes.json())
-      } catch (error) {
-        console.error(error)
-        router.push("/auth/login")
-      } finally {
-        setLoading(false)
-      }
+      const doctorData = await doctorRes.json()
+
+      const specialitiesResponse = await specialitiesRes.json()
+
+      const specialitiesArray = Array.isArray(specialitiesResponse)
+        ? specialitiesResponse
+        : specialitiesResponse.data ?? []
+
+      setSpecialities(specialitiesArray)
+
+      const specialtyName =
+        specialitiesArray.find(
+          (s: any) => s.id === doctorData.speciality_id
+        )?.name ?? "Especialidad no definida"
+
+      setDoctor({
+        ...doctorData,
+        first_name: dataUser?.user.first_name,
+        last_name: dataUser?.user.last_name,
+        specialty: specialtyName,
+      })
+
+      setMedicalRecords(await recordsRes.json())
+      setAppointments(await appointmentsRes.json())
+    } catch (error) {
+      console.error(error)
+      router.push("/auth/login")
+    } finally {
+      setLoading(false)
     }
+  }
 
-    loadDashboard()
-  }, [dataUser, router])
+  loadDashboard()
+}, [dataUser, router])
+
 
   if (loading) return <DashboardSkeleton />
   if (!doctor) return null
@@ -121,7 +148,7 @@ export default function DoctorDashboardPage() {
           Hola, Dr/a. {doctor.last_name} 👋
         </h2>
         <p className="text-slate-500 mt-1">
-          {doctor.specialty} · MP-{doctor.licence_number}
+          {doctor.specialty} · {doctor.licence_number}
         </p>
       </section>
 
