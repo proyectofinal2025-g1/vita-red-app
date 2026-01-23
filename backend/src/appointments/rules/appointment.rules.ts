@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { AppointmentStatus } from '../enums/appointment-status.enum';
 import { toZonedTime } from 'date-fns-tz';
+import { log } from 'console';
 
 const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
 
@@ -56,7 +57,7 @@ export class AppointmentRules {
       throw new BadRequestException(
         `Los turnos deben reservarse con al menos ${minHours} horas de anticipación`,
       );
-    }
+    }    
   }
 
   static validateCancellableStatus(status: AppointmentStatus): void {

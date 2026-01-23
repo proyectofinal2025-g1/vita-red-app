@@ -166,7 +166,7 @@ export default function AppointmentForm({ onClose }: { onClose: () => void }) {
     if (isWithin24Hours(selectedDate, time)) {
       Swal.fire(
         "Anticipación insuficiente",
-        "Debes agendar con al menos 24hs",
+        "Debes agendar con al menos 12hs",
         "warning",
       );
       return;
