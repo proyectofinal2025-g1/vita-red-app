@@ -18,24 +18,23 @@ export class SuperAdminService {
   constructor(private readonly super_adminRepository: SuperAdminRepository) {}
 
   private getMonthName(monthNumber: number): string {
-  const months = [
-    'Enero',
-    'Febrero',
-    'Marzo',
-    'Abril',
-    'Mayo',
-    'Junio',
-    'Julio',
-    'Agosto',
-    'Septiembre',
-    'Octubre',
-    'Noviembre',
-    'Diciembre',
-  ];
+    const months = [
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
+    ];
 
-  return months[monthNumber - 1] ?? 'Mes desconocido';
-}
-
+    return months[monthNumber - 1] ?? 'Mes desconocido';
+  }
 
   async findAll(role?: RolesEnum, isActive?: boolean) {
     return await this.super_adminRepository.findAll(role, isActive);
@@ -142,12 +141,19 @@ export class SuperAdminService {
         endOfYear,
       );
 
+    const monthlyRevenue =
+      await this.super_adminRepository.sumConfirmedRevenueByDateRange(
+        startOfMonthUTC,
+        endOfMonthUTC,
+      );
+
     return {
       totalAppointments,
       appointmentsThisMonth,
       confirmedAppointments,
       cancelledAppointments,
       totalRevenue,
+      monthlyRevenue,
     };
   }
 
@@ -164,15 +170,14 @@ export class SuperAdminService {
   }
 
   async getMonthlyRevenue(year: number): Promise<MonthlyRevenueResponseDto[]> {
-  const rawData =
-    await this.super_adminRepository.sumConfirmedRevenueGroupedByMonth(year);
+    const rawData =
+      await this.super_adminRepository.sumConfirmedRevenueGroupedByMonth(year);
 
-  return rawData.map((item) => ({
-    month: this.getMonthName(Number(item.month)),
-    revenue: Number(item.revenue),
-  }));
-}
-
+    return rawData.map((item) => ({
+      month: this.getMonthName(Number(item.month)),
+      revenue: Number(item.revenue),
+    }));
+  }
 
   async getAppointmentsByStatus(
     year: number,

@@ -32,6 +32,27 @@ export default function SuperAdminOverview() {
     error: dashboardError,
   } = useSuperAdminDashboard(selectedYear);
 
+  const MONTHS = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const monthlyRevenueSelected =
+    dashboardData?.monthlyRevenue.find(
+      (item) => item.month === MONTHS[selectedMonth - 1],
+    )?.revenue ?? 0;
+
   useEffect(() => {
     const fetchOverview = async () => {
       try {
@@ -190,39 +211,61 @@ export default function SuperAdminOverview() {
         )}
 
         {!dashboardLoading && !dashboardError && dashboardData?.kpis && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
+            <div className="bg-white p-6 rounded-xl shadow-xl md:col-span-2 lg:col-span-1 hover:shadow-lg transition">
               <h3 className="text-sm text-gray-500">Turnos Totales</h3>
               <p className="text-3xl font-bold text-blue-600">
                 {dashboardData.kpis.totalAppointments}
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-xl">
+            <div className="bg-white p-6 rounded-xl shadow-xl md:col-span-2 lg:col-span-1 hover:shadow-lg transition">
               <h3 className="text-sm text-gray-500">Turnos del Mes</h3>
               <p className="text-3xl font-bold text-indigo-600">
                 {dashboardData.kpis.appointmentsThisMonth}
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-xl">
+            <div className="bg-white p-6 rounded-xl shadow-xl md:col-span-2 lg:col-span-1 hover:shadow-lg transition">
               <h3 className="text-sm text-gray-500">Turnos Confirmados</h3>
               <p className="text-3xl font-bold text-green-600">
                 {dashboardData.kpis.confirmedAppointments}
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-xl">
+            <div className="bg-white p-6 rounded-xl shadow-xl md:col-span-2 lg:col-span-1 hover:shadow-lg transition">
               <h3 className="text-sm text-gray-500">Turnos Cancelados</h3>
               <p className="text-3xl font-bold text-red-600">
                 {dashboardData.kpis.cancelledAppointments}
               </p>
             </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-xl md:col-span-2 lg:col-span-1">
+            <div className="bg-white p-6 rounded-xl shadow-xl md:col-span-2 lg:col-span-1 hover:shadow-lg transition">
               <h3 className="text-sm text-gray-500">Ingresos Totales</h3>
               <p className="text-3xl font-bold text-emerald-600">
                 ${dashboardData.kpis.totalRevenue}
+              </p>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-xl hover:shadow-lg transition flex flex-col justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h3 className="text-sm text-gray-500">Ingresos del mes</h3>
+
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="text-xs border rounded text-gray-600 w-full sm:w-auto"
+                >
+                  {MONTHS.map((month, index) => (
+                    <option key={month} value={index + 1}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <p className="text-3xl font-bold text-emerald-600">
+                ${monthlyRevenueSelected}
               </p>
             </div>
           </div>

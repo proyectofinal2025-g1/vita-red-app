@@ -456,4 +456,14 @@ export class AppointmentsService {
 
     return { occupiedTimes };
   }
+
+  async findAppointmentsByDoctorForAdmin(doctorId: string) {
+  const appointments =
+    await this.appointmentRepository.findByDoctorId(doctorId);
+
+  return appointments.map((appointment) =>
+    this.toResponseDto(appointment),
+  );
+}
+
 }
