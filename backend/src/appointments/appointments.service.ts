@@ -111,18 +111,18 @@ export class AppointmentsService {
       appointmentDate,
     );
 
-    const sameDayWithDoctor =
-      await this.appointmentRepository.existsSameDayWithDoctor(
-        patient.id,
-        doctor.id,
-        appointmentDate,
-      );
+    // const sameDayWithDoctor =
+    //   await this.appointmentRepository.existsSameDayWithDoctor(
+    //     patient.id,
+    //     doctor.id,
+    //     appointmentDate,
+    //   );
 
-    if (sameDayWithDoctor) {
-      throw new BadRequestException(
-        'No podés agendar más de un turno el mismo día con el mismo médico',
-      );
-    }
+    // if (sameDayWithDoctor) {
+    //   throw new BadRequestException(
+    //     'No podés agendar más de un turno el mismo día con el mismo médico',
+    //   );
+    // }
 
     const doctorConflict = await this.appointmentRepository.existsConflict({
       doctorId: doctor.id,
