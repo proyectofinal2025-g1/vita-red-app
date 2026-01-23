@@ -23,7 +23,7 @@ export class NotificationsCronService {
   async cronService() {
     const now = AppointmentTimeHelper.now();
     const nextDay = AppointmentTimeHelper.addMinutes(now, 720);
-    const limitDate = AppointmentTimeHelper.addMinutes(now, 725);
+    const limitDate = AppointmentTimeHelper.addMinutes(now, 721);
 
     const appointments = await this.appointmentRepo.find({
       where: {
