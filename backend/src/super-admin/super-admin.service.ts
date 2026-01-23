@@ -71,8 +71,6 @@ export class SuperAdminService {
       throw new ForbiddenException(
         'You cannot change the role of a super admin',
       );
-    } else if (role === RolesEnum.SuperAdmin) {
-      throw new ForbiddenException('You cannot assign this role');
     }
     userFound.role = role;
     await this.super_adminRepository.update(userFound);

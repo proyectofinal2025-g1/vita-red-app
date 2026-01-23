@@ -34,14 +34,14 @@ export class NotificationsCronService {
     });
 
     for (const appointment of appointments) {
-      /*if (
+      if (
         appointment.notifications.some(
           notification =>
             notification.type === NotificationType.APPOINTMENT_REMINDER
         )
       ) {
         continue;
-      }*/
+      }
 
       const argentinaDate = toZonedTime(
         appointment.date,
