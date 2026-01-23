@@ -82,71 +82,53 @@ export default function DoctorProfilePage() {
 async function handlePhotoUpload(
   e: React.ChangeEvent<HTMLInputElement>
 ) {
-  const file = e.target.files?.[0];
-  if (!file || !dataUser?.token) return;
+  const file = e.target.files?.[0]
+  if (!file || !dataUser?.token) return
 
-  const localPreview = URL.createObjectURL(file);
-  setPreview(localPreview);
+  setPreview(URL.createObjectURL(file))
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append(
-    "upload_preset",
-    process.env.NEXT_PUBLIC_CLOUDINARY_PRESET!
-  );
+  const formData = new FormData()
+  formData.append("image", file)
 
   try {
     const res = await fetch(
-      `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    const data = await res.json();
-
-    if (!data.secure_url) {
-      console.error("Cloudinary error:", data);
-      throw new Error("No image url");
-    }
-
-    setForm(prev => ({
-      ...prev,
-      photo: data.secure_url,
-    }));
-
-    await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/user/me/avatar`,
       {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${dataUser.token}`,
-          "Content-Type": "application/json",
         },
-        body: formData
+        body: formData,
       }
-    );
+    )
 
-    await refreshUser();
+    if (!res.ok) throw new Error()
+
+    const updatedUser = await res.json()
+
+    setForm((prev) => ({
+      ...prev,
+      photo: updatedUser.profileImageUrl,
+    }))
+
+    await refreshUser()
 
     Swal.fire({
       icon: "success",
       title: "Foto actualizada",
       timer: 2000,
       showConfirmButton: false,
-    });
-
+    })
   } catch (error) {
-    console.error(error);
-
+    console.error(error)
     Swal.fire({
       icon: "error",
       title: "Error",
-      text: "No se pudo subir la imagen",
-    });
+      text: "No se pudo actualizar la foto",
+    })
   }
 }
+
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement>
