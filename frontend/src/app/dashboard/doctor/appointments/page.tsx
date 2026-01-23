@@ -1,26 +1,31 @@
 "use client";
 
-import AppointmentsTable from "./components/AppointmentsTable";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import AppointmentsTable from "./components/AppointmentsTable"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function DoctorAppointmentsPage() {
-  const [appointments, setAppointments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { dataUser } = useAuth();
-
-  const router = useRouter();
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
+  const { dataUser } = useAuth()
 
   function handleAttend(appointment: any) {
     router.push(`/dashboard/doctor/medical-records/${appointment.id}`)
   }
 
   useEffect(() => {
+    if (dataUser === undefined) return
+
+    if (!dataUser?.token) {
+      router.push("/auth/login")
+      return
+    }
+
     async function fetchAppointments() {
       try {
-        const token = dataUser?.token;
-
+        const token = dataUser?.token
         if (!token) {
           router.push("/auth/login");
           return;
@@ -32,30 +37,25 @@ export default function DoctorAppointmentsPage() {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          },
-        );
-
-        if (res.status === 404) {
-          setAppointments([]);
-          return;
-        }
-
+          }
+        )
+        
         if (!res.ok) {
           throw new Error("No autorizado");
         }
 
-        const data = await res.json();
-        setAppointments(Array.isArray(data) ? data : []);
+        const data = await res.json()
+        setAppointments(Array.isArray(data) ? data : data.data ?? [])
       } catch (error) {
-        console.error("Error cargando turnos", error);
-        setAppointments([]);
+        console.error("Error cargando turnos", error)
+        setAppointments([])
       } finally {
         setLoading(false);
       }
     }
-
-    fetchAppointments();
-  }, [dataUser, router]);
+    
+    fetchAppointments()
+  }, [dataUser, router])
 
   return (
     <div className="space-y-8">
@@ -73,5 +73,5 @@ export default function DoctorAppointmentsPage() {
         />
       )}
     </div>
-  );
+  )
 }

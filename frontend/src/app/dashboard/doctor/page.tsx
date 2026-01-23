@@ -25,45 +25,68 @@ export default function DoctorDashboardPage() {
   useEffect(() => {
   const token = dataUser?.token
 
-    if (!token) {
-      router.push("/auth/login");
-      return;
-    }
+  if (dataUser === undefined) return;
+  if (!dataUser?.token) {
+    router.push("/auth/login")
+    return
+  }
 
-    async function loadDashboard() {
-      try {
-        const doctorRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/doctors/me`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+  async function loadDashboard() {
+  try {
+    const token = dataUser?.token
+    if (!token) throw new Error("No token")
 
-        if (!doctorRes.ok) throw new Error("Unauthorized");
+    const [doctorRes, recordsRes, appointmentsRes, specialtiesRes] =
+      await Promise.all([
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/speciality`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ])
 
-        const doctorData = await doctorRes.json();
-        setDoctor(doctorData);
+    if (!doctorRes.ok) throw new Error("Unauthorized")
 
-        const recordsRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records?doctor_id=${doctorData.id}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        console.log("recordsRes.status", recordsRes.status);
+    const doctorData = await doctorRes.json()
 
-        const recordsData = await recordsRes.json();
-        console.log("recordsData", recordsData);
-        setMedicalRecords(Array.isArray(recordsData) ? recordsData : []);
+    const specialtiesJson = await specialtiesRes.json()
+    const specialtiesArray = Array.isArray(specialtiesJson)
+      ? specialtiesJson
+      : specialtiesJson.data ?? []
 
-        setAppointments([]);
-      } catch (error) {
-        console.error(error);
-        router.push("/auth/login");
-      } finally {
-        setLoading(false);
-      }
-    }
+    const specialtyName =
+      specialtiesArray.find(
+        (s: any) => s.id === doctorData.speciality_id
+      )?.name ?? "Especialidad no definida"
+
+    setDoctor({
+      ...doctorData,
+      first_name: dataUser?.user.first_name,
+      last_name: dataUser?.user.last_name,
+      specialty: specialtyName,
+    })
+
+    setMedicalRecords(await recordsRes.json())
+    const appointmentsData = await appointmentsRes.json()
+    const appointmentsArray = Array.isArray(appointmentsData) 
+    ? appointmentsData 
+    : (appointmentsData.data ?? [])
+    setAppointments(appointmentsArray)
+  } catch (error) {
+    console.error(error)
+    router.push("/auth/login")
+  } finally {
+    setLoading(false)
+  }
+}
+
 
     loadDashboard();
   }, [dataUser, router]);
