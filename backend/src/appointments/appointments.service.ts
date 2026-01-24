@@ -466,4 +466,18 @@ export class AppointmentsService {
   );
 }
 
+async updateStatus(appointmentId: string, status: AppointmentStatus) {
+  const appointment = await this.appointmentRepository.findOne({
+    where: { id: appointmentId },
+  });
+
+  if (!appointment) {
+    throw new NotFoundException('Appointment not found');
+  }
+
+  appointment.status = status;
+  return this.appointmentRepository.save(appointment);
+}
+
+
 }

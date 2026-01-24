@@ -239,4 +239,15 @@ export class DoctorService {
     if(!doctorId) throw new NotFoundException('Not found doctor')
     return await this.appointmentService.findAppointmentsByMedic(doctorId)
   }
+
+  async findByUserId(userId: string): Promise<Doctor> {
+  const doctor = await this.doctorRepository.findOneByUserId(userId);
+
+  if (!doctor) {
+    throw new NotFoundException('Doctor profile not found for this user');
+  }
+
+  return doctor;
+}
+
 }
