@@ -6,30 +6,48 @@ import { MedicalRecordRepository } from './medical-record.repository';
 import { MedicalRecord } from './entities/medical-record.entity';
 import { ResponseMedicalHistoryDto } from './dto/medical-history.response.dto';
 import { ResponseMedicalRecordsDto } from './dto/medical-records-response.dto';
+import { AppointmentsService } from '../appointments/appointments.service';
+import { AppointmentStatus } from '../appointments/enums/appointment-status.enum';
 
 @Injectable()
 export class MedicalRecordService {
   constructor(
     private readonly medicalRecordRepository: MedicalRecordRepository,
     private readonly userService: UserService,
-    private readonly doctorService: DoctorService
+    private readonly doctorService: DoctorService,
+    private readonly appointmentService: AppointmentsService,
   ) { }
 
-  async createMedicalRecord(dto: CreateMedicalRecordDto): Promise<MedicalRecord> {
-    const patient = await this.userService.findById(dto.patient_id);
+  async createMedicalRecord(
+  dto: CreateMedicalRecordDto,
+  user: any
+): Promise<MedicalRecord> {
 
-    if (patient.role !== 'patient') {
-      throw new BadRequestException('The user does not correspond to a patient');
-    }
+  const patient = await this.userService.findById(dto.patient_id);
+  if (patient.role !== 'patient') {
+    throw new BadRequestException('The user does not correspond to a patient');
+  }
 
-    const doctor = await this.doctorService.findyById(dto.doctor_id);
+  const doctor = await this.doctorService.findByUserId(user.sub);
 
-    return this.medicalRecordRepository.createMedicalRecord(
+  // 1️⃣ Crear el registro médico
+  const medicalRecord =
+    await this.medicalRecordRepository.createMedicalRecord(
       dto,
       patient,
       doctor
     );
-  }
+
+  // 2️⃣ Marcar el turno como completed
+ await this.appointmentService.updateStatus(
+  dto.appointment_id,
+  AppointmentStatus.COMPLETED
+);
+
+  return medicalRecord;
+}
+
+
 
 
   async findMedicalHistory(patientId: string): Promise<ResponseMedicalHistoryDto[]> {

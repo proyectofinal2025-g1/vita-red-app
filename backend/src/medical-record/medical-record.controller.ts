@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, ParseUUIDPipe, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, ParseUUIDPipe, Param, UseGuards, Req } from '@nestjs/common';
 import { MedicalRecordService } from './medical-record.service';
 import { CreateMedicalRecordDto } from './dto/create-medical-record.dto';
 import { ApiOperation, ApiQuery } from '@nestjs/swagger';
@@ -11,19 +11,25 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 export class MedicalRecordController {
   constructor(private readonly medicalRecordService: MedicalRecordService) { }
 
-  @ApiOperation({
-    summary: 'Crear un regístro médico post consulta',
-  })
-  @Roles(RolesEnum.Medic)
-  @UseGuards(AuthGuard, RolesGuard)
   @Post()
-  async createMedicalRecord(@Body() createMedicalRecordDto: CreateMedicalRecordDto) {
-    const newMedicalRecords = await this.medicalRecordService.createMedicalRecord(createMedicalRecordDto);
-    return {
-      message: 'Medical consultation request successfully completed',
-      medical_record: newMedicalRecords
-    }
-  }
+@Roles(RolesEnum.Medic)
+@UseGuards(AuthGuard, RolesGuard)
+async createMedicalRecord(
+  @Body() createMedicalRecordDto: CreateMedicalRecordDto,
+  @Req() req: any,
+) {
+  const newMedicalRecords =
+    await this.medicalRecordService.createMedicalRecord(
+      createMedicalRecordDto,
+      req.user,
+    );
+
+  return {
+    message: 'Medical consultation request successfully completed',
+    medical_record: newMedicalRecords,
+  };
+}
+
 
   @ApiOperation({
     summary: 'Buscar el historial clínico de un paciente',

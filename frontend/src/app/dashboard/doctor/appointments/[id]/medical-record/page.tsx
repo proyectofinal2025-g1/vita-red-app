@@ -1,22 +1,43 @@
-'use client'
+"use client"
 
 import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Swal from "sweetalert2"
+import { useAuth } from "@/contexts/AuthContext"
 
 export default function MedicalRecordPage() {
   const { id } = useParams()
+  const searchParams = useSearchParams()
   const router = useRouter()
+  const { dataUser } = useAuth()
 
-  const [notes, setNotes] = useState("")
+  const appointmentId = Array.isArray(id) ? id[0] : id
+  const patientId = searchParams.get("patientId")
+
   const [saving, setSaving] = useState(false)
+
+  const [reason, setReason] = useState("")
+  const [diagnosis, setDiagnosis] = useState("")
+  const [treatment, setTreatment] = useState("")
+  const [notes, setNotes] = useState("")
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+
+    if (!dataUser?.token || !dataUser.user?.id) {
+      router.push("/auth/login")
+      return
+    }
+
+    if (!patientId) {
+      Swal.fire("Error", "Paciente no encontrado", "error")
+      return
+    }
+
     setSaving(true)
 
     try {
-      const token = localStorage.getItem("token")
+      console.log("API URL:", process.env.NEXT_PUBLIC_API_URL)
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/medical-record`,
@@ -24,18 +45,23 @@ export default function MedicalRecordPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${dataUser.token}`,
           },
           body: JSON.stringify({
-            appointment_id: id,
+            appointment_id: appointmentId,
+            patient_id: patientId,
+            doctor_id: dataUser.user.id,
+            reason,
+            diagnosis,
+            treatment,
             notes,
           }),
         }
       )
 
-      if (!res.ok) throw new Error()
+      if (!res.ok) throw new Error("Error al guardar")
 
-      Swal.fire({
+      await Swal.fire({
         icon: "success",
         title: "Consulta registrada",
         timer: 1500,
@@ -43,12 +69,9 @@ export default function MedicalRecordPage() {
       })
 
       router.push("/dashboard/doctor/appointments")
-    } catch {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo guardar el registro",
-      })
+    } catch (error) {
+      console.error(error)
+      Swal.fire("Error", "No se pudo guardar el registro", "error")
     } finally {
       setSaving(false)
     }
@@ -61,7 +84,7 @@ export default function MedicalRecordPage() {
           Registrar consulta
         </h2>
         <p className="text-sm text-slate-500">
-          Detalles de la atención médica 📝
+          Completar información clínica 📝
         </p>
       </header>
 
@@ -69,11 +92,35 @@ export default function MedicalRecordPage() {
         onSubmit={handleSubmit}
         className="bg-white rounded-2xl border p-6 shadow-sm space-y-4"
       >
+        <input
+          placeholder="Motivo de consulta"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          required
+          className="w-full rounded-xl border bg-slate-50 p-3 text-sm"
+        />
+
         <textarea
+          placeholder="Diagnóstico"
+          value={diagnosis}
+          onChange={(e) => setDiagnosis(e.target.value)}
+          required
+          className="w-full h-24 rounded-xl border bg-slate-50 p-3 text-sm"
+        />
+
+        <textarea
+          placeholder="Tratamiento"
+          value={treatment}
+          onChange={(e) => setTreatment(e.target.value)}
+          required
+          className="w-full h-24 rounded-xl border bg-slate-50 p-3 text-sm"
+        />
+
+        <textarea
+          placeholder="Notas adicionales (opcional)"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Notas médicas..."
-          className="w-full h-40 rounded-xl border bg-slate-50 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full h-24 rounded-xl border bg-slate-50 p-3 text-sm"
         />
 
         <div className="flex justify-end">
