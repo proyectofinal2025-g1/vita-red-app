@@ -6,12 +6,14 @@ import { DoctorModule } from '../doctor/doctor.module';
 import { MedicalRecordRepository } from './medical-record.repository';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MedicalRecord } from './entities/medical-record.entity';
+import { AppointmentsModule } from '../appointments/appointments.module';
 
 @Module({
   imports:[
     TypeOrmModule.forFeature([MedicalRecord]),
     UserModule,
-    DoctorModule
+    DoctorModule,
+    AppointmentsModule
   ],
   controllers: [MedicalRecordController],
   providers: [MedicalRecordService, MedicalRecordRepository],

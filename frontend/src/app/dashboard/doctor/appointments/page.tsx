@@ -1,61 +1,67 @@
 "use client";
 
-import AppointmentsTable from "./components/AppointmentsTable"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/AuthContext"
+import AppointmentsTable from "./components/AppointmentsTable";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function DoctorAppointmentsPage() {
-  const [appointments, setAppointments] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-  const { dataUser } = useAuth()
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const { dataUser } = useAuth();
 
   function handleAttend(appointment: any) {
-    router.push(`/dashboard/doctor/medical-records/${appointment.id}`)
-  }
+  router.push(
+    `/dashboard/doctor/appointments/${appointment.id}/medical-record` +
+    `?patientId=${appointment.patient.id}`
+  )
+}
+
 
   useEffect(() => {
-    if (dataUser === undefined) return
+    if (dataUser === undefined) return;
 
     if (!dataUser?.token) {
-      router.push("/auth/login")
-      return
+      router.push("/auth/login");
+      return;
     }
 
     async function fetchAppointments() {
       try {
-        const token = dataUser?.token
-        if (!token) {
-          router.push("/auth/login");
-          return;
-        }
-
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`,
           {
             headers: {
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${dataUser?.token}`,
             },
-          }
-        )
-        
+          },
+        );
+
         if (!res.ok) {
-          throw new Error("No autorizado");
+          throw new Error(`Error ${res.status}`);
         }
 
-        const data = await res.json()
-        setAppointments(Array.isArray(data) ? data : data.data ?? [])
+        const data = await res.json();
+
+        const normalizedAppointments = (
+          Array.isArray(data) ? data : (data.data ?? [])
+        ).map((a: any) => ({
+          ...a,
+          status: a.status.toLowerCase(),
+        }));
+
+        setAppointments(normalizedAppointments);
       } catch (error) {
-        console.error("Error cargando turnos", error)
-        setAppointments([])
+        console.error("Error cargando turnos", error);
+        setAppointments([]);
       } finally {
         setLoading(false);
       }
     }
-    
-    fetchAppointments()
-  }, [dataUser, router])
+
+    fetchAppointments();
+  }, [dataUser, router]);
 
   return (
     <div className="space-y-8">
@@ -73,5 +79,5 @@ export default function DoctorAppointmentsPage() {
         />
       )}
     </div>
-  )
+  );
 }

@@ -23,70 +23,68 @@ export default function DoctorDashboardPage() {
   const safeAppointments = Array.isArray(appointments) ? appointments : [];
 
   useEffect(() => {
-  const token = dataUser?.token
+    const token = dataUser?.token;
 
-  if (dataUser === undefined) return;
-  if (!dataUser?.token) {
-    router.push("/auth/login")
-    return
-  }
+    if (dataUser === undefined) return;
+    if (!dataUser?.token) {
+      router.push("/auth/login");
+      return;
+    }
 
-  async function loadDashboard() {
-  try {
-    const token = dataUser?.token
-    if (!token) throw new Error("No token")
+    async function loadDashboard() {
+      try {
+        const token = dataUser?.token;
+        if (!token) return;
 
-    const [doctorRes, recordsRes, appointmentsRes, specialtiesRes] =
-      await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/medical-record/doctor/medical-records`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/speciality`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ])
+        const [doctorRes, appointmentsRes, specialtiesRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/doctors/me`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/doctors/appointments/list`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          ),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/speciality`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
 
-    if (!doctorRes.ok) throw new Error("Unauthorized")
+        if (!doctorRes.ok) {
+          throw new Error(`Error doctor ${doctorRes.status}`);
+        }
 
-    const doctorData = await doctorRes.json()
+        const doctorData = await doctorRes.json();
 
-    const specialtiesJson = await specialtiesRes.json()
-    const specialtiesArray = Array.isArray(specialtiesJson)
-      ? specialtiesJson
-      : specialtiesJson.data ?? []
+        const specialtiesJson = await specialtiesRes.json();
+        const specialtiesArray = Array.isArray(specialtiesJson)
+          ? specialtiesJson
+          : (specialtiesJson.data ?? []);
 
-    const specialtyName =
-      specialtiesArray.find(
-        (s: any) => s.id === doctorData.speciality_id
-      )?.name ?? "Especialidad no definida"
+        const specialtyName =
+          specialtiesArray.find((s: any) => s.id === doctorData.speciality_id)
+            ?.name ?? "Especialidad no definida";
 
-    setDoctor({
-      ...doctorData,
-      first_name: dataUser?.user.first_name,
-      last_name: dataUser?.user.last_name,
-      specialty: specialtyName,
-    })
+        setDoctor({
+          ...doctorData,
+          first_name: dataUser?.user.first_name,
+          last_name: dataUser?.user.last_name,
+          specialty: specialtyName,
+        });
 
-    setMedicalRecords(await recordsRes.json())
-    const appointmentsData = await appointmentsRes.json()
-    const appointmentsArray = Array.isArray(appointmentsData) 
-    ? appointmentsData 
-    : (appointmentsData.data ?? [])
-    setAppointments(appointmentsArray)
-  } catch (error) {
-    console.error(error)
-    router.push("/auth/login")
-  } finally {
-    setLoading(false)
-  }
-}
+        const appointmentsJson = await appointmentsRes.json();
+        const appointmentsArray = Array.isArray(appointmentsJson)
+          ? appointmentsJson
+          : (appointmentsJson.data ?? []);
 
+        setAppointments(appointmentsArray);
+      } catch (error) {
+        console.error("Error cargando dashboard", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
     loadDashboard();
   }, [dataUser, router]);
@@ -158,7 +156,7 @@ export default function DoctorDashboardPage() {
         </p>
       </section>
 
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      {/* <section className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatCard
           title="Turnos hoy"
           value={todayAppointments.length}
@@ -177,7 +175,7 @@ export default function DoctorDashboardPage() {
           onClick={() => setFilter("pending")}
           active={filter === "pending"}
         />
-      </section>
+      </section> */}
 
       {filter && (
         <section className="bg-blue-100 rounded-2xl p-6 border-b-blue-300 shadow-sm">

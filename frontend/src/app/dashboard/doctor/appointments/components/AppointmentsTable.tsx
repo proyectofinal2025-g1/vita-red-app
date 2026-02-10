@@ -1,36 +1,43 @@
-import StatusBadge from "./StatusBadge";
+import StatusBadge from "./StatusBadge"
 import {
   formatArgentinaDate,
   formatArgentinaTime,
-} from "@/utils/formatArgentinaDateTime";
+} from "@/utils/formatArgentinaDateTime"
+
+type AppointmentStatus =
+  | "confirmed"
+  | "pending"
+  | "cancelled"
+  | "completed"
+
 
 interface Patient {
-  id: string;
-  first_name: string;
-  last_name: string;
+  id: string
+  first_name: string
+  last_name: string
 }
 
 interface Appointment {
-  id: number;
-  patient: Patient | null;
-  date: string;
-  hour: string;
-  status: "confirmed" | "pending" | "cancelled" | "completed";
+  id: string
+  patient: Patient | null
+  date: string
+  hour: string
+  status: AppointmentStatus
 }
 
 export default function AppointmentsTable({
   appointments,
   onAttend,
 }: {
-  appointments: Appointment[];
-  onAttend: (a: Appointment) => void;
+  appointments: Appointment[]
+  onAttend: (a: Appointment) => void
 }) {
   if (!appointments.length) {
     return (
-      <div className="bg-white rounded-2xl p-6 border text-slate-500 ">
+      <div className="bg-white rounded-2xl p-6 border text-slate-500">
         No tenés turnos asignados
       </div>
-    );
+    )
   }
 
   return (
@@ -47,44 +54,48 @@ export default function AppointmentsTable({
         </thead>
 
         <tbody>
-          {appointments.map((a) => (
-            <tr
-              key={a.id}
-              className="border-t hover:bg-slate-50 cursor-pointer"
-            >
-              <td className="px-4 py-3">
-                {a.patient
-                  ? `${a.patient.first_name} ${a.patient.last_name}`
-                  : "Paciente"}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {formatArgentinaDate(a.date)}
-              </td>
-              <td className="px-4 py-3 text-center">
-                {formatArgentinaTime(a.date)}
-              </td>
+          {appointments.map((a) => {
 
-              <td className="px-4 py-3 text-center">
-                <StatusBadge status={a.status} />
-              </td>
-              <td>
-                {a.status.toLowerCase() === "confirmed" && (
-                  <button
-                    onClick={() => onAttend(a)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-semibold"
-                  >
-                    Atender
-                  </button>
-                )}
+            return (
+              <tr
+                key={a.id}
+                className="border-t hover:bg-slate-50"
+              >
+                <td className="px-4 py-3">
+                  {a.patient
+                    ? `${a.patient.first_name} ${a.patient.last_name}`
+                    : "Paciente"}
+                </td>
 
-                {a.status !== "confirmed" && (
-                  <span className="text-slate-400 text-xs">-</span>
-                )}
-              </td>
-            </tr>
-          ))}
+                <td className="px-4 py-3 text-center">
+                  {formatArgentinaDate(a.date)}
+                </td>
+
+                <td className="px-4 py-3 text-center">
+                  {formatArgentinaTime(a.date)}
+                </td>
+
+                <td className="px-4 py-3 text-center">
+                  <StatusBadge status={a.status} />
+                </td>
+
+                <td className="px-4 py-3 text-center">
+                  {a.status === "confirmed" ? (
+                    <button
+                      onClick={() => onAttend(a)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-semibold"
+                    >
+                      Atender
+                    </button>
+                  ) : (
+                    <span className="text-slate-400 text-xs">-</span>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
-  );
+  )
 }
