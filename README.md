@@ -109,63 +109,63 @@ src/
 
 ### ⚙️ Instalación y ejecución
 🔹 Backend
-git clone <repo-backend>
-cd backend
-npm install
+- git clone <repo-backend>
+- cd backend
+- npm install
 
 
 ## Configurar variables de entorno (.env):
 
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=yourpassword
-DB_NAME=DB_NAME
+- DB_HOST=localhost
+- DB_PORT=5432
+- DB_USERNAME=postgres
+- DB_PASSWORD=yourpassword
+- DB_NAME=DB_NAME
 
-JWT_SECRET=jwtsecret
+- JWT_SECRET=jwtsecret
 
-CLOUDINARY_CLOUD_NAME=ds6anafmo
-CLOUDINARY_API_KEY=983884613929627
-CLOUDINARY_API_SECRET=ajb8Qjq2KS0DdaGhvSfftSnKa3M
+- CLOUDINARY_CLOUD_NAME=nombre de cloudinary
+- CLOUDINARY_API_KEY=api key cloudinary
+- CLOUDINARY_API_SECRET=api secret cloudinary
 
-FIRST_NAME_SUPERADMIN=yourName;
-LAST_NAME_SUPERADMIN=yourLastName;
-DNI_SUPERADMIN=YourDocument;
-EMAIL_SUPERADMIN=yourEmail;
-PASSWORD_SUPERADMIN=yourpassword;
+- FIRST_NAME_SUPERADMIN=yourName;
+- LAST_NAME_SUPERADMIN=yourLastName;
+- DNI_SUPERADMIN=YourDocument;
+- EMAIL_SUPERADMIN=yourEmail;
+- PASSWORD_SUPERADMIN=yourpassword;
 
 # ENVS PARA MERCADO PAGO
-MP_WEBHOOK_SECRET=nombre del proyecto en MC
-MP_ACCESS_TOKEN=token de mercado pago
-BACKEND_URL=url de deploy (render)
-FRONTEND_URL=url de deploy (vercel)
+- MP_WEBHOOK_SECRET=nombre del proyecto en MC
+- MP_ACCESS_TOKEN=token de mercado pago
+- BACKEND_URL=url de deploy (render)
+- FRONTEND_URL=url de deploy (vercel)
 
 # SENDGRID CONFIGURATION
-SENDGRID_API_KEY=yourSendgridApiKey
-SENDGRID_FROM_EMAIL=yourVerifiedSendgridEmail
+- SENDGRID_API_KEY=yourSendgridApiKey
+- SENDGRID_FROM_EMAIL=yourVerifiedSendgridEmail
 
 
 #   GOOGLE AUTH
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+- GOOGLE_CLIENT_ID=your_google_client_id
+- GOOGLE_CLIENT_SECRET=your_google_client_secret
+- GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 
 
 #    CHAT
-OPENAI_API_KEY=your_openai_api_key 
+- OPENAI_API_KEY=your_openai_api_key 
 
 
 ## Ejecutar:
 
-npm run start:dev
+- npm run start:dev
 
 🔹 Frontend
-git clone <repo-frontend>
-cd frontend
-npm install
-npm run dev
+- git clone <repo-frontend>
+- cd frontend
+- npm install
+- npm run dev
 
 
 ## Configurar .env.local con la URL del backend.
 
-NEXT_PUBLIC_API_URL=http://localhost:3000
+- NEXT_PUBLIC_API_URL=http://localhost:3000
